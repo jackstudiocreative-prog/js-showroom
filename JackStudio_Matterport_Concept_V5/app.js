@@ -15,6 +15,10 @@ const SP=window.JS_SPRITES||{},SPS=window.JS_SPRITE_SIZE||[1,1],sV=[],sU=[],sS=[
 // Each product is a photo card that turns (around its vertical axis) to face the viewer, so it is
 // always seen from the front; the turn is limited so cards never swing out of their shelf.
 const SPR=[];
+// Suitcase panels use their own photo sheet (JS_LUG_*): rectified lid fronts, backs and ribbed sides.
+const LR=window.JS_LUG_RECTS||{},lV=[],lU=[],lS=[];
+function lt(id){const r=LR[id];return r?[(r[0]+1)/2048,(r[1]+1)/1024,(r[0]+r[2]-1)/2048,(r[1]+r[3]-1)/1024]:[0,0,.001,.001]}
+function ltri(a,b,c,ta,tb,tc,tile,sh){if(XF){a=XF(a);b=XF(b);c=XF(c)}for(const [p,t] of [[a,ta],[b,tb],[c,tc]]){lV.push(...p);lU.push(tile[0]+t[0]*(tile[2]-tile[0]),tile[1]+(1-t[1])*(tile[3]-tile[1]));lS.push(sh)}}
 function sprite(x,zc,hw,y0,y1,key,shade=1,turn=true){const m=SP[key];if(!m)return;const [u,v,w,h]=m.uv;
  let b=[x,y0,zc],t=[x,y1,zc],e=[x,y0,zc+hw];if(XF){b=XF(b);t=XF(t);e=XF(e)}
  SPR.push({x:b[0],z:b[2],y0:b[1],y1:t[1],hw:e[2]-b[2],turn,uv:[(u+.5)/SPS[0],(v+.5)/SPS[1],(u+w-.5)/SPS[0],(v+h-.5)/SPS[1]],shade})}
@@ -103,7 +107,7 @@ const tops=[[2.55,2.4],[2.71,2.56],[2.55,2.4]];          // middle frame tallest
 const post=(x,z,h)=>box(x,h/2,z,.035,h,.035,'metal',1);
 frames.forEach((z,i)=>{const [hf,hb]=tops[i];post(FR,z,hf);post(W-.02,z,hb);line3([FR,hf,z],[W-.02,hb,z],.03,'metal');
  for(let y=.3;y<=2.42;y+=.27)box((FR+W)/2,y,z,.43,.025,.025,'metal',1)});
-const cx=(FR+W)/2,DECK=.05,SH={A:.734,B:1.596,C:2.228};
+const cx=(FR+W)/2,DECK=.05,SH={A:.90,B:1.64,C:2.228};
 for(let bay=0;bay<2;bay++){const z0=frames[bay],zc=z0+BW/2,len=BW-.04;
  box(cx,DECK,zc,.48,.04,len,'birch',1.05);box(cx+.22,.025,zc,.03,.05,len,'birch',.8);
  for(const y of [SH.A,SH.B,SH.C]){box(cx-.01,y-.014,zc,.48,.028,len,'birch',1.1);box(FR+.07,y-.036,zc,.02,.01,len-.08,'white',1.6)}
@@ -111,7 +115,7 @@ for(let bay=0;bay<2;bay++){const z0=frames[bay],zc=z0+BW/2,len=BW-.04;
 }
 // deck: cabin cases in the same order as the photo
 const cz=t=>frames[0]+t*BW*2,dy=DECK+.02;
-[['lug_silver',.13],['lug_lav',.37],['lug_char',.62],['lug_orange',.87]].forEach(([t,f])=>suitcase(cx-.02,dy,cz(f),.44,.58,.25,t));
+[['white',.135],['lav',.365],['grey',.635],['orange',.865]].forEach(([c,f])=>suitcase(cx-.16,dy,cz(f),c));
 // products: straight-on photo cut-outs, placed at their measured positions (metres from the
 // left ladder frame). Items standing on a shelf are seated on it; raised/hanging ones keep their height.
 for(const [k,m] of Object.entries(SP)){
@@ -122,21 +126,53 @@ for(const [k,m] of Object.entries(SP)){
  if(k==='b_olivecrate')box(cx+.15,y0+.14,zc,.2,.28,hw*1.8,'crate',.92);
 }
 // chrome display stands behind the hanging bags (thin in the photo, so rebuilt in 3D)
-for(const [z,top] of [[.17,1.22],[.84,1.24],[1.24,1.2],[1.77,1.16]]){const zz=frames[0]+z;
+for(const [z,t0] of [[.17,1.22],[.84,1.24],[1.24,1.2],[1.77,1.16]]){const top=t0-.734+SH.A;const zz=frames[0]+z;
  box(cx+.05,SH.A+.006,zz,.16,.012,.16,'metal',1.4);box(cx+.05,(SH.A+top)/2,zz,.014,top-SH.A,.014,'white',.9);box(cx+.05,top,zz,.014,.014,.2,'white',.9)}
 // TRAVEL MOVEMENT wall: rectified photo of the lettering, cork map and pegboard
 const ZP=frames[2]+.14,Y0=.36;
 xpanel(W-.005,ZP-.11,ZP+1.29,Y0+1.0,Y0+2.2,'tm_upper',.76,1);
 xpanel(W-.005,ZP-.11,ZP+1.29,Y0-.33,Y0+1.0,'tm_lower',.76,1);
-suitcase(W-.2,.0,ZP+.12,.42,.62,.25,'lug_orange');suitcase(W-.2,.0,ZP+.46,.36,.52,.22,'lug_orange');
+suitcase(W-.31,0,ZP+.2,'orange');suitcase(W-.31,0,ZP+.72,'orange');
 XF=null;
 }
-function suitcase(x,y,z,w,h,d,tex){const side=tex+'_side',wh=.07,b=y+wh;
-// body: front face toward -x carries the photo; other faces plain colour
-box(x,b+h/2,z,d,h,w,side,1);
-xpanel(x-d/2-.002,z-w/2,z+w/2,b,b+h,tex,1.0,1);
-for(const dz of [-w/2+.05,w/2-.05])for(const dx of [-d/2+.04,d/2-.04])box(x+dx,y+wh/2,z+dz,.035,wh,.035,'metal',1);
-box(x+d/2-.05,b+h+.015,z,.05,.03,w*.5,'metal',1);}
+// 29-inch front-opening hard case, modelled from the product photos (79 x 50 x 31 cm, 4 double spinners).
+// Local frame: u across the front (world +z), v up, w toward the viewer (world -x). x = front face.
+function suitcase(x,y,z,col,S=1){
+ const H=.71*S,W=.455*S,D=.28*S,WH=.078*S,LID0=.10*S,R=.035*S,cz=z,bx=x+D/2;
+ const P=(u,v,w)=>[bx-w,y+v,cz+u];
+ const prof=(w0,h0,w1,h1,r)=>{const pts=[],c=[[w1-r,h1-r,0],[w0+r,h1-r,90],[w0+r,h0+r,180],[w1-r,h0+r,270]];
+  for(const [cu,cv,a0] of c)for(let i=0;i<=5;i++){const a=(a0+i*18)*Math.PI/180;pts.push([cu+r*Math.cos(a),cv+r*Math.sin(a)])}return pts};
+ // body: rounded profile extruded through the depth
+ const body=prof(-W/2,WH,W/2,H,R),n=body.length,fw=D/2,bw=-D/2;
+ const side=lt('s_'+col),back=lt('b_'+col),plain=lt('c_'+col);
+ for(let i=0;i<n;i++){const [u0,v0]=body[i],[u1,v1]=body[(i+1)%n],vert=Math.abs(u1-u0)<Math.abs(v1-v0),tex=vert?side:plain,sh=vert?.84:(v0>H/2?1.06:.6);
+  const t0=(v0-WH)/(H-WH),t1=(v1-WH)/(H-WH);
+  ltri(P(u0,v0,fw),P(u1,v1,fw),P(u1,v1,bw),[0,t0],[0,t1],[1,t1],tex,sh);ltri(P(u0,v0,fw),P(u1,v1,bw),P(u0,v0,bw),[0,t0],[1,t1],[1,t0],tex,sh)}
+ const fan=(pts,w,tile,u0,v0,uw,vh,sh,flip)=>{const cu=(u0+u0+uw)/2,cv=v0+vh/2,m=[(cu-u0)/uw,(cv-v0)/vh];
+  for(let i=0;i<pts.length;i++){const a=pts[i],b=pts[(i+1)%pts.length],ta=[(a[0]-u0)/uw,(a[1]-v0)/vh],tb=[(b[0]-u0)/uw,(b[1]-v0)/vh];
+   if(flip)ta[0]=1-ta[0],tb[0]=1-tb[0],m[0]=1-m[0];ltri(P(cu,cv,w),P(a[0],a[1],w),P(b[0],b[1],w),flip?[1-(cu-u0)/uw,m[1]]:m,ta,tb,tile,sh)}};
+ fan(body,bw,back,-W/2,WH,W,H-WH,.9,true);   // back panel (photo)
+ fan(body,fw,plain,-W/2,WH,W,H-WH,.95,false); // body front (visible only under the lid)
+ // front-opening lid: photo panel standing 1.4 cm proud, with the black zip rim around it
+ const LW=W-.012*S,lid=prof(-LW/2,LID0,LW/2,H-.006*S,R*.9),lf=fw+.014*S;
+ fan(lid,lf,lt('f_'+col),-LW/2,LID0,LW,H-.006*S-LID0,1.0,false);
+ for(let i=0;i<lid.length;i++){const [u0,v0]=lid[i],[u1,v1]=lid[(i+1)%lid.length];quad(P(u0,v0,fw),P(u1,v1,fw),P(u1,v1,lf),P(u0,v0,lf),'metal',.7)}
+ // base: black wheel housings at the four corners, recessed black grip in the front centre
+ for(const su of [-1,1])for(const sw of [-1,1]){const hu=su*(W/2-.05*S),hw=sw*(D/2-.045*S);
+  const c=P(hu,WH-.004*S,hw);box(c[0],c[1],c[2],.07*S,.03*S,.075*S,'metal',.65);
+  const k=P(hu,.045*S,hw);box(k[0],k[1],k[2],.016*S,.03*S,.016*S,'metal',.6);
+  for(const du of [-.016,.016]){const wc=P(hu+du*S,.028*S,hw);wheel(wc[0],wc[1],wc[2],.027*S,.012*S)}}
+ {const g=P(0,WH+.012*S,fw+.002*S);box(g[0],g[1],g[2],.01*S,.022*S,.13*S,'metal',.55)}
+ // top carry handle (back half) and the two side feet
+ {const t=P(0,H+.008*S,bw+.05*S);box(t[0],t[1],t[2],.06*S,.016*S,.16*S,'metal',.75)}
+ for(const v of [.16,.6]){const f=P(-W/2-.006*S,v*S,fw-.05*S);box(f[0],f[1],f[2],.035*S,.04*S,.012*S,'metal',.7)}
+}
+// double spinner disc: axle along world z (discs face the room)
+function wheel(x,y,z,r,t){const N=10;for(let i=0;i<N;i++){const a=i/N*Math.PI*2,b=(i+1)/N*Math.PI*2,
+ p=(ang,dz)=>[x+Math.cos(ang)*r*0,y+Math.sin(ang)*r,z+dz];
+ const A=[x+Math.cos(a)*r,y+Math.sin(a)*r],B=[x+Math.cos(b)*r,y+Math.sin(b)*r];
+ quad([A[0],A[1],z-t/2],[B[0],B[1],z-t/2],[B[0],B[1],z+t/2],[A[0],A[1],z+t/2],'metal',.55);
+ for(const dz of [-t/2,t/2])quad([x,y,z+dz],[A[0],A[1],z+dz],[B[0],B[1],z+dz],[B[0],B[1],z+dz],'metal',dz<0?.8:.9)}}
 function bagZ(x,y,z,len,h,dep,tex){box(x,y+h/2,z,dep,h,len,tex,1);box(x-dep/2-.004,y+h*.62,z,.01,.018,len*.75,'brass',.9);
 const t=y+h;line3([x,t,z-len*.25],[x,t+h*.6,z-len*.15],.016,tex);line3([x,t+h*.6,z-len*.15],[x,t+h*.6,z+len*.15],.016,tex);line3([x,t+h*.6,z+len*.15],[x,t,z+len*.25],.016,tex);}
 function duffel(x,y,z,len,h,tex){box(x,y+h/2,z,h*.95,h,len,tex,1);box(x,y+h*.55,z,h*1.02,h*.7,len*.97,tex,.92);
@@ -188,7 +224,7 @@ zpanel(z+d/2+.03,x-1.08,x+1.08,.21,.48,tex,1.03);
 buildWorld();
 function mesh(V,U,S){const m={n:V.length/3};for(const [k,d,n] of [['p',V,3],['u',U,2],['s',S,1]]){m[k]=gl.createBuffer();gl.bindBuffer(gl.ARRAY_BUFFER,m[k]);gl.bufferData(gl.ARRAY_BUFFER,new Float32Array(d),gl.STATIC_DRAW)}return m}
 function bindMesh(m){for(const [k,l,n] of [['p',loc.pos,3],['u',loc.uv,2],['s',loc.shade,1]]){gl.bindBuffer(gl.ARRAY_BUFFER,m[k]);gl.enableVertexAttribArray(l);gl.vertexAttribPointer(l,n,gl.FLOAT,false,0,0)}}
-const worldMesh=mesh(verts,UVS,shades);
+const worldMesh=mesh(verts,UVS,shades),lugMesh=mesh(lV,lU,lS);let lugTex=null;
 for(const s of SPR){const [U0,V0,U1,V1]=s.uv;for(const t of [[U0,V1],[U1,V1],[U1,V0],[U0,V1],[U1,V0],[U0,V0]]){sU.push(...t);sS.push(s.shade)}}
 const spriteMesh=mesh(spriteGeometry(0,0),sU,sS);let lastSprCam='';
 function updateSprites(){const k=cam.x.toFixed(2)+','+cam.z.toFixed(2);if(k===lastSprCam)return;lastSprCam=k;gl.bindBuffer(gl.ARRAY_BUFFER,spriteMesh.p);gl.bufferData(gl.ARRAY_BUFFER,new Float32Array(spriteGeometry(cam.x,cam.z)),gl.DYNAMIC_DRAW)}let atlasTex=null,spriteTex=null;
@@ -280,9 +316,9 @@ let lastOverlay=0;
 function render(now){const dt=Math.min(.055,(now-last)/1000||.016);last=now;animate(dt);const dpr=Math.min(window.devicePixelRatio||1,1.6);const w=Math.round(canvas.clientWidth*dpr),h=Math.round(canvas.clientHeight*dpr);if(canvas.width!==w||canvas.height!==h){canvas.width=w;canvas.height=h;gl.viewport(0,0,w,h)}
 gl.clearColor(.81,.79,.73,1);gl.clear(gl.COLOR_BUFFER_BIT|gl.DEPTH_BUFFER_BIT);
 const fw=[Math.sin(cam.yaw)*Math.cos(cam.pitch),Math.sin(cam.pitch),-Math.cos(cam.yaw)*Math.cos(cam.pitch)];const proj=perspective(Math.PI/3.1,w/h,.09,75),view=lookAt([cam.x,cam.y,cam.z],[cam.x+fw[0],cam.y+fw[1],cam.z+fw[2]]);mvp=mul(proj,view);
-gl.uniformMatrix4fv(loc.mvp,false,mvp);gl.uniform3f(loc.camera,cam.x,cam.y,cam.z);bindMesh(worldMesh);gl.bindTexture(gl.TEXTURE_2D,atlasTex);gl.uniform1f(loc.cut,-1.);gl.drawArrays(gl.TRIANGLES,0,worldMesh.n);if(spriteTex&&spriteMesh.n){updateSprites();bindMesh(spriteMesh);gl.bindTexture(gl.TEXTURE_2D,spriteTex);gl.uniform1f(loc.cut,.5);gl.drawArrays(gl.TRIANGLES,0,spriteMesh.n)}if(now-lastOverlay>45){updateOverlay();lastOverlay=now}requestAnimationFrame(render)}
+gl.uniformMatrix4fv(loc.mvp,false,mvp);gl.uniform3f(loc.camera,cam.x,cam.y,cam.z);bindMesh(worldMesh);gl.bindTexture(gl.TEXTURE_2D,atlasTex);gl.uniform1f(loc.cut,-1.);gl.drawArrays(gl.TRIANGLES,0,worldMesh.n);if(lugTex&&lugMesh.n){bindMesh(lugMesh);gl.bindTexture(gl.TEXTURE_2D,lugTex);gl.drawArrays(gl.TRIANGLES,0,lugMesh.n)}if(spriteTex&&spriteMesh.n){updateSprites();bindMesh(spriteMesh);gl.bindTexture(gl.TEXTURE_2D,spriteTex);gl.uniform1f(loc.cut,.5);gl.drawArrays(gl.TRIANGLES,0,spriteMesh.n)}if(now-lastOverlay>45){updateOverlay();lastOverlay=now}requestAnimationFrame(render)}
 function loadTex(url,fmt){return new Promise((ok,bad)=>{const im=new Image();im.onload=()=>{const t=gl.createTexture();gl.bindTexture(gl.TEXTURE_2D,t);gl.pixelStorei(gl.UNPACK_FLIP_Y_WEBGL,false);gl.texImage2D(gl.TEXTURE_2D,0,fmt,fmt,gl.UNSIGNED_BYTE,im);gl.texParameteri(gl.TEXTURE_2D,gl.TEXTURE_MIN_FILTER,gl.LINEAR_MIPMAP_LINEAR);gl.texParameteri(gl.TEXTURE_2D,gl.TEXTURE_MAG_FILTER,gl.LINEAR);gl.texParameteri(gl.TEXTURE_2D,gl.TEXTURE_WRAP_S,gl.CLAMP_TO_EDGE);gl.texParameteri(gl.TEXTURE_2D,gl.TEXTURE_WRAP_T,gl.CLAMP_TO_EDGE);gl.generateMipmap(gl.TEXTURE_2D);ok(t)};im.onerror=bad;im.src=url})}
 function launch(){gl.activeTexture(gl.TEXTURE0);gl.uniform1i(loc.sampler,0);
-Promise.all([loadTex(window.JS_ATLAS_URL,gl.RGB),window.JS_SPRITE_URL?loadTex(window.JS_SPRITE_URL,gl.RGBA).catch(()=>null):Promise.resolve(null)]).then(([a,b])=>{atlasTex=a;spriteTex=b;gl.enable(gl.DEPTH_TEST);gl.disable(gl.CULL_FACE);$('loading').hidden=true;setArea('entrance');last=performance.now();requestAnimationFrame(render)}).catch(()=>{$('loading').innerHTML='<div class="loadbox">Unable to load 3D textures. Extract the whole ZIP first.</div>'})}
+Promise.all([loadTex(window.JS_ATLAS_URL,gl.RGB),window.JS_SPRITE_URL?loadTex(window.JS_SPRITE_URL,gl.RGBA).catch(()=>null):Promise.resolve(null),window.JS_LUG_URL?loadTex(window.JS_LUG_URL,gl.RGB).catch(()=>null):Promise.resolve(null)]).then(([a,b,c])=>{atlasTex=a;spriteTex=b;lugTex=c;gl.enable(gl.DEPTH_TEST);gl.disable(gl.CULL_FACE);$('loading').hidden=true;setArea('entrance');last=performance.now();requestAnimationFrame(render)}).catch(()=>{$('loading').innerHTML='<div class="loadbox">Unable to load 3D textures. Extract the whole ZIP first.</div>'})}
 launch();
 })();
