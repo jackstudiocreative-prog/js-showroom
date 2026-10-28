@@ -115,13 +115,16 @@ const cz=t=>frames[0]+t*BW*2,dy=DECK+.02;
 [['white',.135],['lav',.365],['grey',.635],['orange',.865]].forEach(([c,f])=>suitcase(cx-.17,dy,cz(f),c));
 // products: straight-on photo cut-outs, placed at their measured positions (metres from the
 // left ladder frame). Items standing on a shelf are seated on it; raised/hanging ones keep their height.
-for(const [k,m] of Object.entries(SP)){if(!m.shelf)continue;
+for(const [k,m] of Object.entries(SP)){if(!m.shelf||k==='a_left2')continue;
  const zc=frames[0]+(m.z[0]+m.z[1])/2,hw=(m.z[1]-m.z[0])/2,h=m.y[1]-m.y[0],gap=m.y[0]-SH[m.shelf];
  const y0=Math.abs(gap)<.06?SH[m.shelf]:m.y[0],crate=k==='b_crate'||k==='b_olivecrate';
  sprite(crate?cx-.05:cx-.02-m.order*.002,zc,hw,y0,y0+h,k,1.05,!crate);
  if(k==='b_crate')box(cx+.15,y0+.15,zc,.2,.3,hw*1.9,'crate',.92);
  if(k==='b_olivecrate')box(cx+.15,y0+.14,zc,.2,.28,hw*1.8,'crate',.92);
 }
+// the three Daily Sling Bags on the right of the left bay (modelled)
+{const zb=frames[0];box(cx+.03,SH.A+.05,zb+.68,.10,.10,.17,'metal',.8);
+ slingBag(cx-.075,SH.A+.002,zb+.85,'dark');slingBag(cx+.03,SH.A+.10,zb+.68,'brown');slingBag(cx+.035,SH.A+.27,zb+.84,'black',{hang:SH.A+.506});}
 // chrome display stands behind the hanging bags (thin in the photo, so rebuilt in 3D)
 for(const [z,t0] of [[.17,1.22],[.84,1.24],[1.24,1.2],[1.77,1.16]]){const top=t0-.734+SH.A;const zz=frames[0]+z;
  box(cx+.05,SH.A+.006,zz,.16,.012,.16,'metal',1.4);box(cx+.05,(SH.A+top)/2,zz,.014,top-SH.A,.014,'white',.9);box(cx+.05,top,zz,.014,.014,.2,'white',.9)}
@@ -190,6 +193,65 @@ function suitcase(x,y,z,col,S=1){
  rbox(toW,[0,H+.006*S,-D/2+.075*S],[.085*S,.01*S,.032*S],.008*S,K,null,[2,1,2]);
  for(const v of [.17,.6])for(const w of [-D/2+.06*S,bodyF-.05*S])rbox(toW,[-W/2-.004*S,v*S,w],[.006*S,.018*S,.012*S],.004*S,K,null,[1,1,1]);
 }
+// ---------------------------------------------------------------------------------------------
+// Daily Sling Bag, modelled from the product photos (approx. 27 x 16 x 11.5 cm): rounded body,
+// front flap with the diagonal lower edge wrapping over the top, diagonal zip pocket with metal
+// teeth and puller, round JACK STUDIO badge, side zips with pullers, strap tabs with D-rings,
+// adjustable strap with buckle. Colour per bag; leather grain and polished metal are shaded.
+// ---------------------------------------------------------------------------------------------
+const LEA=[0,-1],MET=[0,-2],SILVER=[.80,.81,.83];
+const BAGCOL={black:[.16,.145,.13],brown:[.40,.24,.13],dark:[.29,.255,.235]};
+function n3(a){const l=Math.hypot(...a)||1;return a.map(v=>v/l)}
+function crs(a,b){return [a[1]*b[2]-a[2]*b[1],a[2]*b[0]-a[0]*b[2],a[0]*b[1]-a[1]*b[0]]}
+function prism(toW,ring,off,col,mat){const top=ring.map(p=>p.map((v,i)=>v+off[i])),all=ring.concat(top),C=[0,1,2].map(i=>all.reduce((s,p)=>s+p[i],0)/all.length);
+ const tri=(a,b,c)=>{let n=n3(crs(b.map((v,i)=>v-a[i]),c.map((v,i)=>v-a[i])));const m=[0,1,2].map(i=>(a[i]+b[i]+c[i])/3-C[i]);if(n[0]*m[0]+n[1]*m[1]+n[2]*m[2]<0)n=n.map(v=>-v);for(const q of [a,b,c]){const W=toW(q,n);mpush(W[0],W[1],col,mat,[-1,-1])}};
+ for(let i=1;i<ring.length-1;i++){tri(ring[0],ring[i],ring[i+1]);tri(top[0],top[i],top[i+1])}
+ for(let i=0;i<ring.length;i++){const j=(i+1)%ring.length;tri(ring[i],ring[j],top[j]);tri(ring[i],top[j],top[i])}}
+function bar(toW,a,b,wdir,wid,thk,col,mat){const d=b.map((v,i)=>v-a[i]),sv=n3(wdir).map(v=>v*wid/2),t=n3(crs(d,wdir)).map(v=>v*thk);
+ const A=a.map((v,i)=>v-t[i]/2),B=b.map((v,i)=>v-t[i]/2);prism(toW,[A.map((v,i)=>v-sv[i]),A.map((v,i)=>v+sv[i]),B.map((v,i)=>v+sv[i]),B.map((v,i)=>v-sv[i])],t,col,mat)}
+function disc(toW,c,rad,thk,col,mat,N=22){const ring=[];for(let i=0;i<N;i++){const a=i/N*Math.PI*2;ring.push([c[0]+Math.cos(a)*rad,c[1]+Math.sin(a)*rad,c[2]])}prism(toW,ring,[0,0,thk],col,mat)}
+function slingBag(x,y,z,colName,opt={}){
+ const C=BAGCOL[colName]||BAGCOL.black,W=.27,H=.16,D=.115,R=.024,e=.0035,toW=(p,n)=>[[x-p[2],y+p[1],z+p[0]],[-n[2],n[1],n[0]]];
+ const U=px=>(px-405)/510*W,V=py=>(490-py)/305*H,F=D/2;
+ rbox(toW,[0,H/2,0],[W/2,H/2,D/2],R,C,null,[6,6,4]);
+ // flap: front panel with the diagonal lower edge, then wrapping over the top towards the back
+ const ring=[[175,192],[615,192],[617,375],[600,412],[560,432],[530,428],[175,232]].map(([px,py])=>[U(px),Math.min(V(py),H-R),F+.0005]);
+ prism(toW,ring,[0,0,e-.0005],C.map(v=>v*1.06),LEA);
+ for(let i=6;i>2;i--){const a=ring[i],b=ring[i-1],d=b.map((v,k)=>v-a[k]),pn=n3(crs([0,0,1],d)).map(v=>-v*.003);
+  bar(toW,a.map((v,k)=>k===2?F+.0003:v+pn[k]),b.map((v,k)=>k===2?F+.0003:v+pn[k]),crs(d,[0,0,1]),.006,.0004,C.map(v=>v*.3),LEA)}
+ {const u0=U(175),u1=U(615),pr=[];for(let k=0;k<=8;k++){const t=k/8*Math.PI*.75;pr.push([H-R+(R+e)*Math.sin(t),(F-R)+(R+e)*Math.cos(t),Math.sin(t),Math.cos(t)])}
+  for(let k=0;k<pr.length-1;k++){const [v0,w0,a0,b0]=pr[k],[v1,w1,a1,b1]=pr[k+1],w1b=k+1===pr.length-1?w1:w1;
+   const q=[[u0,v0,w0,a0,b0],[u1,v0,w0,a0,b0],[u1,v1,w1b,a1,b1],[u0,v1,w1b,a1,b1]];
+   for(const idx of [0,1,2,0,2,3]){const [uu,vv,ww,ny,nw]=q[idx],Wd=toW([uu,vv,ww],[0,ny,nw]);mpush(Wd[0],Wd[1],C.map(v=>v*1.06),LEA,[-1,-1])}}
+  for(const uu of [u0,u1])for(let k=0;k<pr.length-1;k++){const [v0,w0]=pr[k],[v1,w1]=pr[k+1];const sgn=uu<0?-1:1;
+   prism(toW,[[uu,v0,w0],[uu,v1,w1],[uu,H-R+(R)*Math.sin((k+1)/8*Math.PI*.75),(F-R)+R*Math.cos((k+1)/8*Math.PI*.75)],[uu,H-R+R*Math.sin(k/8*Math.PI*.75),(F-R)+R*Math.cos(k/8*Math.PI*.75)]],[sgn*.0015,0,0],C,LEA)}}
+ // diagonal zip pocket: tape, metal teeth, slider and pull tab
+ const za=[U(215),V(300),F],zb=[U(525),V(435),F];
+ bar(toW,za,zb,[0,0,1].map((v,i)=>i===2?0:0).length?crs(zb.map((v,i)=>v-za[i]),[0,0,1]):[0,1,0],.011,.0016,C.map(v=>v*.55),LEA);
+ bar(toW,za.map((v,i)=>i===2?v+.0012:v),zb.map((v,i)=>i===2?v+.0012:v),crs(zb.map((v,i)=>v-za[i]),[0,0,1]),.0035,.0018,SILVER,MET);
+ bar(toW,[U(222),V(306),F+.002],[U(240),V(314),F+.002],[0,1,0],.009,.004,SILVER,MET);
+ bar(toW,[U(230),V(318),F+.004],[U(230),V(386),F+.004],[1,0,0],.0105,.0018,SILVER,MET);
+ bar(toW,[U(230),V(366),F+.0052],[U(230),V(378),F+.0052],[1,0,0],.005,.0008,[.05,.05,.05],LEA);
+ // round JACK STUDIO badge on the flap
+ disc(toW,[U(382),V(280),F+e],.0088,.0014,SILVER,MET);disc(toW,[U(382),V(280),F+e+.0014],.0068,.0006,[.07,.07,.075],MET);
+ // side zips along the top of both side panels, pullers hanging at the front end
+ for(const sg of [-1,1]){const uu=sg*(W/2+.0008),vv=H*.68;
+  bar(toW,[uu,vv,-F+.025],[uu,vv,F-.02],[0,1,0],.009,.0016,C.map(v=>v*.55),LEA);
+  bar(toW,[uu+sg*.001,vv,-F+.025],[uu+sg*.001,vv,F-.02],[0,1,0],.003,.0016,SILVER,MET);
+  bar(toW,[uu+sg*.0025,vv+.004,F-.03],[uu+sg*.0025,vv-.034,F-.03],[0,0,1],.0105,.0018,SILVER,MET);}
+ // strap tabs + D-rings, then the strap with an adjustable buckle
+ const tab=[-.40*W,.36*W],ringV=H+.03,rings=[];
+ for(const uu of tab){bar(toW,[uu,H-.012,0],[uu,H+.02,0],[1,0,0],.02,.004,C,LEA);
+  for(const [a,b] of [[[uu-.013,ringV-.008,0],[uu+.013,ringV-.008,0]],[[uu-.013,ringV+.008,0],[uu+.013,ringV+.008,0]],[[uu-.013,ringV-.008,0],[uu-.013,ringV+.008,0]],[[uu+.013,ringV-.008,0],[uu+.013,ringV+.008,0]]])bar(toW,a,b,[0,0,1],.003,.003,SILVER,MET);
+  rings.push([uu,ringV+.008,0])}
+ let path;
+ if(opt.hang!==undefined){const vt=opt.hang-y,wb=-.07;path=[[rings[0],[-.012,vt,wb]],[[.012,vt,wb],rings[1]]];}
+ else{const p1=[-.07,H+.075,-.045],p2=[.07,H+.075,-.045];path=[[rings[0],p1],[p1,p2],[p2,rings[1]]];}
+ const fw=(a,b)=>{const d=b.map((v,i)=>v-a[i]);return crs([d[0],d[1],0],[0,0,1])};
+ for(const [a,b] of path)bar(toW,a,b,fw(a,b),.024,.004,C.map(v=>v*.9),LEA);
+ {const [a,b]=path[0],m=a.map((v,i)=>v+(b[i]-v)*.55),d=n3(b.map((v,i)=>v-a[i])),s=[m.map((v,i)=>v-d[i]*.012),m.map((v,i)=>v+d[i]*.012)];
+  bar(toW,s[0],s[1],fw(a,b),.031,.008,SILVER,MET);bar(toW,s[0].map((v,i)=>v+d[i]*.003),s[1].map((v,i)=>v-d[i]*.003),fw(a,b),.033,.0095,C.map(v=>v*.85),LEA);}
+}
 function bagZ(x,y,z,len,h,dep,tex){box(x,y+h/2,z,dep,h,len,tex,1);box(x-dep/2-.004,y+h*.62,z,.01,.018,len*.75,'brass',.9);
 const t=y+h;line3([x,t,z-len*.25],[x,t+h*.6,z-len*.15],.016,tex);line3([x,t+h*.6,z-len*.15],[x,t+h*.6,z+len*.15],.016,tex);line3([x,t+h*.6,z+len*.15],[x,t,z+len*.25],.016,tex);}
 function duffel(x,y,z,len,h,tex){box(x,y+h/2,z,h*.95,h,len,tex,1);box(x,y+h*.55,z,h*1.02,h*.7,len*.97,tex,.92);
@@ -246,11 +308,15 @@ const litVS=`attribute vec3 aP,aN,aC;attribute vec2 aR,aT;uniform mat4 uVP;varyi
 const litFS=`precision highp float;varying vec3 vW,vN,vC;varying vec2 vR,vT;uniform vec3 uCam;uniform sampler2D uDec;uniform float uPer;
 void main(){vec3 n=normalize(vN);float ao=1.;
  if(vR.y>.01){float ph=vR.x*6.2831853/uPer;n=normalize(n+vec3(0.,sin(ph)*.62*vR.y,0.));ao=1.-.16*vR.y*smoothstep(.55,1.,cos(ph));}
+ float mat=vR.y<-1.5?2.:(vR.y<-.5?1.:0.);
+ if(mat==1.){vec3 g=floor(vW*1700.);float h1=fract(sin(dot(g,vec3(12.9898,78.233,37.719)))*43758.5453),h2=fract(sin(dot(g,vec3(39.346,11.135,83.155)))*24634.6345);n=normalize(n+vec3(h1-.5,h2-.5,(h1+h2)*.5-.5)*.06);}
  vec3 V=normalize(uCam-vW),L1=normalize(vec3(.12,1.,.18)),L2=normalize(vec3(-1.,.45,.2)),H2=normalize(L2+V),H1=normalize(L1+V);
  float dif=.40+.40*max(dot(n,L1),0.)+.34*max(dot(n,L2),0.)+.06*max(-n.y,0.);
  float sp=.09*pow(max(dot(n,H2),0.),26.)+.06*pow(max(dot(n,H1),0.),40.);
  float rim=pow(1.-max(dot(n,V),0.),3.)*.08;
  vec3 col=vC*dif*ao+vec3(sp+rim);
+ if(mat==1.)col=vC*dif+vec3(sp*1.8+rim*.6);
+ if(mat==2.){float env=.55+.45*n.y;col=vC*(.30+.30*dif)*env+vec3(sp*9.+rim*2.5+.10*pow(max(dot(reflect(-V,n),L1),0.),6.));}
  if(vT.x>=0.){vec4 d=texture2D(uDec,vT);if(d.a<.5)discard;col=vec3(.95)*(.55+.45*dif)+vec3(sp*.6);}
  col=mix(col,vec3(.81,.78,.74),clamp((distance(vW,uCam)-10.)/24.,0.,.28));gl_FragColor=vec4(col,1.);}`;
 const litProg=gl.createProgram();gl.attachShader(litProg,shader(gl.VERTEX_SHADER,litVS));gl.attachShader(litProg,shader(gl.FRAGMENT_SHADER,litFS));gl.linkProgram(litProg);
