@@ -5,11 +5,16 @@ if(!gl){$('loading').innerHTML='<div class="loadbox">Your browser does not suppo
 const clamp=(v,a,b)=>Math.max(a,Math.min(b,v)),lerp=(a,b,t)=>a+(b-a)*t;
 const rects=window.JS_ATLAS_RECTS||{};
 const vs=`attribute vec3 aPos;attribute vec2 aUV;attribute float aShade;uniform mat4 uVP;uniform vec3 uCamera;varying vec2 vUV;varying float vShade;varying float vDist;void main(){gl_Position=uVP*vec4(aPos,1.);vUV=aUV;vShade=aShade;vDist=distance(aPos,uCamera);}`;
-const fs=`precision highp float;varying vec2 vUV;varying float vShade;varying float vDist;uniform sampler2D uTexture;void main(){vec4 tex=texture2D(uTexture,vUV);vec3 color=tex.rgb*vShade;color=mix(color,vec3(.81,.78,.74),clamp((vDist-10.)/24.,0.,.28));gl_FragColor=vec4(color,1.);}`;
+const fs=`precision highp float;varying vec2 vUV;varying float vShade;varying float vDist;uniform sampler2D uTexture;uniform float uCut;void main(){vec4 tex=texture2D(uTexture,vUV);if(tex.a<uCut)discard;vec3 color=tex.rgb*vShade;color=mix(color,vec3(.81,.78,.74),clamp((vDist-10.)/24.,0.,.28));gl_FragColor=vec4(color,1.);}`;
 function shader(type,source){const s=gl.createShader(type);gl.shaderSource(s,source);gl.compileShader(s);if(!gl.getShaderParameter(s,gl.COMPILE_STATUS))throw Error(gl.getShaderInfoLog(s));return s}
 const program=gl.createProgram();gl.attachShader(program,shader(gl.VERTEX_SHADER,vs));gl.attachShader(program,shader(gl.FRAGMENT_SHADER,fs));gl.linkProgram(program);if(!gl.getProgramParameter(program,gl.LINK_STATUS))throw Error(gl.getProgramInfoLog(program));gl.useProgram(program);
-const loc={pos:gl.getAttribLocation(program,'aPos'),uv:gl.getAttribLocation(program,'aUV'),shade:gl.getAttribLocation(program,'aShade'),mvp:gl.getUniformLocation(program,'uVP'),camera:gl.getUniformLocation(program,'uCamera'),sampler:gl.getUniformLocation(program,'uTexture')};
+const loc={pos:gl.getAttribLocation(program,'aPos'),uv:gl.getAttribLocation(program,'aUV'),shade:gl.getAttribLocation(program,'aShade'),mvp:gl.getUniformLocation(program,'uVP'),camera:gl.getUniformLocation(program,'uCamera'),sampler:gl.getUniformLocation(program,'uTexture'),cut:gl.getUniformLocation(program,'uCut')};
 const verts=[],UVS=[],shades=[];
+// Photo cut-out products (RGBA sprite sheet, alpha-tested), drawn as a second pass.
+const SP=window.JS_SPRITES||{},SPS=window.JS_SPRITE_SIZE||[1,1],sV=[],sU=[],sS=[];
+function sprite(x,z0,z1,y0,y1,key,shade=1){const m=SP[key];if(!m)return;const [u,v,w,h]=m.uv,U0=(u+.5)/SPS[0],U1=(u+w-.5)/SPS[0],V0=(v+.5)/SPS[1],V1=(v+h-.5)/SPS[1];
+let p=[[x,y0,z0],[x,y0,z1],[x,y1,z1],[x,y1,z0]];if(XF)p=p.map(XF);const o=[0,1,2,0,2,3],t=[[U0,V1],[U1,V1],[U1,V0],[U0,V0]];
+for(const i of o){sV.push(...p[i]);sU.push(...t[i]);sS.push(shade)}}
 const vw=4096;function uvTile(id){const r=rects[id]||rects.white;return [(r[0]+2)/vw,(r[1]+2)/vw,(r[0]+r[2]-2)/vw,(r[1]+r[3]-2)/vw]}
 let XF=null;// optional point transform (used to scale a whole zone)
 function quad(a,b,c,d,texture='wall',shade=1){if(XF){a=XF(a);b=XF(b);c=XF(c);d=XF(d)}const uv=uvTile(texture),p=[a,b,c,a,c,d],t=[[uv[0],uv[3]],[uv[2],uv[3]],[uv[2],uv[1]],[uv[0],uv[3]],[uv[2],uv[1]],[uv[0],uv[1]]];for(let i=0;i<6;i++){verts.push(...p[i]);UVS.push(...t[i]);shades.push(shade)}}
@@ -80,51 +85,38 @@ quad([-OW,.001,F+.04],[OW,.001,F+.04],[OW,.001,F-R],[-OW,.001,F-R],'floor',.9);
 // thin shadow line where the soffit meets the fascia
 box(0,OH-.004,F+.002,OW*2,.008,.004,'metal',.6);
 }
-// TRAVEL MOVEMENT corner (right wall, back): rebuilt from the store photos.
-// Wide two-bay luggage ladder-shelf in the corner, then the TRAVEL MOVEMENT wall (map + pegboard).
+// TRAVEL MOVEMENT corner (right wall, back), rebuilt from the store photos.
+// Shelf heights, bay width and every product's size/position are measured from the wide store
+// photo; the products themselves are cut out of that photo (JS_SPRITES), so they match exactly.
 function travelZone(){
 const W=5.43,FR=W-.45;
-// Modelled at true size (store ceiling ~2.75 m per the photos), then scaled so it sits in this
-// 4.05 m-high room with the same proportions as the photographs.
 const K=4.055/2.78,ZA=-10.06;XF=p=>[W+(p[0]-W)*K,p[1]*K,ZA+(p[2]-ZA)*K];
-const BW=1.35,frames=[ZA,ZA+BW,ZA+2*BW];      // ladder side frames (z)
-const tops=[[2.6,2.42],[2.76,2.62],[2.5,2.36]]; // [front post, back post]; middle frame tallest
+const BW=1.083,frames=[ZA,ZA+BW,ZA+2*BW];
+const tops=[[2.55,2.4],[2.71,2.56],[2.55,2.4]];          // middle frame tallest, as in the photo
 const post=(x,z,h)=>box(x,h/2,z,.035,h,.035,'metal',1);
-frames.forEach((z,i)=>{
- const [hf,hb]=tops[i];post(FR,z,hf);post(W-.02,z,hb);line3([FR,hf,z],[W-.02,hb,z],.03,'metal');
- for(let y=.3;y<=2.2;y+=.27)box((FR+W)/2,y,z,.43,.025,.025,'metal',1);
-});
-const cx=(FR+W)/2,SH=[.80,1.52,2.17];
-const bz=(bay,t)=>frames[bay]+t*BW;           // position inside a bay, t = 0..1
-for(let bay=0;bay<2;bay++){const zc=bz(bay,.5),len=BW-.04;
- box(cx,.05,zc,.48,.04,len,'birch',1.05);box(cx+.22,.025,zc,.03,.05,len,'birch',.8);
- for(const y of SH){box(cx-.01,y,zc,.48,.028,len,'birch',1.1);box(FR+.07,y-.022,zc,.02,.01,len-.08,'white',1.6);}
- line3([W-.03,SH[0]+.04,bz(bay,.03)],[W-.03,SH[1]-.04,bz(bay,.97)],.012,'metal');line3([W-.03,SH[1]-.04,bz(bay,.03)],[W-.03,SH[0]+.04,bz(bay,.97)],.012,'metal');
+frames.forEach((z,i)=>{const [hf,hb]=tops[i];post(FR,z,hf);post(W-.02,z,hb);line3([FR,hf,z],[W-.02,hb,z],.03,'metal');
+ for(let y=.3;y<=2.42;y+=.27)box((FR+W)/2,y,z,.43,.025,.025,'metal',1)});
+const cx=(FR+W)/2,DECK=.05,SH={A:.734,B:1.596,C:2.228};
+for(let bay=0;bay<2;bay++){const z0=frames[bay],zc=z0+BW/2,len=BW-.04;
+ box(cx,DECK,zc,.48,.04,len,'birch',1.05);box(cx+.22,.025,zc,.03,.05,len,'birch',.8);
+ for(const y of [SH.A,SH.B,SH.C]){box(cx-.01,y-.014,zc,.48,.028,len,'birch',1.1);box(FR+.07,y-.036,zc,.02,.01,len-.08,'white',1.6)}
+ line3([W-.03,SH.A+.04,z0+.03],[W-.03,SH.B-.06,z0+BW-.03],.012,'metal');line3([W-.03,SH.B-.06,z0+.03],[W-.03,SH.A+.04,z0+BW-.03],.012,'metal');
 }
-// deck: four cabin cases, two per bay
-const deck=.07;
-suitcase(cx-.02,deck,bz(0,.27),.42,.6,.25,'lug_silver');suitcase(cx-.02,deck,bz(0,.73),.42,.6,.25,'lug_lav');
-suitcase(cx-.02,deck,bz(1,.27),.42,.6,.25,'lug_char');suitcase(cx-.02,deck,bz(1,.73),.44,.62,.26,'lug_orange');
-// shelf A: two tiers of handbags (back bay); backpacks + half-moon bags (front bay)
-const A=SH[0]+.014;
-[[.12,'darkleather'],[.37,'darkleather'],[.62,'darkleather'],[.86,'darkleather']].forEach(([t,tex],i)=>{stand(cx,A,bz(0,t),.36);bagZ(cx,A+.36,bz(0,t),.3,.19,.13,tex)});
-[[.18,'darkleather'],[.42,'brownleather'],[.62,'brownleather'],[.85,'darkleather']].forEach(([t,tex])=>{box(cx,A+.06,bz(0,t),.18,.12,.24,'metal',1);bagZ(cx,A+.12,bz(0,t),.3,.17,.13,tex)});
-stand(cx,A,bz(1,.2),.12);backpack(cx,A+.12,bz(1,.2),.3,.4,'darkleather');
-stand(cx,A,bz(1,.68),.12);backpack(cx,A+.12,bz(1,.68),.3,.42,'brownleather');
-bagZ(cx,A,bz(1,.44),.3,.15,.12,'darkleather');bagZ(cx,A,bz(1,.9),.28,.15,.12,'brownleather');
-// shelf B: navy backpacks, navy duffel over a crate of blue bags (back bay); grey backpack, crate + olive duffel (front bay)
-const B=SH[1]+.014;
-backpack(cx,B,bz(0,.12),.34,.5,'canvas_navy');
-box(cx,B+.15,bz(0,.47),.38,.3,.62,'crate',1.05);bagZ(cx,B+.04,bz(0,.37),.28,.2,.2,'canvas_navy');bagZ(cx,B+.04,bz(0,.6),.26,.2,.2,'canvas_navy');
-duffel(cx,B+.3,bz(0,.47),.68,.32,'canvas_navy');backpack(cx,B,bz(0,.84),.26,.4,'canvas_navy');
-backpack(cx,B,bz(1,.2),.36,.56,'canvas_grey');
-box(cx,B+.17,bz(1,.66),.38,.34,.5,'crate',1.05);duffel(cx,B+.34,bz(1,.66),.66,.3,'canvas_char');
-// shelf C: canvas backpacks and day bags
-const C=SH[2]+.014;
-backpack(cx,C,bz(0,.12),.34,.5,'canvas_brown');bagZ(cx,C,bz(0,.4),.3,.34,.06,'canvas_navy');backpack(cx,C,bz(0,.7),.34,.44,'canvas_navy');
-box(cx,C+.17,bz(1,.25),.14,.34,.34,'darkleather',.9);backpack(cx,C,bz(1,.62),.3,.4,'darkleather');
+// deck: cabin cases in the same order as the photo
+const cz=t=>frames[0]+t*BW*2,dy=DECK+.02;
+[['lug_silver',.13],['lug_lav',.37],['lug_char',.62],['lug_orange',.87]].forEach(([t,f])=>suitcase(cx-.02,dy,cz(f),.44,.58,.25,t));
+// products: photo cut-outs placed by their measured position between the ladder frames
+const POSTS=[[157,790],[790,1270]];
+for(const [k,m] of Object.entries(SP)){
+ const [x0,y0,x1,y1]=m.px,mid=(x0+x1)/2,bay=mid<790?0:1,[L,R]=POSTS[bay],f=BW/(R-L);
+ // top shelf is seen from below in the photo (its surface hidden), so its items read ~15% small
+ const g=m.shelf==='C'?1.15:m.shelf==='A'?1.08:1,zc=frames[bay]+(mid-L)*f,hw=(x1-x0)*f*g/2,bottom=SH[m.shelf]-(y1-m.line)*f;
+ sprite(cx-.03,zc-hw,zc+hw,bottom,bottom+(y1-y0)*f*g,k,1.04);
+ if(k==='b_olivecrate')box(cx+.1,SH.B+.13,zc,.24,.26,hw*1.9,'crate',1.0);
+ if(k==='b_group')box(cx+.1,SH.B+.12,zc-.04,.24,.24,hw*1.4,'crate',.9);
+}
 // TRAVEL MOVEMENT wall: rectified photo of the lettering, cork map and pegboard
-const ZP=frames[2]+.14,Y0=.36;   // pegboard bottom-left corner on the wall
+const ZP=frames[2]+.14,Y0=.36;
 xpanel(W-.005,ZP-.11,ZP+1.29,Y0+1.0,Y0+2.2,'tm_upper',.76,1);
 xpanel(W-.005,ZP-.11,ZP+1.29,Y0-.33,Y0+1.0,'tm_lower',.76,1);
 suitcase(W-.2,.0,ZP+.12,.42,.62,.25,'lug_orange');suitcase(W-.2,.0,ZP+.46,.36,.52,.22,'lug_orange');
@@ -185,10 +177,9 @@ const tex=variation===1?'label_craft_innovative':'label_craft_heritage';
 zpanel(z+d/2+.03,x-1.08,x+1.08,.21,.48,tex,1.03);
 }
 buildWorld();
-const posBuf=gl.createBuffer();gl.bindBuffer(gl.ARRAY_BUFFER,posBuf);gl.bufferData(gl.ARRAY_BUFFER,new Float32Array(verts),gl.STATIC_DRAW);gl.enableVertexAttribArray(loc.pos);gl.vertexAttribPointer(loc.pos,3,gl.FLOAT,false,0,0);
-const uvBuf=gl.createBuffer();gl.bindBuffer(gl.ARRAY_BUFFER,uvBuf);gl.bufferData(gl.ARRAY_BUFFER,new Float32Array(UVS),gl.STATIC_DRAW);gl.enableVertexAttribArray(loc.uv);gl.vertexAttribPointer(loc.uv,2,gl.FLOAT,false,0,0);
-const shadeBuf=gl.createBuffer();gl.bindBuffer(gl.ARRAY_BUFFER,shadeBuf);gl.bufferData(gl.ARRAY_BUFFER,new Float32Array(shades),gl.STATIC_DRAW);gl.enableVertexAttribArray(loc.shade);gl.vertexAttribPointer(loc.shade,1,gl.FLOAT,false,0,0);
-const vertexCount=verts.length/3;
+function mesh(V,U,S){const m={n:V.length/3};for(const [k,d,n] of [['p',V,3],['u',U,2],['s',S,1]]){m[k]=gl.createBuffer();gl.bindBuffer(gl.ARRAY_BUFFER,m[k]);gl.bufferData(gl.ARRAY_BUFFER,new Float32Array(d),gl.STATIC_DRAW)}return m}
+function bindMesh(m){for(const [k,l,n] of [['p',loc.pos,3],['u',loc.uv,2],['s',loc.shade,1]]){gl.bindBuffer(gl.ARRAY_BUFFER,m[k]);gl.enableVertexAttribArray(l);gl.vertexAttribPointer(l,n,gl.FLOAT,false,0,0)}}
+const worldMesh=mesh(verts,UVS,shades),spriteMesh=mesh(sV,sU,sS);let atlasTex=null,spriteTex=null;
 // Standard column-major camera/view matrix, all geometry positioned in world coordinates.
 function perspective(fovy,aspect,near,far){const f=1/Math.tan(fovy/2),a=1/(near-far);return new Float32Array([f/aspect,0,0,0,0,f,0,0,0,0,(far+near)*a,-1,0,0,2*far*near*a,0])}
 function lookAt(eye,target){let z=[eye[0]-target[0],eye[1]-target[1],eye[2]-target[2]];let n=Math.hypot(...z);z=z.map(a=>a/n);let x=[z[2],0,-z[0]];n=Math.hypot(...x);x=x.map(a=>a/n);const y=[z[1]*x[2]-z[2]*x[1],z[2]*x[0]-z[0]*x[2],z[0]*x[1]-z[1]*x[0]];
@@ -277,7 +268,9 @@ let lastOverlay=0;
 function render(now){const dt=Math.min(.055,(now-last)/1000||.016);last=now;animate(dt);const dpr=Math.min(window.devicePixelRatio||1,1.6);const w=Math.round(canvas.clientWidth*dpr),h=Math.round(canvas.clientHeight*dpr);if(canvas.width!==w||canvas.height!==h){canvas.width=w;canvas.height=h;gl.viewport(0,0,w,h)}
 gl.clearColor(.81,.79,.73,1);gl.clear(gl.COLOR_BUFFER_BIT|gl.DEPTH_BUFFER_BIT);
 const fw=[Math.sin(cam.yaw)*Math.cos(cam.pitch),Math.sin(cam.pitch),-Math.cos(cam.yaw)*Math.cos(cam.pitch)];const proj=perspective(Math.PI/3.1,w/h,.09,75),view=lookAt([cam.x,cam.y,cam.z],[cam.x+fw[0],cam.y+fw[1],cam.z+fw[2]]);mvp=mul(proj,view);
-gl.uniformMatrix4fv(loc.mvp,false,mvp);gl.uniform3f(loc.camera,cam.x,cam.y,cam.z);gl.drawArrays(gl.TRIANGLES,0,vertexCount);if(now-lastOverlay>45){updateOverlay();lastOverlay=now}requestAnimationFrame(render)}
-function launch(){const tex=gl.createTexture();gl.bindTexture(gl.TEXTURE_2D,tex);gl.pixelStorei(gl.UNPACK_FLIP_Y_WEBGL,false);const im=new Image();im.onload=()=>{gl.texImage2D(gl.TEXTURE_2D,0,gl.RGB,gl.RGB,gl.UNSIGNED_BYTE,im);gl.texParameteri(gl.TEXTURE_2D,gl.TEXTURE_MIN_FILTER,gl.LINEAR_MIPMAP_LINEAR);gl.texParameteri(gl.TEXTURE_2D,gl.TEXTURE_MAG_FILTER,gl.LINEAR);gl.generateMipmap(gl.TEXTURE_2D);gl.activeTexture(gl.TEXTURE0);gl.uniform1i(loc.sampler,0);gl.enable(gl.DEPTH_TEST);gl.disable(gl.CULL_FACE);$('loading').hidden=true;setArea('entrance');last=performance.now();requestAnimationFrame(render);};im.onerror=()=>{$('loading').innerHTML='<div class="loadbox">Unable to load 3D textures. Extract the whole ZIP first.</div>'};im.src=window.JS_ATLAS_URL}
+gl.uniformMatrix4fv(loc.mvp,false,mvp);gl.uniform3f(loc.camera,cam.x,cam.y,cam.z);bindMesh(worldMesh);gl.bindTexture(gl.TEXTURE_2D,atlasTex);gl.uniform1f(loc.cut,-1.);gl.drawArrays(gl.TRIANGLES,0,worldMesh.n);if(spriteTex&&spriteMesh.n){bindMesh(spriteMesh);gl.bindTexture(gl.TEXTURE_2D,spriteTex);gl.uniform1f(loc.cut,.5);gl.drawArrays(gl.TRIANGLES,0,spriteMesh.n)}if(now-lastOverlay>45){updateOverlay();lastOverlay=now}requestAnimationFrame(render)}
+function loadTex(url,fmt){return new Promise((ok,bad)=>{const im=new Image();im.onload=()=>{const t=gl.createTexture();gl.bindTexture(gl.TEXTURE_2D,t);gl.pixelStorei(gl.UNPACK_FLIP_Y_WEBGL,false);gl.texImage2D(gl.TEXTURE_2D,0,fmt,fmt,gl.UNSIGNED_BYTE,im);gl.texParameteri(gl.TEXTURE_2D,gl.TEXTURE_MIN_FILTER,gl.LINEAR_MIPMAP_LINEAR);gl.texParameteri(gl.TEXTURE_2D,gl.TEXTURE_MAG_FILTER,gl.LINEAR);gl.texParameteri(gl.TEXTURE_2D,gl.TEXTURE_WRAP_S,gl.CLAMP_TO_EDGE);gl.texParameteri(gl.TEXTURE_2D,gl.TEXTURE_WRAP_T,gl.CLAMP_TO_EDGE);gl.generateMipmap(gl.TEXTURE_2D);ok(t)};im.onerror=bad;im.src=url})}
+function launch(){gl.activeTexture(gl.TEXTURE0);gl.uniform1i(loc.sampler,0);
+Promise.all([loadTex(window.JS_ATLAS_URL,gl.RGB),window.JS_SPRITE_URL?loadTex(window.JS_SPRITE_URL,gl.RGBA).catch(()=>null):Promise.resolve(null)]).then(([a,b])=>{atlasTex=a;spriteTex=b;gl.enable(gl.DEPTH_TEST);gl.disable(gl.CULL_FACE);$('loading').hidden=true;setArea('entrance');last=performance.now();requestAnimationFrame(render)}).catch(()=>{$('loading').innerHTML='<div class="loadbox">Unable to load 3D textures. Extract the whole ZIP first.</div>'})}
 launch();
 })();
