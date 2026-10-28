@@ -56,7 +56,7 @@ box(4.55,.68,7.6,.6,1.35,.75,'cream');box(4.55,1.39,7.6,.72,.11,.85,'wood');bag(
 box(-4.55,.53,7.7,.74,1.04,.68,'wood');box(-4.55,1.11,7.7,.82,.12,.75,'cream');bag(-4.55,1.38,7.7,.37,.41,.21,'brownleather',true);
 }
 // Back of store, rebuilt from the storefront photo: lit JACK STUDiO letters over a wide
-// solid white end wall, black ladder-frame shelving either side, service desk in front.
+// solid white end wall, black ladder-frame shelving either side; nothing else on the wall.
 function backWall(){
 const Z=-10.22,T=.18;
 // solid white end wall (the sign wall is the end of the store)
@@ -64,11 +64,6 @@ box(0,2,Z,11,4.1,T,'wall',1.05);
 zpanel(Z+T/2+.005,-1.9,1.9,2.72,4.02,'sign',1.0);
 // tall ladder-frame shelving against the back wall either side of the opening
 ladderShelf(-1);ladderShelf(1);
-// service desk: black front, light-wood top, gift boxes and small leather goods (no people)
-box(0,.5,-8.86,3.6,1.0,.9,'black',1);box(0,1.04,-8.86,3.75,.07,1.0,'wood',1.12);
-for(const [x,n] of [[-1.15,2],[.75,3]])for(let i=0;i<n;i++)box(x,1.11+i*.065,-8.78+(i%2)*.02,.26,.06,.16,'giftbox',1.0);
-for(const x of [-.3,.1])box(x,1.13,-8.95,.26,.11,.17,'black',1.2);
-bag(1.5,1.24,-8.9,.32,.3,.16,'darkleather',true);bag(-1.6,1.22,-8.95,.28,.26,.14,'brownleather',true);
 }
 function ladderShelf(side){
 const z=-9.88,x0=side*3.25,x1=side*5.3,cx=(x0+x1)/2,w=Math.abs(x1-x0);
@@ -151,7 +146,7 @@ const stops=[
  {id:'urban',name:'Urban Carry',x:2.85,z:2.45,yaw:1.57,detail:'urban',desc:'Explore the everyday bag and backpack collection.'},
  {id:'professional',name:'Professional',x:2.85,z:-2.15,yaw:1.57,detail:'professional',desc:'Office-ready leather goods and work bags.'},
  {id:'travel',name:'Travel Movement',x:2.85,z:-7.05,yaw:1.57,detail:'travel',desc:'Travel bags, cabin luggage and accessories.'},
- {id:'counter',name:'Service Counter',x:0,z:-7.30,yaw:0,detail:'counter',desc:'The JACK STUDiO brand wall and service desk.'},
+ {id:'counter',name:'Brand Wall',x:0,z:-7.30,yaw:0,detail:'counter',desc:'The JACK STUDiO brand wall.'},
  {id:'fashion',name:'Everyday Style',x:-2.85,z:-7.10,yaw:-1.57,detail:'fashion',desc:'Discover the apparel and everyday collection.'},
  {id:'heritage',name:'Craft Heritage',x:-2.85,z:-2.25,yaw:-1.57,detail:'heritage',desc:'Take a closer look at handcrafted leather goods.'},
  {id:'essential',name:'Essential',x:-2.85,z:3.05,yaw:-1.57,detail:'essential',desc:'Explore accessories, wallets and daily essentials.'},
@@ -163,7 +158,7 @@ function wrap(a){return Math.atan2(Math.sin(a),Math.cos(a))}
 function updateArea(){const s=nearestStop();if(s.id!==activeID){activeID=s.id;$('areaTitle').textContent=s.name;$('areaDescription').textContent=s.desc}}
 function blocked(x,z,r=.32){if(Math.abs(x)>5.04-r||z< -9.52+r||z>9.04-r)return true;
 // central island & service counter; white glass door not obstructed
-for(const obj of [{x:0,z:3.35,w:2.35,h:1.9},{x:0,z:-2.25,w:2.35,h:1.9},{x:0,z:-8.86,w:4.1,h:1.0},{x:-4.55,z:7.7,w:.74,h:.68},{x:4.55,z:7.6,w:.6,h:.75}])
+for(const obj of [{x:0,z:3.35,w:2.35,h:1.9},{x:0,z:-2.25,w:2.35,h:1.9},{x:-4.55,z:7.7,w:.74,h:.68},{x:4.55,z:7.6,w:.6,h:.75}])
 if(Math.abs(x-obj.x)<obj.w/2+r&&Math.abs(z-obj.z)<obj.h/2+r)return true;
 return false}
 function gridPath(tx,tz){tx=clamp(tx,-4.6,4.6);tz=clamp(tz,-9.04,8.84);const step=.4,nx=25,nz=46,x0=-4.8,z0=-9.1;
