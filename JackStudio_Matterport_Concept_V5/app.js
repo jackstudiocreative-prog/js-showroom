@@ -68,7 +68,7 @@ for(const z of [-7.3,-2.1,3.1,7.15])box(0,4.0,z,3.2,.06,.06,'metal',.8);
 backWall();
 // Main wall arrays with actual store photos integrated into the display backing.
 rack(-1,3.0,'essential','ESSENTIAL');rack(-1,-2.15,'heritage','CRAFT HERITAGE');rack(-1,-7.10,'fashion','EVERYDAY STYLE');
-rack(1,3.0,'urban','URBAN CARRY');rack(1,-2.15,'professional','PROFESSIONAL');travelZone();
+rack(1,3.0,'urban','URBAN CARRY');profZone();travelZone();
 // Main freestanding display islands, with three-dimensional leather products.
 island(0,3.35,'CRAFT INNOVATIVE',1);island(0,-2.25,'CRAFT HERITAGE',2);
 // Entrance side pedestal and accessories.
@@ -96,6 +96,33 @@ box(0,OH-.004,F+.002,OW*2,.008,.004,'metal',.6);
 // TRAVEL MOVEMENT corner (right wall, back), rebuilt from the store photos.
 // Shelf heights, bay width and every product's size/position are measured from the wide store
 // photo; the products themselves are cut out of that photo (JS_SPRITES), so they match exactly.
+// PROFESSIONAL zone (right wall, between Travel Movement and Urban Carry), rebuilt from the store photos.
+// Units u are the photos' own (pegboard panel = 1.22 u); G scales them into this room.
+// Left: the tall black ladder shelf with its products (cut out of the photo, one card per product).
+// Right: the PROFESSIONAL wall (perspective-corrected photo: lettering, two pegboards, belts) and
+// the two mannequins standing in front of it.
+function profZone(){
+const W=5.43,G=1.12,ZP=-1.5,Z=u=>ZP+u*G,id=(p,n)=>[p,n];
+// ---- wall photo
+{const m=SP.pf_wall;if(m)sprite(W-.006,Z((m.u0+m.u1)/2),(m.u1-m.u0)*G/2,(m.v0+.13)*G,(m.v1+.13)*G,'pf_wall',.76,false);}
+// ---- tall ladder shelf: 1.23 u wide, 0.45 u deep, left side is a ladder with an angled top
+const SW=1.23*G,SD=.45*G,zl=Z(-2.56),zr=zl+SW,xf=W-SD,xb=W-.03,post=(x,z,y0,y1)=>box(x,(y0+y1)/2,z,.04,y1-y0,.04,'metal',1);
+const top=3.58*G,LV=[.14,1.11,2.03,2.75].map(v=>v*G);
+post(xf,zl,0,top-.25);post(xb,zl,0,top);line3([xf,top-.25,zl],[xf+.18,top,zl],.04,'metal');line3([xf+.18,top,zl],[xb,top,zl],.04,'metal');
+post(xf,zr,0,top);post(xb,zr,0,top);box((xf+xb)/2,top,zr,SD,.04,.04,'metal',1);
+for(let y=.33;y<top-.3;y+=.33)box((xf+xb)/2,y,zl,SD,.035,.035,'metal',1);
+box((xf+xb)/2,.06,zr,SD,.04,.04,'metal',1);
+for(const y of LV){box((xf+xb)/2,y-.015,(zl+zr)/2,SD-.02,.03,SW-.03,'birch',1.1);if(y>1)box(xf+.06,y-.034,(zl+zr)/2,.02,.008,SW-.1,'white',1.6)}
+for(const [y0,y1] of [[LV[0],LV[1]],[LV[1],LV[2]]]){line3([xb-.01,y0+.03,zl+.03],[xb-.01,y1-.03,zr-.03],.014,'metal');line3([xb-.01,y1-.03,zl+.03],[xb-.01,y0+.03,zr-.03],.014,'metal')}
+// products (cards face the viewer like the other shelves); chrome poles under the hanging pieces
+const xc=xf+SD*.48;
+for(const k of ['pf_bp_black','pf_bp_blue','pf_bp_brown','pf_bag_l','pf_bag_m','pf_bag_r','pf_hang','pf_tags','pf_bp_navy','pf_wallets3','pf_poster','pf_belts','pf_bags4','pf_books','pf_wallets4']){
+ const m=SP[k];if(!m)continue;const zc=zl+m.z*G,y0=m.y*G;sprite(xc,zc,m.w*G/2,y0,y0+m.h*G,k,1.05,true);}
+for(const [k,lv] of [['pf_bag_r',2],['pf_hang',1],['pf_tags',1]]){const m=SP[k];if(!m)continue;const zc=zl+m.z*G;box(xc+.05,(LV[lv]+m.y*G+.05)/2,zc,.012,m.y*G+.05-LV[lv],.012,'white',.95);box(xc+.05,LV[lv]+.004,zc,.14,.008,.14,'metal',1.3)}
+{const m=SP.pf_poster;if(m)box(xc+.06,(LV[1]+m.y*G)/2,zl+m.z*G,.16,m.y*G-LV[1],m.w*G*.8,'metal',.75);}
+// ---- mannequins (cut out of the photos; base on the floor, facing the room)
+for(const [k,u,d] of [['pf_mq_lanyard',-.9,.55],['pf_mq_suit',-.21,.62]]){const m=SP[k];if(m)sprite(W-d*G,Z(u),m.w*G/2,0,m.h*G,k,1.0,true)}
+}
 function travelZone(){
 const W=5.43,FR=W-.45;
 const K=4.055/2.78,ZA=-10.06;XF=p=>[W+(p[0]-W)*K,p[1]*K,ZA+(p[2]-ZA)*K];
@@ -364,7 +391,7 @@ const stops=[
  {id:'entrance',name:'Entrance',x:0,z:8.05,yaw:0,detail:'island',desc:'Welcome to the Jack Studio concept showroom.'},
  {id:'innovative',name:'Craft Innovative',x:2.40,z:4.15,yaw:-1.45,detail:'island',desc:'Walk around the central leather-goods display.'},
  {id:'urban',name:'Urban Carry',x:2.85,z:2.45,yaw:1.57,detail:'urban',desc:'Explore the everyday bag and backpack collection.'},
- {id:'professional',name:'Professional',x:2.85,z:-2.15,yaw:1.57,detail:'professional',desc:'Office-ready leather goods and work bags.'},
+ {id:'professional',name:'Professional',x:2.2,z:-2.3,yaw:1.57,detail:'professional',desc:'Office-ready leather goods and work bags.'},
  {id:'travel',name:'Travel Movement',x:1.5,z:-7.0,yaw:1.57,detail:'travel',desc:'Travel bags, cabin luggage and accessories.'},
  {id:'counter',name:'Brand Wall',x:0,z:-5.40,yaw:0,detail:'counter',desc:'The JACK STUDiO brand wall.'},
  {id:'fashion',name:'Everyday Style',x:-2.85,z:-7.10,yaw:-1.57,detail:'fashion',desc:'Discover the apparel and everyday collection.'},
