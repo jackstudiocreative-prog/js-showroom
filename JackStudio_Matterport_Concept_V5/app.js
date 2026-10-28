@@ -22,8 +22,9 @@ function ltri(a,b,c,ta,tb,tc,tile,sh){if(XF){a=XF(a);b=XF(b);c=XF(c)}for(const [
 function sprite(x,zc,hw,y0,y1,key,shade=1,turn=true){const m=SP[key];if(!m)return;const [u,v,w,h]=m.uv;
  let b=[x,y0,zc],t=[x,y1,zc],e=[x,y0,zc+hw];if(XF){b=XF(b);t=XF(t);e=XF(e)}
  SPR.push({x:b[0],z:b[2],y0:b[1],y1:t[1],hw:e[2]-b[2],turn,uv:[(u+.5)/SPS[0],(v+.5)/SPS[1],(u+w-.5)/SPS[0],(v+h-.5)/SPS[1]],shade})}
-function spriteGeometry(camX,camZ){const P=[];for(const s of SPR){let nx=-1,nz=0;
- if(s.turn){let a=Math.atan2(camZ-s.z,camX-s.x),d=Math.atan2(Math.sin(a-Math.PI),Math.cos(a-Math.PI));d=Math.max(-.9,Math.min(.9,d));nx=-Math.cos(d);nz=-Math.sin(d)}
+// cards stay parallel to the screen (face the view direction), so a row of them always lines up
+function spriteGeometry(yaw){const P=[];const a0=Math.atan2(Math.cos(yaw),-Math.sin(yaw));for(const s of SPR){let nx=-1,nz=0;
+ if(s.turn){let a=a0,d=Math.atan2(Math.sin(a-Math.PI),Math.cos(a-Math.PI));d=Math.max(-.9,Math.min(.9,d));nx=-Math.cos(d);nz=-Math.sin(d)}
  const rx=nz*s.hw,rz=-nx*s.hw,q=[[s.x-rx,s.y0,s.z-rz],[s.x+rx,s.y0,s.z+rz],[s.x+rx,s.y1,s.z+rz],[s.x-rx,s.y1,s.z-rz]];
  for(const i of [0,1,2,0,2,3])P.push(...q[i])}return P}
 const vw=4096;function uvTile(id){const r=rects[id]||rects.white;return [(r[0]+2)/vw,(r[1]+2)/vw,(r[0]+r[2]-2)/vw,(r[1]+r[3]-2)/vw]}
@@ -135,18 +136,12 @@ xpanel(W-.005,ZP-.11,ZP+1.29,Y0-.33,Y0+1.0,'tm_lower',.76,1);
 suitcase(W-.31,0,ZP+.2,'orange');suitcase(W-.31,0,ZP+.72,'orange');
 XF=null;
 }
-// 29-inch UNBREAKABLE case. The front is the real product photo (straightened, cut out with its
-// wheels); a plain shell behind it, wearing the photographed ribbed sides and back, gives it depth.
+// 29-inch UNBREAKABLE case: the real product photo (straightened, cut out whole with its wheels).
+// All four photos are normalised to the same size so the row lines up; like the bags, each case
+// turns to face the viewer so it is always seen from the front.
 function suitcase(x,y,z,col,S=1){
- const m=SP['case_'+col];if(!m)return;
- const W=.455*S,Htot=W*m.aspect,D=.28*S,WH=Htot*(1-m.body),H=Htot,cz=z,bx=x+D/2;
- sprite(x,cz,W/2,y,y+Htot,'case_'+col,1.0,false);
- const P=(u,v,w)=>[bx-w,y+v,cz+u],lq=(a,b,c,d,tile,sh)=>{ltri(a,b,c,[0,0],[1,0],[1,1],tile,sh);ltri(a,c,d,[0,0],[1,1],[0,1],tile,sh)};
- const u0=-W/2+.016*S,u1=W/2-.016*S,v0=WH+.004*S,v1=H-.035*S,f=D/2-.004*S,bw=-D/2;
- lq(P(u0,v0,f),P(u0,v0,bw),P(u0,v1,bw),P(u0,v1,f),lt('s_'+col),.8);
- lq(P(u1,v0,bw),P(u1,v0,f),P(u1,v1,f),P(u1,v1,bw),lt('s_'+col),.86);
- lq(P(u1,v0,bw),P(u0,v0,bw),P(u0,v1,bw),P(u1,v1,bw),lt('b_'+col),.9);
- lq(P(u0,v1,f),P(u0,v1,bw),P(u1,v1,bw),P(u1,v1,f),lt('c_'+col),1.02);
+ const m=SP['case_'+col];if(!m)return;const W=.455*S;
+ sprite(x+.12*S,z,W/2,y,y+W*m.aspect,'case_'+col,1.0,true);
 }
 function bagZ(x,y,z,len,h,dep,tex){box(x,y+h/2,z,dep,h,len,tex,1);box(x-dep/2-.004,y+h*.62,z,.01,.018,len*.75,'brass',.9);
 const t=y+h;line3([x,t,z-len*.25],[x,t+h*.6,z-len*.15],.016,tex);line3([x,t+h*.6,z-len*.15],[x,t+h*.6,z+len*.15],.016,tex);line3([x,t+h*.6,z+len*.15],[x,t,z+len*.25],.016,tex);}
@@ -201,8 +196,8 @@ function mesh(V,U,S){const m={n:V.length/3};for(const [k,d,n] of [['p',V,3],['u'
 function bindMesh(m){for(const [k,l,n] of [['p',loc.pos,3],['u',loc.uv,2],['s',loc.shade,1]]){gl.bindBuffer(gl.ARRAY_BUFFER,m[k]);gl.enableVertexAttribArray(l);gl.vertexAttribPointer(l,n,gl.FLOAT,false,0,0)}}
 const worldMesh=mesh(verts,UVS,shades),lugMesh=mesh(lV,lU,lS);let lugTex=null;
 for(const s of SPR){const [U0,V0,U1,V1]=s.uv;for(const t of [[U0,V1],[U1,V1],[U1,V0],[U0,V1],[U1,V0],[U0,V0]]){sU.push(...t);sS.push(s.shade)}}
-const spriteMesh=mesh(spriteGeometry(0,0),sU,sS);let lastSprCam='';
-function updateSprites(){const k=cam.x.toFixed(2)+','+cam.z.toFixed(2);if(k===lastSprCam)return;lastSprCam=k;gl.bindBuffer(gl.ARRAY_BUFFER,spriteMesh.p);gl.bufferData(gl.ARRAY_BUFFER,new Float32Array(spriteGeometry(cam.x,cam.z)),gl.DYNAMIC_DRAW)}let atlasTex=null,spriteTex=null;
+const spriteMesh=mesh(spriteGeometry(Math.PI/2),sU,sS);let lastSprCam='';
+function updateSprites(){const k=cam.yaw.toFixed(3);if(k===lastSprCam)return;lastSprCam=k;gl.bindBuffer(gl.ARRAY_BUFFER,spriteMesh.p);gl.bufferData(gl.ARRAY_BUFFER,new Float32Array(spriteGeometry(cam.yaw)),gl.DYNAMIC_DRAW)}let atlasTex=null,spriteTex=null;
 // Standard column-major camera/view matrix, all geometry positioned in world coordinates.
 function perspective(fovy,aspect,near,far){const f=1/Math.tan(fovy/2),a=1/(near-far);return new Float32Array([f/aspect,0,0,0,0,f,0,0,0,0,(far+near)*a,-1,0,0,2*far*near*a,0])}
 function lookAt(eye,target){let z=[eye[0]-target[0],eye[1]-target[1],eye[2]-target[2]];let n=Math.hypot(...z);z=z.map(a=>a/n);let x=[z[2],0,-z[0]];n=Math.hypot(...x);x=x.map(a=>a/n);const y=[z[1]*x[2]-z[2]*x[1],z[2]*x[0]-z[0]*x[2],z[0]*x[1]-z[1]*x[0]];
