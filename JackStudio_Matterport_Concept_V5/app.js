@@ -35,7 +35,7 @@ box(-1.61,2,9.42,.13,4,.15,'metal');box(1.61,2,9.42,.13,4,.15,'metal');box(0,3.7
 xpanel(-1.58,9.37,9.40,.1,3.65,'glass',1,-1);box(0,1.8,9.4,.045,3.6,.065,'metal',.9);
 // Wall skirt/baseboard around all sides
 for(const x of [-5.38,5.38])box(x,.13,-.4,.12,.26,19.5,'wood',.82);
-box(0,.11,-10.05,10.6,.22,.11,'wood',.85);
+for(const s of [-1,1])box(s*(5.3+2.17)/2,.11,-10.075,5.3-2.17,.22,.11,'wood',.85);
 // Ceiling tracks and multiple recessed lights
 for(const x of [-2.5,2.5]){
  box(x,4,-.4,.07,.06,16.6,'metal',1);
@@ -58,10 +58,20 @@ box(-4.55,.53,7.7,.74,1.04,.68,'wood');box(-4.55,1.11,7.7,.82,.12,.75,'cream');b
 // Back of store, rebuilt from the storefront photo: lit JACK STUDiO letters over a wide
 // solid white end wall, nothing else on the wall.
 function backWall(){
-const Z=-10.22,T=.18;
-// solid white end wall (the sign wall is the end of the store)
-box(0,2,Z,11,4.1,T,'wall',1.05);
-zpanel(Z+T/2+.005,-1.9,1.9,2.72,4.02,'sign',1.0);
+// Proportions measured from the storefront photo: fascia ~1/3 of the wall height, letters 0.44 m
+// tall and 3.24 m wide, sitting 0.35 m above a 4.3 m wide opening. The opening is kept as a
+// shallow white recess (structure only; nothing behind it is shown).
+const Z=-10.22,T=.18,F=Z+T/2,OW=2.17,OH=2.70,R=.12,CEIL=4.055;
+box(-(5.5+OW)/2,OH/2,Z,5.5-OW,OH,T,'bw_lower',1.04);box((5.5+OW)/2,OH/2,Z,5.5-OW,OH,T,'bw_lower',1.04);
+box(0,(OH+4.1)/2,Z,11,4.1-OH,T,'bw_lower',1.04);
+zpanel(F+.003,-5.5,5.5,OH,CEIL,'bw_fascia',1.0);
+// recess: back face, side reveals, soffit and a strip of floor
+zpanel(F-R,-OW,OW,0,OH,'bw_lower',.95);
+xpanel(-OW,F-R,F,0,OH,'bw_lower',.84,1);xpanel(OW,F-R,F,0,OH,'bw_lower',.9,-1);
+quad([-OW,OH,F],[OW,OH,F],[OW,OH,F-R],[-OW,OH,F-R],'bw_lower',.72);
+quad([-OW,.001,F+.04],[OW,.001,F+.04],[OW,.001,F-R],[-OW,.001,F-R],'floor',.9);
+// thin shadow line where the soffit meets the fascia
+box(0,OH-.004,F+.002,OW*2,.008,.004,'metal',.6);
 }
 function rack(side,z,photo,title){const x=side*5.13,front=side*4.71,W=3.08;
 // wood wall backing and photo inset. The photos provide real bags, not a full-room illusion.
@@ -122,7 +132,7 @@ const stops=[
  {id:'urban',name:'Urban Carry',x:2.85,z:2.45,yaw:1.57,detail:'urban',desc:'Explore the everyday bag and backpack collection.'},
  {id:'professional',name:'Professional',x:2.85,z:-2.15,yaw:1.57,detail:'professional',desc:'Office-ready leather goods and work bags.'},
  {id:'travel',name:'Travel Movement',x:2.85,z:-7.05,yaw:1.57,detail:'travel',desc:'Travel bags, cabin luggage and accessories.'},
- {id:'counter',name:'Brand Wall',x:0,z:-7.30,yaw:0,detail:'counter',desc:'The JACK STUDiO brand wall.'},
+ {id:'counter',name:'Brand Wall',x:0,z:-5.40,yaw:0,detail:'counter',desc:'The JACK STUDiO brand wall.'},
  {id:'fashion',name:'Everyday Style',x:-2.85,z:-7.10,yaw:-1.57,detail:'fashion',desc:'Discover the apparel and everyday collection.'},
  {id:'heritage',name:'Craft Heritage',x:-2.85,z:-2.25,yaw:-1.57,detail:'heritage',desc:'Take a closer look at handcrafted leather goods.'},
  {id:'essential',name:'Essential',x:-2.85,z:3.05,yaw:-1.57,detail:'essential',desc:'Explore accessories, wallets and daily essentials.'},
