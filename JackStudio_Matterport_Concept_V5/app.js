@@ -81,56 +81,52 @@ quad([-OW,.001,F+.04],[OW,.001,F+.04],[OW,.001,F-R],[-OW,.001,F-R],'floor',.9);
 box(0,OH-.004,F+.002,OW*2,.008,.004,'metal',.6);
 }
 // TRAVEL MOVEMENT corner (right wall, back): rebuilt from the store photos.
-// Luggage ladder-shelf unit in the corner, then the TRAVEL MOVEMENT wall with map + pegboard.
+// Wide two-bay luggage ladder-shelf in the corner, then the TRAVEL MOVEMENT wall (map + pegboard).
 function travelZone(){
-const W=5.43,FR=W-.43;
+const W=5.43,FR=W-.45;
 // Modelled at true size (store ceiling ~2.75 m per the photos), then scaled so it sits in this
 // 4.05 m-high room with the same proportions as the photographs.
-const K=4.055/2.78,ZA=-10.06;XF=p=>[W+(p[0]-W)*K,p[1]*K,ZA+(p[2]-ZA)*K];            // wall face, front of the shelving
-const frames=[-10.06,-9.0,-7.95];  // ladder side frames (z)
-const tops=[[2.1,1.9],[2.55,2.2],[2.76,2.7]]; // [front post, back post] heights
+const K=4.055/2.78,ZA=-10.06;XF=p=>[W+(p[0]-W)*K,p[1]*K,ZA+(p[2]-ZA)*K];
+const BW=1.35,frames=[ZA,ZA+BW,ZA+2*BW];      // ladder side frames (z)
+const tops=[[2.6,2.42],[2.76,2.62],[2.5,2.36]]; // [front post, back post]; middle frame tallest
 const post=(x,z,h)=>box(x,h/2,z,.035,h,.035,'metal',1);
 frames.forEach((z,i)=>{
- const [hf,hb]=tops[i];post(FR,z,hf);post(W-.02,z,hb);
- line3([FR,hf,z],[W-.02,hb,z],.03,'metal');
- const rungTop=i===1?1.52:2.17;
- for(let y=.3;y<=rungTop+.01;y+=.27)box((FR+W)/2,y,z,.41,.025,.025,'metal',1);
+ const [hf,hb]=tops[i];post(FR,z,hf);post(W-.02,z,hb);line3([FR,hf,z],[W-.02,hb,z],.03,'metal');
+ for(let y=.3;y<=2.2;y+=.27)box((FR+W)/2,y,z,.43,.025,.025,'metal',1);
 });
-const bays=[[frames[0],frames[1]],[frames[1],frames[2]]];
-const cx=(FR+W)/2;
-// light birch boards: raised floor deck + three shelves, each bay its own board, LED bar underneath
-for(const [z0,z1] of bays){const zc=(z0+z1)/2,len=z1-z0-.04;
- box(cx,.05,zc,.46,.04,len,'birch',1.05);box(cx+.2,.025,zc,.03,.05,len,'birch',.8);
- for(const y of [.86,1.52,2.17]){box(cx-.01,y,zc,.46,.028,len,'birch',1.1);box(FR+.08,y-.025,zc,.02,.012,len-.1,'white',1.5);}
- // X bracing on the wall side between the lower two shelves
- line3([W-.03,.9,z0+.04],[W-.03,1.48,z1-.04],.012,'metal');line3([W-.03,1.48,z0+.04],[W-.03,.9,z1-.04],.012,'metal');
+const cx=(FR+W)/2,SH=[.80,1.52,2.17];
+const bz=(bay,t)=>frames[bay]+t*BW;           // position inside a bay, t = 0..1
+for(let bay=0;bay<2;bay++){const zc=bz(bay,.5),len=BW-.04;
+ box(cx,.05,zc,.48,.04,len,'birch',1.05);box(cx+.22,.025,zc,.03,.05,len,'birch',.8);
+ for(const y of SH){box(cx-.01,y,zc,.48,.028,len,'birch',1.1);box(FR+.07,y-.022,zc,.02,.01,len-.08,'white',1.6);}
+ line3([W-.03,SH[0]+.04,bz(bay,.03)],[W-.03,SH[1]-.04,bz(bay,.97)],.012,'metal');line3([W-.03,SH[1]-.04,bz(bay,.03)],[W-.03,SH[0]+.04,bz(bay,.97)],.012,'metal');
 }
-// hard-shell cabin cases on the deck (fronts photographed), wheels and handles
-const lugs=[['lug_silver',-9.77],['lug_lav',-9.27],['lug_char',-8.72],['lug_orange',-8.2]];
-for(const [t,z] of lugs)suitcase(cx-.02,.07,z,.44,.66,.26,t);
-// shelf A (0.88): handbags on stands, a riser, brochure
-const shelfA=.86+.014;
-bagZ(cx,shelfA,-9.85,.3,.18,.13,'darkleather');bagZ(cx,shelfA+.22,-9.8,.32,.16,.13,'darkleather');stand(cx,shelfA,-9.8,.2);
-bagZ(cx,shelfA+.24,-9.3,.28,.18,.12,'darkleather');stand(cx,shelfA,-9.3,.24);
-bagZ(cx,shelfA,-9.05,.26,.16,.12,'brownleather');box(cx+.12,shelfA+.12,-9.55,.02,.24,.16,'white',1.15);
-box(cx,shelfA+.1,-8.55,.24,.02,.3,'metal',1);for(const dz of [-.13,.13])box(cx,shelfA+.05,-8.55+dz,.2,.1,.015,'metal',1);
-bagZ(cx,shelfA+.11,-8.55,.26,.17,.11,'darkleather');
-bagZ(cx,shelfA+.18,-8.22,.3,.18,.11,'darkleather');stand(cx,shelfA,-8.22,.18);
-// shelf B (1.62): navy duffels + backpack + small crate (back bay); crate with grey duffel (front bay)
-const shelfB=1.52+.014;
-box(cx,shelfB+.13,-9.45,.34,.26,.42,'crate',1.05);bagZ(cx,shelfB+.06,-9.45,.3,.18,.2,'canvas_navy');
-duffel(cx,shelfB+.26,-9.5,.62,.27,'canvas_navy');backpack(cx,shelfB,-9.92,.3,.42,'canvas_navy');
-backpack(cx,shelfB+.26,-9.12,.22,.3,'canvas_navy');
-box(cx,shelfB+.17,-8.32,.36,.34,.48,'crate',1.05);duffel(cx,shelfB+.34,-8.32,.62,.3,'canvas_grey');
-// shelf C (2.25): canvas backpacks and day bags
-const shelfC=2.17+.014;
-backpack(cx,shelfC,-9.82,.32,.42,'canvas_brown');backpack(cx,shelfC,-9.38,.3,.44,'canvas_grey');
-bagZ(cx,shelfC,-8.72,.36,.3,.18,'canvas_char');backpack(cx,shelfC,-8.25,.32,.36,'canvas_char');
+// deck: four cabin cases, two per bay
+const deck=.07;
+suitcase(cx-.02,deck,bz(0,.27),.42,.6,.25,'lug_silver');suitcase(cx-.02,deck,bz(0,.73),.42,.6,.25,'lug_lav');
+suitcase(cx-.02,deck,bz(1,.27),.42,.6,.25,'lug_char');suitcase(cx-.02,deck,bz(1,.73),.44,.62,.26,'lug_orange');
+// shelf A: two tiers of handbags (back bay); backpacks + half-moon bags (front bay)
+const A=SH[0]+.014;
+[[.12,'darkleather'],[.37,'darkleather'],[.62,'darkleather'],[.86,'darkleather']].forEach(([t,tex],i)=>{stand(cx,A,bz(0,t),.36);bagZ(cx,A+.36,bz(0,t),.3,.19,.13,tex)});
+[[.18,'darkleather'],[.42,'brownleather'],[.62,'brownleather'],[.85,'darkleather']].forEach(([t,tex])=>{box(cx,A+.06,bz(0,t),.18,.12,.24,'metal',1);bagZ(cx,A+.12,bz(0,t),.3,.17,.13,tex)});
+stand(cx,A,bz(1,.2),.12);backpack(cx,A+.12,bz(1,.2),.3,.4,'darkleather');
+stand(cx,A,bz(1,.68),.12);backpack(cx,A+.12,bz(1,.68),.3,.42,'brownleather');
+bagZ(cx,A,bz(1,.44),.3,.15,.12,'darkleather');bagZ(cx,A,bz(1,.9),.28,.15,.12,'brownleather');
+// shelf B: navy backpacks, navy duffel over a crate of blue bags (back bay); grey backpack, crate + olive duffel (front bay)
+const B=SH[1]+.014;
+backpack(cx,B,bz(0,.12),.34,.5,'canvas_navy');
+box(cx,B+.15,bz(0,.47),.38,.3,.62,'crate',1.05);bagZ(cx,B+.04,bz(0,.37),.28,.2,.2,'canvas_navy');bagZ(cx,B+.04,bz(0,.6),.26,.2,.2,'canvas_navy');
+duffel(cx,B+.3,bz(0,.47),.68,.32,'canvas_navy');backpack(cx,B,bz(0,.84),.26,.4,'canvas_navy');
+backpack(cx,B,bz(1,.2),.36,.56,'canvas_grey');
+box(cx,B+.17,bz(1,.66),.38,.34,.5,'crate',1.05);duffel(cx,B+.34,bz(1,.66),.66,.3,'canvas_char');
+// shelf C: canvas backpacks and day bags
+const C=SH[2]+.014;
+backpack(cx,C,bz(0,.12),.34,.5,'canvas_brown');bagZ(cx,C,bz(0,.4),.3,.34,.06,'canvas_navy');backpack(cx,C,bz(0,.7),.34,.44,'canvas_navy');
+box(cx,C+.17,bz(1,.25),.14,.34,.34,'darkleather',.9);backpack(cx,C,bz(1,.62),.3,.4,'darkleather');
 // TRAVEL MOVEMENT wall: rectified photo of the lettering, cork map and pegboard
-const ZP=-7.81,Y0=.36;   // pegboard bottom-left corner on the wall
+const ZP=frames[2]+.14,Y0=.36;   // pegboard bottom-left corner on the wall
 xpanel(W-.005,ZP-.11,ZP+1.29,Y0+1.0,Y0+2.2,'tm_upper',.76,1);
 xpanel(W-.005,ZP-.11,ZP+1.29,Y0-.33,Y0+1.0,'tm_lower',.76,1);
-// the two orange cases standing in front of the pegboard
 suitcase(W-.2,.0,ZP+.12,.42,.62,.25,'lug_orange');suitcase(W-.2,.0,ZP+.46,.36,.52,.22,'lug_orange');
 XF=null;
 }
@@ -205,7 +201,7 @@ const stops=[
  {id:'innovative',name:'Craft Innovative',x:2.40,z:4.15,yaw:-1.45,detail:'island',desc:'Walk around the central leather-goods display.'},
  {id:'urban',name:'Urban Carry',x:2.85,z:2.45,yaw:1.57,detail:'urban',desc:'Explore the everyday bag and backpack collection.'},
  {id:'professional',name:'Professional',x:2.85,z:-2.15,yaw:1.57,detail:'professional',desc:'Office-ready leather goods and work bags.'},
- {id:'travel',name:'Travel Movement',x:1.7,z:-7.5,yaw:1.57,detail:'travel',desc:'Travel bags, cabin luggage and accessories.'},
+ {id:'travel',name:'Travel Movement',x:1.5,z:-7.0,yaw:1.57,detail:'travel',desc:'Travel bags, cabin luggage and accessories.'},
  {id:'counter',name:'Brand Wall',x:0,z:-5.40,yaw:0,detail:'counter',desc:'The JACK STUDiO brand wall.'},
  {id:'fashion',name:'Everyday Style',x:-2.85,z:-7.10,yaw:-1.57,detail:'fashion',desc:'Discover the apparel and everyday collection.'},
  {id:'heritage',name:'Craft Heritage',x:-2.85,z:-2.25,yaw:-1.57,detail:'heritage',desc:'Take a closer look at handcrafted leather goods.'},
