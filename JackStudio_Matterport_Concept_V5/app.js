@@ -118,7 +118,7 @@ const cz=t=>frames[0]+t*BW*2,dy=DECK+.02;
 [['white',.135],['lav',.365],['grey',.635],['orange',.865]].forEach(([c,f])=>suitcase(cx-.16,dy,cz(f),c));
 // products: straight-on photo cut-outs, placed at their measured positions (metres from the
 // left ladder frame). Items standing on a shelf are seated on it; raised/hanging ones keep their height.
-for(const [k,m] of Object.entries(SP)){
+for(const [k,m] of Object.entries(SP)){if(!m.shelf)continue;
  const zc=frames[0]+(m.z[0]+m.z[1])/2,hw=(m.z[1]-m.z[0])/2,h=m.y[1]-m.y[0],gap=m.y[0]-SH[m.shelf];
  const y0=Math.abs(gap)<.06?SH[m.shelf]:m.y[0],crate=k==='b_crate'||k==='b_olivecrate';
  sprite(crate?cx-.05:cx-.02-m.order*.002,zc,hw,y0,y0+h,k,1.05,!crate);
@@ -135,44 +135,19 @@ xpanel(W-.005,ZP-.11,ZP+1.29,Y0-.33,Y0+1.0,'tm_lower',.76,1);
 suitcase(W-.31,0,ZP+.2,'orange');suitcase(W-.31,0,ZP+.72,'orange');
 XF=null;
 }
-// 29-inch front-opening hard case, modelled from the product photos (79 x 50 x 31 cm, 4 double spinners).
-// Local frame: u across the front (world +z), v up, w toward the viewer (world -x). x = front face.
+// 29-inch UNBREAKABLE case. The front is the real product photo (straightened, cut out with its
+// wheels); a plain shell behind it, wearing the photographed ribbed sides and back, gives it depth.
 function suitcase(x,y,z,col,S=1){
- const H=.71*S,W=.455*S,D=.28*S,WH=.078*S,LID0=.10*S,R=.035*S,cz=z,bx=x+D/2;
- const P=(u,v,w)=>[bx-w,y+v,cz+u];
- const prof=(w0,h0,w1,h1,r)=>{const pts=[],c=[[w1-r,h1-r,0],[w0+r,h1-r,90],[w0+r,h0+r,180],[w1-r,h0+r,270]];
-  for(const [cu,cv,a0] of c)for(let i=0;i<=5;i++){const a=(a0+i*18)*Math.PI/180;pts.push([cu+r*Math.cos(a),cv+r*Math.sin(a)])}return pts};
- // body: rounded profile extruded through the depth
- const body=prof(-W/2,WH,W/2,H,R),n=body.length,fw=D/2,bw=-D/2;
- const side=lt('s_'+col),back=lt('b_'+col),plain=lt('c_'+col);
- for(let i=0;i<n;i++){const [u0,v0]=body[i],[u1,v1]=body[(i+1)%n],vert=Math.abs(u1-u0)<Math.abs(v1-v0),tex=vert?side:plain,sh=vert?.84:(v0>H/2?1.06:.6);
-  const t0=(v0-WH)/(H-WH),t1=(v1-WH)/(H-WH);
-  ltri(P(u0,v0,fw),P(u1,v1,fw),P(u1,v1,bw),[0,t0],[0,t1],[1,t1],tex,sh);ltri(P(u0,v0,fw),P(u1,v1,bw),P(u0,v0,bw),[0,t0],[1,t1],[1,t0],tex,sh)}
- const fan=(pts,w,tile,u0,v0,uw,vh,sh,flip)=>{const cu=(u0+u0+uw)/2,cv=v0+vh/2,m=[(cu-u0)/uw,(cv-v0)/vh];
-  for(let i=0;i<pts.length;i++){const a=pts[i],b=pts[(i+1)%pts.length],ta=[(a[0]-u0)/uw,(a[1]-v0)/vh],tb=[(b[0]-u0)/uw,(b[1]-v0)/vh];
-   if(flip)ta[0]=1-ta[0],tb[0]=1-tb[0],m[0]=1-m[0];ltri(P(cu,cv,w),P(a[0],a[1],w),P(b[0],b[1],w),flip?[1-(cu-u0)/uw,m[1]]:m,ta,tb,tile,sh)}};
- fan(body,bw,back,-W/2,WH,W,H-WH,.9,true);   // back panel (photo)
- fan(body,fw,plain,-W/2,WH,W,H-WH,.95,false); // body front (visible only under the lid)
- // front-opening lid: photo panel standing 1.4 cm proud, with the black zip rim around it
- const LW=W-.012*S,lid=prof(-LW/2,LID0,LW/2,H-.006*S,R*.9),lf=fw+.014*S;
- fan(lid,lf,lt('f_'+col),-LW/2,LID0,LW,H-.006*S-LID0,1.0,false);
- for(let i=0;i<lid.length;i++){const [u0,v0]=lid[i],[u1,v1]=lid[(i+1)%lid.length];quad(P(u0,v0,fw),P(u1,v1,fw),P(u1,v1,lf),P(u0,v0,lf),'metal',.7)}
- // base: black wheel housings at the four corners, recessed black grip in the front centre
- for(const su of [-1,1])for(const sw of [-1,1]){const hu=su*(W/2-.05*S),hw=sw*(D/2-.045*S);
-  const c=P(hu,WH-.004*S,hw);box(c[0],c[1],c[2],.07*S,.03*S,.075*S,'metal',.65);
-  const k=P(hu,.045*S,hw);box(k[0],k[1],k[2],.016*S,.03*S,.016*S,'metal',.6);
-  for(const du of [-.016,.016]){const wc=P(hu+du*S,.028*S,hw);wheel(wc[0],wc[1],wc[2],.027*S,.012*S)}}
- {const g=P(0,WH+.012*S,fw+.002*S);box(g[0],g[1],g[2],.01*S,.022*S,.13*S,'metal',.55)}
- // top carry handle (back half) and the two side feet
- {const t=P(0,H+.008*S,bw+.05*S);box(t[0],t[1],t[2],.06*S,.016*S,.16*S,'metal',.75)}
- for(const v of [.16,.6]){const f=P(-W/2-.006*S,v*S,fw-.05*S);box(f[0],f[1],f[2],.035*S,.04*S,.012*S,'metal',.7)}
+ const m=SP['case_'+col];if(!m)return;
+ const W=.455*S,Htot=W*m.aspect,D=.28*S,WH=Htot*(1-m.body),H=Htot,cz=z,bx=x+D/2;
+ sprite(x,cz,W/2,y,y+Htot,'case_'+col,1.0,false);
+ const P=(u,v,w)=>[bx-w,y+v,cz+u],lq=(a,b,c,d,tile,sh)=>{ltri(a,b,c,[0,0],[1,0],[1,1],tile,sh);ltri(a,c,d,[0,0],[1,1],[0,1],tile,sh)};
+ const u0=-W/2+.016*S,u1=W/2-.016*S,v0=WH+.004*S,v1=H-.035*S,f=D/2-.004*S,bw=-D/2;
+ lq(P(u0,v0,f),P(u0,v0,bw),P(u0,v1,bw),P(u0,v1,f),lt('s_'+col),.8);
+ lq(P(u1,v0,bw),P(u1,v0,f),P(u1,v1,f),P(u1,v1,bw),lt('s_'+col),.86);
+ lq(P(u1,v0,bw),P(u0,v0,bw),P(u0,v1,bw),P(u1,v1,bw),lt('b_'+col),.9);
+ lq(P(u0,v1,f),P(u0,v1,bw),P(u1,v1,bw),P(u1,v1,f),lt('c_'+col),1.02);
 }
-// double spinner disc: axle along world z (discs face the room)
-function wheel(x,y,z,r,t){const N=10;for(let i=0;i<N;i++){const a=i/N*Math.PI*2,b=(i+1)/N*Math.PI*2,
- p=(ang,dz)=>[x+Math.cos(ang)*r*0,y+Math.sin(ang)*r,z+dz];
- const A=[x+Math.cos(a)*r,y+Math.sin(a)*r],B=[x+Math.cos(b)*r,y+Math.sin(b)*r];
- quad([A[0],A[1],z-t/2],[B[0],B[1],z-t/2],[B[0],B[1],z+t/2],[A[0],A[1],z+t/2],'metal',.55);
- for(const dz of [-t/2,t/2])quad([x,y,z+dz],[A[0],A[1],z+dz],[B[0],B[1],z+dz],[B[0],B[1],z+dz],'metal',dz<0?.8:.9)}}
 function bagZ(x,y,z,len,h,dep,tex){box(x,y+h/2,z,dep,h,len,tex,1);box(x-dep/2-.004,y+h*.62,z,.01,.018,len*.75,'brass',.9);
 const t=y+h;line3([x,t,z-len*.25],[x,t+h*.6,z-len*.15],.016,tex);line3([x,t+h*.6,z-len*.15],[x,t+h*.6,z+len*.15],.016,tex);line3([x,t+h*.6,z+len*.15],[x,t,z+len*.25],.016,tex);}
 function duffel(x,y,z,len,h,tex){box(x,y+h/2,z,h*.95,h,len,tex,1);box(x,y+h*.55,z,h*1.02,h*.7,len*.97,tex,.92);
