@@ -11,7 +11,8 @@ const program=gl.createProgram();gl.attachShader(program,shader(gl.VERTEX_SHADER
 const loc={pos:gl.getAttribLocation(program,'aPos'),uv:gl.getAttribLocation(program,'aUV'),shade:gl.getAttribLocation(program,'aShade'),mvp:gl.getUniformLocation(program,'uVP'),camera:gl.getUniformLocation(program,'uCamera'),sampler:gl.getUniformLocation(program,'uTexture')};
 const verts=[],UVS=[],shades=[];
 const vw=4096;function uvTile(id){const r=rects[id]||rects.white;return [(r[0]+2)/vw,(r[1]+2)/vw,(r[0]+r[2]-2)/vw,(r[1]+r[3]-2)/vw]}
-function quad(a,b,c,d,texture='wall',shade=1){const uv=uvTile(texture),p=[a,b,c,a,c,d],t=[[uv[0],uv[3]],[uv[2],uv[3]],[uv[2],uv[1]],[uv[0],uv[3]],[uv[2],uv[1]],[uv[0],uv[1]]];for(let i=0;i<6;i++){verts.push(...p[i]);UVS.push(...t[i]);shades.push(shade)}}
+let XF=null;// optional point transform (used to scale a whole zone)
+function quad(a,b,c,d,texture='wall',shade=1){if(XF){a=XF(a);b=XF(b);c=XF(c);d=XF(d)}const uv=uvTile(texture),p=[a,b,c,a,c,d],t=[[uv[0],uv[3]],[uv[2],uv[3]],[uv[2],uv[1]],[uv[0],uv[3]],[uv[2],uv[1]],[uv[0],uv[1]]];for(let i=0;i<6;i++){verts.push(...p[i]);UVS.push(...t[i]);shades.push(shade)}}
 function box(x,y,z,w,h,d,tex='wood',light=1){const a=x-w/2,b=x+w/2,c=y-h/2,e=y+h/2,f=z-d/2,g=z+d/2;
 quad([a,c,g],[b,c,g],[b,e,g],[a,e,g],tex,light*.96);quad([b,c,f],[a,c,f],[a,e,f],[b,e,f],tex,light*.85);
 quad([a,c,f],[a,c,g],[a,e,g],[a,e,f],tex,light*.77);quad([b,c,g],[b,c,f],[b,e,f],[b,e,g],tex,light*.91);
@@ -82,14 +83,17 @@ box(0,OH-.004,F+.002,OW*2,.008,.004,'metal',.6);
 // TRAVEL MOVEMENT corner (right wall, back): rebuilt from the store photos.
 // Luggage ladder-shelf unit in the corner, then the TRAVEL MOVEMENT wall with map + pegboard.
 function travelZone(){
-const W=5.43,FR=W-.43;            // wall face, front of the shelving
+const W=5.43,FR=W-.43;
+// Modelled at true size (store ceiling ~2.75 m per the photos), then scaled so it sits in this
+// 4.05 m-high room with the same proportions as the photographs.
+const K=4.055/2.78,ZA=-10.06;XF=p=>[W+(p[0]-W)*K,p[1]*K,ZA+(p[2]-ZA)*K];            // wall face, front of the shelving
 const frames=[-10.06,-9.0,-7.95];  // ladder side frames (z)
-const tops=[[3.05,2.7],[3.55,3.05],[3.92,3.85]]; // [front post, back post] heights
+const tops=[[2.1,1.9],[2.55,2.2],[2.76,2.7]]; // [front post, back post] heights
 const post=(x,z,h)=>box(x,h/2,z,.035,h,.035,'metal',1);
 frames.forEach((z,i)=>{
  const [hf,hb]=tops[i];post(FR,z,hf);post(W-.02,z,hb);
  line3([FR,hf,z],[W-.02,hb,z],.03,'metal');
- const rungTop=i===1?1.62:2.25;
+ const rungTop=i===1?1.52:2.17;
  for(let y=.3;y<=rungTop+.01;y+=.27)box((FR+W)/2,y,z,.41,.025,.025,'metal',1);
 });
 const bays=[[frames[0],frames[1]],[frames[1],frames[2]]];
@@ -97,15 +101,15 @@ const cx=(FR+W)/2;
 // light birch boards: raised floor deck + three shelves, each bay its own board, LED bar underneath
 for(const [z0,z1] of bays){const zc=(z0+z1)/2,len=z1-z0-.04;
  box(cx,.05,zc,.46,.04,len,'birch',1.05);box(cx+.2,.025,zc,.03,.05,len,'birch',.8);
- for(const y of [.88,1.62,2.25]){box(cx-.01,y,zc,.46,.028,len,'birch',1.1);box(FR+.08,y-.025,zc,.02,.012,len-.1,'white',1.5);}
+ for(const y of [.86,1.52,2.17]){box(cx-.01,y,zc,.46,.028,len,'birch',1.1);box(FR+.08,y-.025,zc,.02,.012,len-.1,'white',1.5);}
  // X bracing on the wall side between the lower two shelves
- line3([W-.03,.92,z0+.04],[W-.03,1.58,z1-.04],.012,'metal');line3([W-.03,1.58,z0+.04],[W-.03,.92,z1-.04],.012,'metal');
+ line3([W-.03,.9,z0+.04],[W-.03,1.48,z1-.04],.012,'metal');line3([W-.03,1.48,z0+.04],[W-.03,.9,z1-.04],.012,'metal');
 }
 // hard-shell cabin cases on the deck (fronts photographed), wheels and handles
 const lugs=[['lug_silver',-9.77],['lug_lav',-9.27],['lug_char',-8.72],['lug_orange',-8.2]];
 for(const [t,z] of lugs)suitcase(cx-.02,.07,z,.44,.66,.26,t);
 // shelf A (0.88): handbags on stands, a riser, brochure
-const shelfA=.88+.014;
+const shelfA=.86+.014;
 bagZ(cx,shelfA,-9.85,.3,.18,.13,'darkleather');bagZ(cx,shelfA+.22,-9.8,.32,.16,.13,'darkleather');stand(cx,shelfA,-9.8,.2);
 bagZ(cx,shelfA+.24,-9.3,.28,.18,.12,'darkleather');stand(cx,shelfA,-9.3,.24);
 bagZ(cx,shelfA,-9.05,.26,.16,.12,'brownleather');box(cx+.12,shelfA+.12,-9.55,.02,.24,.16,'white',1.15);
@@ -113,21 +117,22 @@ box(cx,shelfA+.1,-8.55,.24,.02,.3,'metal',1);for(const dz of [-.13,.13])box(cx,s
 bagZ(cx,shelfA+.11,-8.55,.26,.17,.11,'darkleather');
 bagZ(cx,shelfA+.18,-8.22,.3,.18,.11,'darkleather');stand(cx,shelfA,-8.22,.18);
 // shelf B (1.62): navy duffels + backpack + small crate (back bay); crate with grey duffel (front bay)
-const shelfB=1.62+.014;
+const shelfB=1.52+.014;
 box(cx,shelfB+.13,-9.45,.34,.26,.42,'crate',1.05);bagZ(cx,shelfB+.06,-9.45,.3,.18,.2,'canvas_navy');
 duffel(cx,shelfB+.26,-9.5,.62,.27,'canvas_navy');backpack(cx,shelfB,-9.92,.3,.42,'canvas_navy');
 backpack(cx,shelfB+.26,-9.12,.22,.3,'canvas_navy');
 box(cx,shelfB+.17,-8.32,.36,.34,.48,'crate',1.05);duffel(cx,shelfB+.34,-8.32,.62,.3,'canvas_grey');
 // shelf C (2.25): canvas backpacks and day bags
-const shelfC=2.25+.014;
+const shelfC=2.17+.014;
 backpack(cx,shelfC,-9.82,.32,.42,'canvas_brown');backpack(cx,shelfC,-9.38,.3,.44,'canvas_grey');
 bagZ(cx,shelfC,-8.72,.36,.3,.18,'canvas_char');backpack(cx,shelfC,-8.25,.32,.36,'canvas_char');
 // TRAVEL MOVEMENT wall: rectified photo of the lettering, cork map and pegboard
-const ZP=-7.81,Y0=.40;   // pegboard bottom-left corner on the wall
+const ZP=-7.81,Y0=.36;   // pegboard bottom-left corner on the wall
 xpanel(W-.005,ZP-.11,ZP+1.29,Y0+1.0,Y0+2.2,'tm_upper',.76,1);
 xpanel(W-.005,ZP-.11,ZP+1.29,Y0-.33,Y0+1.0,'tm_lower',.76,1);
 // the two orange cases standing in front of the pegboard
 suitcase(W-.2,.0,ZP+.12,.42,.62,.25,'lug_orange');suitcase(W-.2,.0,ZP+.46,.36,.52,.22,'lug_orange');
+XF=null;
 }
 function suitcase(x,y,z,w,h,d,tex){const side=tex+'_side',wh=.07,b=y+wh;
 // body: front face toward -x carries the photo; other faces plain colour
@@ -200,7 +205,7 @@ const stops=[
  {id:'innovative',name:'Craft Innovative',x:2.40,z:4.15,yaw:-1.45,detail:'island',desc:'Walk around the central leather-goods display.'},
  {id:'urban',name:'Urban Carry',x:2.85,z:2.45,yaw:1.57,detail:'urban',desc:'Explore the everyday bag and backpack collection.'},
  {id:'professional',name:'Professional',x:2.85,z:-2.15,yaw:1.57,detail:'professional',desc:'Office-ready leather goods and work bags.'},
- {id:'travel',name:'Travel Movement',x:2.2,z:-8.2,yaw:1.57,detail:'travel',desc:'Travel bags, cabin luggage and accessories.'},
+ {id:'travel',name:'Travel Movement',x:1.7,z:-7.5,yaw:1.57,detail:'travel',desc:'Travel bags, cabin luggage and accessories.'},
  {id:'counter',name:'Brand Wall',x:0,z:-5.40,yaw:0,detail:'counter',desc:'The JACK STUDiO brand wall.'},
  {id:'fashion',name:'Everyday Style',x:-2.85,z:-7.10,yaw:-1.57,detail:'fashion',desc:'Discover the apparel and everyday collection.'},
  {id:'heritage',name:'Craft Heritage',x:-2.85,z:-2.25,yaw:-1.57,detail:'heritage',desc:'Take a closer look at handcrafted leather goods.'},
