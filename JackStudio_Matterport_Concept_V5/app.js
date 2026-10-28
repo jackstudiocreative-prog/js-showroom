@@ -115,7 +115,7 @@ const cz=t=>frames[0]+t*BW*2,dy=DECK+.02;
 [['white',.135],['lav',.365],['grey',.635],['orange',.865]].forEach(([c,f])=>suitcase(cx-.17,dy,cz(f),c));
 // products: straight-on photo cut-outs, placed at their measured positions (metres from the
 // left ladder frame). Items standing on a shelf are seated on it; raised/hanging ones keep their height.
-for(const [k,m] of Object.entries(SP)){if(!m.shelf||k==='a_left2')continue;
+for(const [k,m] of Object.entries(SP)){if(!m.shelf||k==='a_left2'||k==='a_left1')continue;
  const zc=frames[0]+(m.z[0]+m.z[1])/2,hw=(m.z[1]-m.z[0])/2,h=m.y[1]-m.y[0],gap=m.y[0]-SH[m.shelf];
  const y0=Math.abs(gap)<.06?SH[m.shelf]:m.y[0],crate=k==='b_crate'||k==='b_olivecrate';
  sprite(crate?cx-.05:cx-.02-m.order*.002,zc,hw,y0,y0+h,k,1.05,!crate);
@@ -134,6 +134,17 @@ for(const [k,m] of Object.entries(SP)){if(!m.shelf||k==='a_left2')continue;
   st(L,TL);st(TL,TR);st(TR,R);
   const mid=L.map((v,i)=>v+(TL[i]-v)*.45),d=n3(TL.map((v,i)=>v-L[i])),a=mid.map((v,i)=>v-d[i]*.013),b=mid.map((v,i)=>v+d[i]*.013);
   bar(id,a,b,crs(d,[1,0,0]),.032,.009,SILVER,MET);bar(id,a.map((v,i)=>v+d[i]*.003),b.map((v,i)=>v-d[i]*.003),crs(d,[1,0,0]),.034,.0095,K,LEA);}sb(cx+.03,SH.A+.07,zb+.68,'brown');sb(cx-.075,SH.A+.002,zb+.85,'dark');}
+// the three hobo shoulder bags on the left of the left bay: one whole product photo each
+{const zb=frames[0],id=(p,n)=>[p,n];
+ box(cx+.045,SH.A+.035,zb+.405,.10,.07,.17,'metal',.8);
+ const hb=(x,y,z,k,turn)=>{const m=SP['hobo_'+k];if(m)sprite(x,z,m.w/2,y,y+m.h,'hobo_'+k,1.05,turn);return m};
+ hb(cx+.045,SH.A+.07,zb+.405,'brown',true);hb(cx-.075,SH.A+.002,zb+.225,'dark',true);
+ // black one hangs on the stand: strap from both rings up and over the top bar
+ const zc=zb+.17,top=SH.A+.486,m=SP.hobo_black;if(m){const bx=cx-.01,y0=top-.06-m.h;hb(bx,y0,zc,'black',false);
+  const rp=m.ring.map(([u,v])=>[bx+.004,y0+m.h*(1-v),zc-m.w/2+u*m.w]),TL=[cx+.04,top+.012,zc-.016],TR=[cx+.04,top+.012,zc+.016],K=[.12,.11,.10];
+  const st=(a,b)=>{const d=b.map((v,i)=>v-a[i]);bar(id,a,b,crs(d,[1,0,0]),.03,.004,K,LEA)};st(rp[0],TL);st(TL,TR);st(TR,rp[1]);
+  const mid=rp[1].map((v,i)=>v+(TR[i]-v)*.5),d=n3(TR.map((v,i)=>v-rp[1][i])),a=mid.map((v,i)=>v-d[i]*.014),b=mid.map((v,i)=>v+d[i]*.014);
+  bar(id,a,b,crs(d,[1,0,0]),.038,.009,SILVER,MET);bar(id,a.map((v,i)=>v+d[i]*.003),b.map((v,i)=>v-d[i]*.003),crs(d,[1,0,0]),.04,.0095,K,LEA);}}
 // chrome display stands behind the hanging bags (thin in the photo, so rebuilt in 3D)
 for(const [z,t0] of [[.17,1.22],[.84,1.24],[1.24,1.2],[1.77,1.16]]){const top=t0-.734+SH.A;const zz=frames[0]+z;
  box(cx+.05,SH.A+.006,zz,.16,.012,.16,'metal',1.4);box(cx+.05,(SH.A+top)/2,zz,.014,top-SH.A,.014,'white',.9);box(cx+.05,top,zz,.014,.014,.2,'white',.9)}
