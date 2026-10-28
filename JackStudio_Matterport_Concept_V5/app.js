@@ -56,14 +56,11 @@ box(4.55,.68,7.6,.6,1.35,.75,'cream');box(4.55,1.39,7.6,.72,.11,.85,'wood');bag(
 box(-4.55,.53,7.7,.74,1.04,.68,'wood');box(-4.55,1.11,7.7,.82,.12,.75,'cream');bag(-4.55,1.38,7.7,.37,.41,.21,'brownleather',true);
 }
 // Back of store, rebuilt from the storefront photo: lit JACK STUDiO letters over a wide
-// opening into the repair workshop, black ladder-frame shelving either side, service desk in front.
+// solid white end wall, black ladder-frame shelving either side, service desk in front.
 function backWall(){
-const Z=-10.22,T=.18,OX=3.0,OH=2.65;
-// wall pieces around the opening + white reveals
-box(-(5.5+OX)/2,2,Z,5.5-OX,4,T,'wall',1.05);box((5.5+OX)/2,2,Z,5.5-OX,4,T,'wall',1.05);
-box(0,(OH+4.1)/2,Z,OX*2,4.1-OH,T,'wall',1.05);
-xpanel(-OX,Z-T/2,Z+T/2,0,OH,'white',.92,-1);xpanel(OX,Z-T/2,Z+T/2,0,OH,'white',.86,1);
-quad([-OX,OH,Z+T/2],[OX,OH,Z+T/2],[OX,OH,Z-T/2],[-OX,OH,Z-T/2],'white',.8);
+const Z=-10.22,T=.18;
+// solid white end wall (the sign wall is the end of the store)
+box(0,2,Z,11,4.1,T,'wall',1.05);
 zpanel(Z+T/2+.005,-1.9,1.9,2.72,4.02,'sign',1.0);
 // tall ladder-frame shelving against the back wall either side of the opening
 ladderShelf(-1);ladderShelf(1);
@@ -72,7 +69,6 @@ box(0,.5,-8.86,3.6,1.0,.9,'black',1);box(0,1.04,-8.86,3.75,.07,1.0,'wood',1.12);
 for(const [x,n] of [[-1.15,2],[.75,3]])for(let i=0;i<n;i++)box(x,1.11+i*.065,-8.78+(i%2)*.02,.26,.06,.16,'giftbox',1.0);
 for(const x of [-.3,.1])box(x,1.13,-8.95,.26,.11,.17,'black',1.2);
 bag(1.5,1.24,-8.9,.32,.3,.16,'darkleather',true);bag(-1.6,1.22,-8.95,.28,.26,.14,'brownleather',true);
-workshop();
 }
 function ladderShelf(side){
 const z=-9.88,x0=side*3.25,x1=side*5.3,cx=(x0+x1)/2,w=Math.abs(x1-x0);
@@ -95,35 +91,6 @@ if(side<0){ // smaller everyday bags, like the left shelf in the photo
  for(let i=0;i<3;i++){const lx=x0+.42+i*.62;box(lx,.52,z+.03,.5,.74,.3,lug[i],1);box(lx,.94,z+.03,.16,.1,.03,'black',1);
   for(const wx of [-.18,.18])box(lx+wx,.12,z+.03,.06,.07,.06,'black',1)}
 }
-}
-// Repair workshop seen through the opening (structure only, no people).
-function workshop(){
-const zb=-14.4,zf=-10.31;
-for(let x=-5.4;x<5.4;x+=1.35)for(let z=zb;z<zf;z+=1.0)quad([x,0,Math.min(z+1,zf)],[x+1.35,0,Math.min(z+1,zf)],[x+1.35,0,z],[x,0,z],'ws_floor',1.05);
-box(0,3.6,(zb+zf)/2,11,.1,zf-zb,'white',1.02);
-box(-5.5,1.8,(zb+zf)/2,.15,3.6,zf-zb,'white',.95);box(5.5,1.8,(zb+zf)/2,.15,3.6,zf-zb,'white',.9);
-zpanel(zb,-5.5,5.5,0,3.6,'white',1.0);
-// tool wall with black frames + banner above
-zpanel(zb+.02,-3.6,1.6,.55,2.95,'ws_peg',1.05);
-zpanel(zb+.02,-3.3,1.3,3.0,3.55,'ws_banner',1.05);
-for(const x of [-3.62,-1.95,-.12,1.58])box(x,1.75,zb+.12,.06,3.5,.06,'black',1);
-box(-1,3.45,zb+.12,5.3,.05,.06,'black',1);
-// lights in the workshop
-for(const x of [-2,1.5])box(x,3.54,-12.3,1.4,.04,.18,'white',1.3);
-// long work table with stacks of parts boxes
-box(.4,.9,-12.1,3.2,.06,1.25,'wood',1.12);
-for(const x of [-1.1,1.9])for(const z of [-12.65,-11.55])box(x,.44,z,.06,.88,.06,'black',1);
-for(let i=0;i<9;i++)box(-.8+i*.36,.97+(i%3)*.03,-12.1+((i*7)%3-1)*.25,.28,.08+(i%3)*.06,.22,i%4?'cream':'box',1.05);
-// side desk with laptop (left), work stand
-box(-3.6,.76,-11.4,1.5,.05,.75,'wood',1.08);for(const x of [-4.3,-2.9])box(x,.38,-11.4,.05,.76,.6,'black',1);
-box(-3.6,.8,-11.45,.42,.02,.3,'laptop',1);quad([-3.81,.81,-11.6],[-3.39,.81,-11.6],[-3.39,1.08,-11.68],[-3.81,1.08,-11.68],'laptop',1.1);
-box(-1.4,.55,-11.0,.5,.75,.3,'lug_dark',1);
-// right side: storage racking, wrapped stock, crates and colour bins
-for(const x of [3.0,4.9])for(const z of [-13.9,-11.0])box(x,1.6,z,.06,3.2,.06,'metal',1);
-for(const y of [.2,1.1,2.0,2.9])box(3.95,y,-12.45,1.9,.05,2.9,'metal',.9);
-for(const [y,h] of [[.22,.85],[1.12,.85],[2.02,.85]])for(const z of [-13.4,-12.4,-11.5])box(3.95,y+h/2,z,1.7,h,.85,(z===-12.4&&y>1)?'box':'wrap',1.02);
-box(2.3,.65,-10.9,.6,1.3,.45,'bins',1);
-box(2.2,1.2,-13.2,.9,2.4,.7,'wrap',1.05);
 }
 function rack(side,z,photo,title){const x=side*5.13,front=side*4.71,W=3.08;
 // wood wall backing and photo inset. The photos provide real bags, not a full-room illusion.
@@ -184,7 +151,7 @@ const stops=[
  {id:'urban',name:'Urban Carry',x:2.85,z:2.45,yaw:1.57,detail:'urban',desc:'Explore the everyday bag and backpack collection.'},
  {id:'professional',name:'Professional',x:2.85,z:-2.15,yaw:1.57,detail:'professional',desc:'Office-ready leather goods and work bags.'},
  {id:'travel',name:'Travel Movement',x:2.85,z:-7.05,yaw:1.57,detail:'travel',desc:'Travel bags, cabin luggage and accessories.'},
- {id:'counter',name:'Service Counter',x:0,z:-7.30,yaw:0,detail:'counter',desc:'The brand wall, service desk and repair workshop behind.'},
+ {id:'counter',name:'Service Counter',x:0,z:-7.30,yaw:0,detail:'counter',desc:'The JACK STUDiO brand wall and service desk.'},
  {id:'fashion',name:'Everyday Style',x:-2.85,z:-7.10,yaw:-1.57,detail:'fashion',desc:'Discover the apparel and everyday collection.'},
  {id:'heritage',name:'Craft Heritage',x:-2.85,z:-2.25,yaw:-1.57,detail:'heritage',desc:'Take a closer look at handcrafted leather goods.'},
  {id:'essential',name:'Essential',x:-2.85,z:3.05,yaw:-1.57,detail:'essential',desc:'Explore accessories, wallets and daily essentials.'},
