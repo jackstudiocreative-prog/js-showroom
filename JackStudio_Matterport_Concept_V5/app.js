@@ -123,10 +123,17 @@ for(const [k,m] of Object.entries(SP)){if(!m.shelf||k==='a_left2')continue;
  if(k==='b_olivecrate')box(cx+.15,y0+.14,zc,.2,.28,hw*1.8,'crate',.92);
 }
 // the three Daily Sling Bags on the right of the left bay
-{const zb=frames[0];box(cx+.03,SH.A+.05,zb+.68,.10,.10,.17,'metal',.8);
+{const zb=frames[0];box(cx+.03,SH.A+.035,zb+.68,.10,.07,.17,'metal',.8);
  // one whole product photo per bag (front-facing card), sized from the photo: 28 cm wide
  const sb=(x,y,z,k)=>{const m=SP['sling_'+k];if(m)sprite(x,z,m.w/2,y,y+m.h,'sling_'+k,1.05,true)};
- sb(cx+.035,SH.A+.27,zb+.84,'black');sb(cx+.03,SH.A+.10,zb+.68,'brown');sb(cx-.075,SH.A+.002,zb+.85,'dark');}
+ // black bag hangs on the chrome stand: its strap goes up from both tabs and over the stand's top bar
+ {const zc=zb+.84,top=SH.A+.506,m=SP.sling_black,bx=cx-.01,y0=top-.05-m.h,yt=y0+m.h-.012,id=(p,n)=>[p,n],K=[.12,.11,.10];
+  sprite(bx,zc,m.w/2,y0,y0+m.h,'sling_black',1.05,false);
+  const L=[bx+.004,yt,zc-.104],R=[bx+.004,yt,zc+.098],TL=[cx+.04,top+.012,zc-.014],TR=[cx+.04,top+.012,zc+.014];
+  const st=(a,b)=>{const d=b.map((v,i)=>v-a[i]);bar(id,a,b,crs(d,[1,0,0]),.024,.004,K,LEA)};
+  st(L,TL);st(TL,TR);st(TR,R);
+  const mid=L.map((v,i)=>v+(TL[i]-v)*.45),d=n3(TL.map((v,i)=>v-L[i])),a=mid.map((v,i)=>v-d[i]*.013),b=mid.map((v,i)=>v+d[i]*.013);
+  bar(id,a,b,crs(d,[1,0,0]),.032,.009,SILVER,MET);bar(id,a.map((v,i)=>v+d[i]*.003),b.map((v,i)=>v-d[i]*.003),crs(d,[1,0,0]),.034,.0095,K,LEA);}sb(cx+.03,SH.A+.07,zb+.68,'brown');sb(cx-.075,SH.A+.002,zb+.85,'dark');}
 // chrome display stands behind the hanging bags (thin in the photo, so rebuilt in 3D)
 for(const [z,t0] of [[.17,1.22],[.84,1.24],[1.24,1.2],[1.77,1.16]]){const top=t0-.734+SH.A;const zz=frames[0]+z;
  box(cx+.05,SH.A+.006,zz,.16,.012,.16,'metal',1.4);box(cx+.05,(SH.A+top)/2,zz,.014,top-SH.A,.014,'white',.9);box(cx+.05,top,zz,.014,.014,.2,'white',.9)}
