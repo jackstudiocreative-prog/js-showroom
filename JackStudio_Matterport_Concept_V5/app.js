@@ -29,7 +29,6 @@ quad([x,0,z+1.6],[x+1.35,0,z+1.6],[x+1.35,0,z],[x,0,z],'floor',.95+((Math.round(
 box(0,4.14,-.4,11,0.17,19.7,'cream',1.04);
 // White plaster walls, room boundary and entrance side returns.
 box(-5.52,2,-.4,.18,4,19.7,'wall',.95);box(5.52,2,-.4,.18,4,19.7,'wall',.99);
-box(0,2,-10.22,11,.03,.18,'wall',1.05);
 box(-4.4,2,9.42,2.2,4,.16,'wall',1);box(4.4,2,9.42,2.2,4,.16,'wall',1);
 box(-1.61,2,9.42,.13,4,.15,'metal');box(1.61,2,9.42,.13,4,.15,'metal');box(0,3.7,9.42,3.2,.14,.12,'metal');
 // Glass entrance doors and side mullions (light gray, intentionally translucent-looking).
@@ -46,12 +45,7 @@ for(const x of [-2.5,2.5]){
  }
 }
 for(const z of [-7.3,-2.1,3.1,7.15])box(0,4.0,z,3.2,.06,.06,'metal',.8);
-// Back of the store with glowing brand sign plus service desk.
-zpanel(-10.04,-3.3,3.3,2.35,3.65,'sign',1.22);
-box(0,.78,-8.86,4.1,1.3,.93,'wood',1.04);box(0,1.42,-8.86,4.22,.12,1.02,'cream');
-box(0,.82,-8.34,3.4,1.05,.035,'metal',.89);
-// Counter display and desk accessories.
-for(const x of [-1.45,-.6,.35,1.15]){box(x,1.62,-8.84,.27,.25,.19,x<0?'darkleather':'brownleather');}
+backWall();
 // Main wall arrays with actual store photos integrated into the display backing.
 rack(-1,3.0,'essential','ESSENTIAL');rack(-1,-2.15,'heritage','CRAFT HERITAGE');rack(-1,-7.10,'fashion','EVERYDAY STYLE');
 rack(1,3.0,'urban','URBAN CARRY');rack(1,-2.15,'professional','PROFESSIONAL');rack(1,-7.10,'travel','TRAVEL MOVEMENT');
@@ -60,8 +54,76 @@ island(0,3.35,'CRAFT INNOVATIVE',1);island(0,-2.25,'CRAFT HERITAGE',2);
 // Entrance side pedestal and accessories.
 box(4.55,.68,7.6,.6,1.35,.75,'cream');box(4.55,1.39,7.6,.72,.11,.85,'wood');bag(4.55,1.64,7.6,.45,.45,.23,'darkleather',true);
 box(-4.55,.53,7.7,.74,1.04,.68,'wood');box(-4.55,1.11,7.7,.82,.12,.75,'cream');bag(-4.55,1.38,7.7,.37,.41,.21,'brownleather',true);
-// Low display plinths near back corners.
-for(const s of [-1,1]){box(s*4.15,.47,-8.78,1.2,.94,.9,'wood');box(s*4.15,.98,-8.78,1.24,.1,.97,'cream');bag(s*4.15,1.3,-8.83,.55,.54,.30,'darkleather',true)}
+}
+// Back of store, rebuilt from the storefront photo: lit JACK STUDiO letters over a wide
+// opening into the repair workshop, black ladder-frame shelving either side, service desk in front.
+function backWall(){
+const Z=-10.22,T=.18,OX=3.0,OH=2.65;
+// wall pieces around the opening + white reveals
+box(-(5.5+OX)/2,2,Z,5.5-OX,4,T,'wall',1.05);box((5.5+OX)/2,2,Z,5.5-OX,4,T,'wall',1.05);
+box(0,(OH+4.1)/2,Z,OX*2,4.1-OH,T,'wall',1.05);
+xpanel(-OX,Z-T/2,Z+T/2,0,OH,'white',.92,-1);xpanel(OX,Z-T/2,Z+T/2,0,OH,'white',.86,1);
+quad([-OX,OH,Z+T/2],[OX,OH,Z+T/2],[OX,OH,Z-T/2],[-OX,OH,Z-T/2],'white',.8);
+zpanel(Z+T/2+.005,-1.9,1.9,2.72,4.02,'sign',1.0);
+// tall ladder-frame shelving against the back wall either side of the opening
+ladderShelf(-1);ladderShelf(1);
+// service desk: black front, light-wood top, gift boxes and small leather goods (no people)
+box(0,.5,-8.86,3.6,1.0,.9,'black',1);box(0,1.04,-8.86,3.75,.07,1.0,'wood',1.12);
+for(const [x,n] of [[-1.15,2],[.75,3]])for(let i=0;i<n;i++)box(x,1.11+i*.065,-8.78+(i%2)*.02,.26,.06,.16,'giftbox',1.0);
+for(const x of [-.3,.1])box(x,1.13,-8.95,.26,.11,.17,'black',1.2);
+bag(1.5,1.24,-8.9,.32,.3,.16,'darkleather',true);bag(-1.6,1.22,-8.95,.28,.26,.14,'brownleather',true);
+workshop();
+}
+function ladderShelf(side){
+const z=-9.88,x0=side*3.25,x1=side*5.3,cx=(x0+x1)/2,w=Math.abs(x1-x0);
+for(const x of [x0+side*.05,x1-side*.05]){
+ for(const dz of [-.2,.2])box(x,1.85,z+dz,.05,3.7,.05,'black',1);
+ for(let y=.3;y<3.7;y+=.32)box(x,y,z,.04,.035,.42,'black',1);
+}
+box(cx,3.68,z+.2,w,.05,.05,'black',1);box(cx,3.68,z-.2,w,.05,.05,'black',1);
+line3([x0+side*.05,3.3,z+.22],[x1-side*.05,.25,z+.22],.04,'black');
+const levels=[.12,.95,1.75,2.55];
+for(const y of levels)box(cx,y,z,w-.12,.05,.48,'wood',1.08);
+if(side<0){ // smaller everyday bags, like the left shelf in the photo
+ for(const y of [.95,1.75,2.55])for(let i=0;i<4;i++)bag(x0-.3-i*.48,y+.2,z+.02,.34,.32,.2,i%2?'brownleather':'darkleather',true);
+ for(let i=0;i<3;i++)bag(x0-.4-i*.6,.38,z,.4,.46,.22,'darkleather',false);
+}else{ // duffels up top, hard-shell luggage at the bottom, like the right shelf
+ for(let i=0;i<3;i++)bag(x0+.4+i*.65,2.82,z,.56,.46,.32,i===1?'brownleather':'darkleather',true);
+ for(let i=0;i<3;i++)bag(x0+.35+i*.62,2.0,z+.02,.4,.4,.24,'darkleather',true);
+ for(let i=0;i<4;i++)bag(x0+.3+i*.5,1.17,z+.02,.3,.38,.2,i%2?'darkleather':'brownleather',true);
+ const lug=['lug_grey','lug_dark','lug_orange'];
+ for(let i=0;i<3;i++){const lx=x0+.42+i*.62;box(lx,.52,z+.03,.5,.74,.3,lug[i],1);box(lx,.94,z+.03,.16,.1,.03,'black',1);
+  for(const wx of [-.18,.18])box(lx+wx,.12,z+.03,.06,.07,.06,'black',1)}
+}
+}
+// Repair workshop seen through the opening (structure only, no people).
+function workshop(){
+const zb=-14.4,zf=-10.31;
+for(let x=-5.4;x<5.4;x+=1.35)for(let z=zb;z<zf;z+=1.0)quad([x,0,Math.min(z+1,zf)],[x+1.35,0,Math.min(z+1,zf)],[x+1.35,0,z],[x,0,z],'ws_floor',1.05);
+box(0,3.6,(zb+zf)/2,11,.1,zf-zb,'white',1.02);
+box(-5.5,1.8,(zb+zf)/2,.15,3.6,zf-zb,'white',.95);box(5.5,1.8,(zb+zf)/2,.15,3.6,zf-zb,'white',.9);
+zpanel(zb,-5.5,5.5,0,3.6,'white',1.0);
+// tool wall with black frames + banner above
+zpanel(zb+.02,-3.6,1.6,.55,2.95,'ws_peg',1.05);
+zpanel(zb+.02,-3.3,1.3,3.0,3.55,'ws_banner',1.05);
+for(const x of [-3.62,-1.95,-.12,1.58])box(x,1.75,zb+.12,.06,3.5,.06,'black',1);
+box(-1,3.45,zb+.12,5.3,.05,.06,'black',1);
+// lights in the workshop
+for(const x of [-2,1.5])box(x,3.54,-12.3,1.4,.04,.18,'white',1.3);
+// long work table with stacks of parts boxes
+box(.4,.9,-12.1,3.2,.06,1.25,'wood',1.12);
+for(const x of [-1.1,1.9])for(const z of [-12.65,-11.55])box(x,.44,z,.06,.88,.06,'black',1);
+for(let i=0;i<9;i++)box(-.8+i*.36,.97+(i%3)*.03,-12.1+((i*7)%3-1)*.25,.28,.08+(i%3)*.06,.22,i%4?'cream':'box',1.05);
+// side desk with laptop (left), work stand
+box(-3.6,.76,-11.4,1.5,.05,.75,'wood',1.08);for(const x of [-4.3,-2.9])box(x,.38,-11.4,.05,.76,.6,'black',1);
+box(-3.6,.8,-11.45,.42,.02,.3,'laptop',1);quad([-3.81,.81,-11.6],[-3.39,.81,-11.6],[-3.39,1.08,-11.68],[-3.81,1.08,-11.68],'laptop',1.1);
+box(-1.4,.55,-11.0,.5,.75,.3,'lug_dark',1);
+// right side: storage racking, wrapped stock, crates and colour bins
+for(const x of [3.0,4.9])for(const z of [-13.9,-11.0])box(x,1.6,z,.06,3.2,.06,'metal',1);
+for(const y of [.2,1.1,2.0,2.9])box(3.95,y,-12.45,1.9,.05,2.9,'metal',.9);
+for(const [y,h] of [[.22,.85],[1.12,.85],[2.02,.85]])for(const z of [-13.4,-12.4,-11.5])box(3.95,y+h/2,z,1.7,h,.85,(z===-12.4&&y>1)?'box':'wrap',1.02);
+box(2.3,.65,-10.9,.6,1.3,.45,'bins',1);
+box(2.2,1.2,-13.2,.9,2.4,.7,'wrap',1.05);
 }
 function rack(side,z,photo,title){const x=side*5.13,front=side*4.71,W=3.08;
 // wood wall backing and photo inset. The photos provide real bags, not a full-room illusion.
@@ -122,7 +184,7 @@ const stops=[
  {id:'urban',name:'Urban Carry',x:2.85,z:2.45,yaw:1.57,detail:'urban',desc:'Explore the everyday bag and backpack collection.'},
  {id:'professional',name:'Professional',x:2.85,z:-2.15,yaw:1.57,detail:'professional',desc:'Office-ready leather goods and work bags.'},
  {id:'travel',name:'Travel Movement',x:2.85,z:-7.05,yaw:1.57,detail:'travel',desc:'Travel bags, cabin luggage and accessories.'},
- {id:'counter',name:'Service Counter',x:0,z:-7.30,yaw:0,detail:'counter',desc:'See the back service area and brand wall.'},
+ {id:'counter',name:'Service Counter',x:0,z:-7.30,yaw:0,detail:'counter',desc:'The brand wall, service desk and repair workshop behind.'},
  {id:'fashion',name:'Everyday Style',x:-2.85,z:-7.10,yaw:-1.57,detail:'fashion',desc:'Discover the apparel and everyday collection.'},
  {id:'heritage',name:'Craft Heritage',x:-2.85,z:-2.25,yaw:-1.57,detail:'heritage',desc:'Take a closer look at handcrafted leather goods.'},
  {id:'essential',name:'Essential',x:-2.85,z:3.05,yaw:-1.57,detail:'essential',desc:'Explore accessories, wallets and daily essentials.'},
@@ -198,6 +260,6 @@ function render(now){const dt=Math.min(.055,(now-last)/1000||.016);last=now;anim
 gl.clearColor(.81,.79,.73,1);gl.clear(gl.COLOR_BUFFER_BIT|gl.DEPTH_BUFFER_BIT);
 const fw=[Math.sin(cam.yaw)*Math.cos(cam.pitch),Math.sin(cam.pitch),-Math.cos(cam.yaw)*Math.cos(cam.pitch)];const proj=perspective(Math.PI/3.1,w/h,.09,75),view=lookAt([cam.x,cam.y,cam.z],[cam.x+fw[0],cam.y+fw[1],cam.z+fw[2]]);mvp=mul(proj,view);
 gl.uniformMatrix4fv(loc.mvp,false,mvp);gl.uniform3f(loc.camera,cam.x,cam.y,cam.z);gl.drawArrays(gl.TRIANGLES,0,vertexCount);if(now-lastOverlay>45){updateOverlay();lastOverlay=now}requestAnimationFrame(render)}
-function launch(){const tex=gl.createTexture();gl.bindTexture(gl.TEXTURE_2D,tex);gl.pixelStorei(gl.UNPACK_FLIP_Y_WEBGL,true);const im=new Image();im.onload=()=>{gl.texImage2D(gl.TEXTURE_2D,0,gl.RGB,gl.RGB,gl.UNSIGNED_BYTE,im);gl.texParameteri(gl.TEXTURE_2D,gl.TEXTURE_MIN_FILTER,gl.LINEAR_MIPMAP_LINEAR);gl.texParameteri(gl.TEXTURE_2D,gl.TEXTURE_MAG_FILTER,gl.LINEAR);gl.generateMipmap(gl.TEXTURE_2D);gl.activeTexture(gl.TEXTURE0);gl.uniform1i(loc.sampler,0);gl.enable(gl.DEPTH_TEST);gl.disable(gl.CULL_FACE);$('loading').hidden=true;setArea('entrance');last=performance.now();requestAnimationFrame(render);};im.onerror=()=>{$('loading').innerHTML='<div class="loadbox">Unable to load 3D textures. Extract the whole ZIP first.</div>'};im.src=window.JS_ATLAS_URL}
+function launch(){const tex=gl.createTexture();gl.bindTexture(gl.TEXTURE_2D,tex);gl.pixelStorei(gl.UNPACK_FLIP_Y_WEBGL,false);const im=new Image();im.onload=()=>{gl.texImage2D(gl.TEXTURE_2D,0,gl.RGB,gl.RGB,gl.UNSIGNED_BYTE,im);gl.texParameteri(gl.TEXTURE_2D,gl.TEXTURE_MIN_FILTER,gl.LINEAR_MIPMAP_LINEAR);gl.texParameteri(gl.TEXTURE_2D,gl.TEXTURE_MAG_FILTER,gl.LINEAR);gl.generateMipmap(gl.TEXTURE_2D);gl.activeTexture(gl.TEXTURE0);gl.uniform1i(loc.sampler,0);gl.enable(gl.DEPTH_TEST);gl.disable(gl.CULL_FACE);$('loading').hidden=true;setArea('entrance');last=performance.now();requestAnimationFrame(render);};im.onerror=()=>{$('loading').innerHTML='<div class="loadbox">Unable to load 3D textures. Extract the whole ZIP first.</div>'};im.src=window.JS_ATLAS_URL}
 launch();
 })();
