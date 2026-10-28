@@ -56,36 +56,12 @@ box(4.55,.68,7.6,.6,1.35,.75,'cream');box(4.55,1.39,7.6,.72,.11,.85,'wood');bag(
 box(-4.55,.53,7.7,.74,1.04,.68,'wood');box(-4.55,1.11,7.7,.82,.12,.75,'cream');bag(-4.55,1.38,7.7,.37,.41,.21,'brownleather',true);
 }
 // Back of store, rebuilt from the storefront photo: lit JACK STUDiO letters over a wide
-// solid white end wall, black ladder-frame shelving either side; nothing else on the wall.
+// solid white end wall, nothing else on the wall.
 function backWall(){
 const Z=-10.22,T=.18;
 // solid white end wall (the sign wall is the end of the store)
 box(0,2,Z,11,4.1,T,'wall',1.05);
 zpanel(Z+T/2+.005,-1.9,1.9,2.72,4.02,'sign',1.0);
-// tall ladder-frame shelving against the back wall either side of the opening
-ladderShelf(-1);ladderShelf(1);
-}
-function ladderShelf(side){
-const z=-9.88,x0=side*3.25,x1=side*5.3,cx=(x0+x1)/2,w=Math.abs(x1-x0);
-for(const x of [x0+side*.05,x1-side*.05]){
- for(const dz of [-.2,.2])box(x,1.85,z+dz,.05,3.7,.05,'black',1);
- for(let y=.3;y<3.7;y+=.32)box(x,y,z,.04,.035,.42,'black',1);
-}
-box(cx,3.68,z+.2,w,.05,.05,'black',1);box(cx,3.68,z-.2,w,.05,.05,'black',1);
-line3([x0+side*.05,3.3,z+.22],[x1-side*.05,.25,z+.22],.04,'black');
-const levels=[.12,.95,1.75,2.55];
-for(const y of levels)box(cx,y,z,w-.12,.05,.48,'wood',1.08);
-if(side<0){ // smaller everyday bags, like the left shelf in the photo
- for(const y of [.95,1.75,2.55])for(let i=0;i<4;i++)bag(x0-.3-i*.48,y+.2,z+.02,.34,.32,.2,i%2?'brownleather':'darkleather',true);
- for(let i=0;i<3;i++)bag(x0-.4-i*.6,.38,z,.4,.46,.22,'darkleather',false);
-}else{ // duffels up top, hard-shell luggage at the bottom, like the right shelf
- for(let i=0;i<3;i++)bag(x0+.4+i*.65,2.82,z,.56,.46,.32,i===1?'brownleather':'darkleather',true);
- for(let i=0;i<3;i++)bag(x0+.35+i*.62,2.0,z+.02,.4,.4,.24,'darkleather',true);
- for(let i=0;i<4;i++)bag(x0+.3+i*.5,1.17,z+.02,.3,.38,.2,i%2?'darkleather':'brownleather',true);
- const lug=['lug_grey','lug_dark','lug_orange'];
- for(let i=0;i<3;i++){const lx=x0+.42+i*.62;box(lx,.52,z+.03,.5,.74,.3,lug[i],1);box(lx,.94,z+.03,.16,.1,.03,'black',1);
-  for(const wx of [-.18,.18])box(lx+wx,.12,z+.03,.06,.07,.06,'black',1)}
-}
 }
 function rack(side,z,photo,title){const x=side*5.13,front=side*4.71,W=3.08;
 // wood wall backing and photo inset. The photos provide real bags, not a full-room illusion.
