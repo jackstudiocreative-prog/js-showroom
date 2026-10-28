@@ -16,8 +16,8 @@ const SP=window.JS_SPRITES||{},SPS=window.JS_SPRITE_SIZE||[1,1],sV=[],sU=[],sS=[
 // always seen from the front; the turn is limited so cards never swing out of their shelf.
 const SPR=[];
 // Suitcase panels use their own photo sheet (JS_LUG_*): rectified lid fronts, backs and ribbed sides.
-const LR=window.JS_LUG_RECTS||{},lV=[],lU=[],lS=[];
-function lt(id){const r=LR[id];return r?[(r[0]+1)/2048,(r[1]+1)/1024,(r[0]+r[2]-1)/2048,(r[1]+r[3]-1)/1024]:[0,0,.001,.001]}
+const LUG=window.JS_LUG||{rects:{},aspect:1.6,body:.87},LR=LUG.rects,lV=[],lU=[],lS=[];
+function lt(id){const r=LR[id];return r?[(r[0]+.5)/2048,(r[1]+.5)/1024,(r[0]+r[2]-.5)/2048,(r[1]+r[3]-.5)/1024]:[0,0,.001,.001]}
 function ltri(a,b,c,ta,tb,tc,tile,sh){if(XF){a=XF(a);b=XF(b);c=XF(c)}for(const [p,t] of [[a,ta],[b,tb],[c,tc]]){lV.push(...p);lU.push(tile[0]+t[0]*(tile[2]-tile[0]),tile[1]+(1-t[1])*(tile[3]-tile[1]));lS.push(sh)}}
 function sprite(x,zc,hw,y0,y1,key,shade=1,turn=true){const m=SP[key];if(!m)return;const [u,v,w,h]=m.uv;
  let b=[x,y0,zc],t=[x,y1,zc],e=[x,y0,zc+hw];if(XF){b=XF(b);t=XF(t);e=XF(e)}
@@ -116,7 +116,7 @@ for(let bay=0;bay<2;bay++){const z0=frames[bay],zc=z0+BW/2,len=BW-.04;
 }
 // deck: cabin cases in the same order as the photo
 const cz=t=>frames[0]+t*BW*2,dy=DECK+.02;
-[['white',.135],['lav',.365],['grey',.635],['orange',.865]].forEach(([c,f])=>suitcase(cx-.16,dy,cz(f),c));
+[['white',.135],['lav',.365],['grey',.635],['orange',.865]].forEach(([c,f])=>suitcase(cx-.17,dy,cz(f),c));
 // products: straight-on photo cut-outs, placed at their measured positions (metres from the
 // left ladder frame). Items standing on a shelf are seated on it; raised/hanging ones keep their height.
 for(const [k,m] of Object.entries(SP)){if(!m.shelf)continue;
@@ -136,12 +136,17 @@ xpanel(W-.005,ZP-.11,ZP+1.29,Y0-.33,Y0+1.0,'tm_lower',.76,1);
 suitcase(W-.31,0,ZP+.2,'orange');suitcase(W-.31,0,ZP+.72,'orange');
 XF=null;
 }
-// 29-inch UNBREAKABLE case: the real product photo (straightened, cut out whole with its wheels).
-// All four photos are normalised to the same size so the row lines up; like the bags, each case
-// turns to face the viewer so it is always seen from the front.
+// 29-inch UNBREAKABLE case, dressed entirely in the product photos: the straightened front (with
+// its wheels), the back, and the side from the three-quarter shot (lid zip, expander zip, feet).
 function suitcase(x,y,z,col,S=1){
- const m=SP['case_'+col];if(!m)return;const W=.455*S;
- sprite(x+.12*S,z,W/2,y,y+W*m.aspect,'case_'+col,1.0,true);
+ const W=.455*S,D=.28*S,Ht=W*LUG.aspect,yb=y+Ht*(1-LUG.body),yt=y+Ht,z0=z-W/2,z1=z+W/2,x1=x+D;
+ const face=(a,b,c,d,id,sh)=>{const t=lt(id);ltri(a,b,c,[0,0],[1,0],[1,1],t,sh);ltri(a,c,d,[0,0],[1,1],[0,1],t,sh)};
+ face([x,y,z0],[x,y,z1],[x,yt,z1],[x,yt,z0],'f_'+col,1.0);              // front
+ face([x1,y,z1],[x1,y,z0],[x1,yt,z0],[x1,yt,z1],'b_'+col,.92);          // back
+ face([x1,yb,z0],[x,yb,z0],[x,yt,z0],[x1,yt,z0],'s_'+col,.9);           // left side
+ face([x1,yb,z1],[x,yb,z1],[x,yt,z1],[x1,yt,z1],'s_'+col,.86);          // right side (mirror image)
+ const t=lt('f_'+col),c=[.72,.55];const ins=.02*S,yt2=yt-.004*S;          // top: shell colour sampled from the front
+ ltri([x+ins,yt2,z0+ins],[x+ins,yt2,z1-ins],[x1-ins,yt2,z1-ins],c,c,c,t,1.05);ltri([x+ins,yt2,z0+ins],[x1-ins,yt2,z1-ins],[x1-ins,yt2,z0+ins],c,c,c,t,1.05);
 }
 function bagZ(x,y,z,len,h,dep,tex){box(x,y+h/2,z,dep,h,len,tex,1);box(x-dep/2-.004,y+h*.62,z,.01,.018,len*.75,'brass',.9);
 const t=y+h;line3([x,t,z-len*.25],[x,t+h*.6,z-len*.15],.016,tex);line3([x,t+h*.6,z-len*.15],[x,t+h*.6,z+len*.15],.016,tex);line3([x,t+h*.6,z+len*.15],[x,t,z+len*.25],.016,tex);}
@@ -286,9 +291,9 @@ let lastOverlay=0;
 function render(now){const dt=Math.min(.055,(now-last)/1000||.016);last=now;animate(dt);const dpr=Math.min(window.devicePixelRatio||1,1.6);const w=Math.round(canvas.clientWidth*dpr),h=Math.round(canvas.clientHeight*dpr);if(canvas.width!==w||canvas.height!==h){canvas.width=w;canvas.height=h;gl.viewport(0,0,w,h)}
 gl.clearColor(.81,.79,.73,1);gl.clear(gl.COLOR_BUFFER_BIT|gl.DEPTH_BUFFER_BIT);
 const fw=[Math.sin(cam.yaw)*Math.cos(cam.pitch),Math.sin(cam.pitch),-Math.cos(cam.yaw)*Math.cos(cam.pitch)];const proj=perspective(Math.PI/3.1,w/h,.09,75),view=lookAt([cam.x,cam.y,cam.z],[cam.x+fw[0],cam.y+fw[1],cam.z+fw[2]]);mvp=mul(proj,view);
-gl.uniformMatrix4fv(loc.mvp,false,mvp);gl.uniform3f(loc.camera,cam.x,cam.y,cam.z);bindMesh(worldMesh);gl.bindTexture(gl.TEXTURE_2D,atlasTex);gl.uniform1f(loc.cut,-1.);gl.drawArrays(gl.TRIANGLES,0,worldMesh.n);if(lugTex&&lugMesh.n){bindMesh(lugMesh);gl.bindTexture(gl.TEXTURE_2D,lugTex);gl.drawArrays(gl.TRIANGLES,0,lugMesh.n)}if(spriteTex&&spriteMesh.n){updateSprites();bindMesh(spriteMesh);gl.bindTexture(gl.TEXTURE_2D,spriteTex);gl.uniform1f(loc.cut,.5);gl.drawArrays(gl.TRIANGLES,0,spriteMesh.n)}if(now-lastOverlay>45){updateOverlay();lastOverlay=now}requestAnimationFrame(render)}
+gl.uniformMatrix4fv(loc.mvp,false,mvp);gl.uniform3f(loc.camera,cam.x,cam.y,cam.z);bindMesh(worldMesh);gl.bindTexture(gl.TEXTURE_2D,atlasTex);gl.uniform1f(loc.cut,-1.);gl.drawArrays(gl.TRIANGLES,0,worldMesh.n);if(lugTex&&lugMesh.n){bindMesh(lugMesh);gl.bindTexture(gl.TEXTURE_2D,lugTex);gl.uniform1f(loc.cut,.5);gl.drawArrays(gl.TRIANGLES,0,lugMesh.n);gl.uniform1f(loc.cut,-1.)}if(spriteTex&&spriteMesh.n){updateSprites();bindMesh(spriteMesh);gl.bindTexture(gl.TEXTURE_2D,spriteTex);gl.uniform1f(loc.cut,.5);gl.drawArrays(gl.TRIANGLES,0,spriteMesh.n)}if(now-lastOverlay>45){updateOverlay();lastOverlay=now}requestAnimationFrame(render)}
 function loadTex(url,fmt){return new Promise((ok,bad)=>{const im=new Image();im.onload=()=>{const t=gl.createTexture();gl.bindTexture(gl.TEXTURE_2D,t);gl.pixelStorei(gl.UNPACK_FLIP_Y_WEBGL,false);gl.texImage2D(gl.TEXTURE_2D,0,fmt,fmt,gl.UNSIGNED_BYTE,im);gl.texParameteri(gl.TEXTURE_2D,gl.TEXTURE_MIN_FILTER,gl.LINEAR_MIPMAP_LINEAR);gl.texParameteri(gl.TEXTURE_2D,gl.TEXTURE_MAG_FILTER,gl.LINEAR);gl.texParameteri(gl.TEXTURE_2D,gl.TEXTURE_WRAP_S,gl.CLAMP_TO_EDGE);gl.texParameteri(gl.TEXTURE_2D,gl.TEXTURE_WRAP_T,gl.CLAMP_TO_EDGE);gl.generateMipmap(gl.TEXTURE_2D);ok(t)};im.onerror=bad;im.src=url})}
 function launch(){gl.activeTexture(gl.TEXTURE0);gl.uniform1i(loc.sampler,0);
-Promise.all([loadTex(window.JS_ATLAS_URL,gl.RGB),window.JS_SPRITE_URL?loadTex(window.JS_SPRITE_URL,gl.RGBA).catch(()=>null):Promise.resolve(null),window.JS_LUG_URL?loadTex(window.JS_LUG_URL,gl.RGB).catch(()=>null):Promise.resolve(null)]).then(([a,b,c])=>{atlasTex=a;spriteTex=b;lugTex=c;gl.enable(gl.DEPTH_TEST);gl.disable(gl.CULL_FACE);$('loading').hidden=true;setArea('entrance');last=performance.now();requestAnimationFrame(render)}).catch(()=>{$('loading').innerHTML='<div class="loadbox">Unable to load 3D textures. Extract the whole ZIP first.</div>'})}
+Promise.all([loadTex(window.JS_ATLAS_URL,gl.RGB),window.JS_SPRITE_URL?loadTex(window.JS_SPRITE_URL,gl.RGBA).catch(()=>null):Promise.resolve(null),window.JS_LUG_URL?loadTex(window.JS_LUG_URL,gl.RGBA).catch(()=>null):Promise.resolve(null)]).then(([a,b,c])=>{atlasTex=a;spriteTex=b;lugTex=c;gl.enable(gl.DEPTH_TEST);gl.disable(gl.CULL_FACE);$('loading').hidden=true;setArea('entrance');last=performance.now();requestAnimationFrame(render)}).catch(()=>{$('loading').innerHTML='<div class="loadbox">Unable to load 3D textures. Extract the whole ZIP first.</div>'})}
 launch();
 })();
