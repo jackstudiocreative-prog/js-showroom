@@ -12,9 +12,16 @@ const loc={pos:gl.getAttribLocation(program,'aPos'),uv:gl.getAttribLocation(prog
 const verts=[],UVS=[],shades=[];
 // Photo cut-out products (RGBA sprite sheet, alpha-tested), drawn as a second pass.
 const SP=window.JS_SPRITES||{},SPS=window.JS_SPRITE_SIZE||[1,1],sV=[],sU=[],sS=[];
-function sprite(x,z0,z1,y0,y1,key,shade=1){const m=SP[key];if(!m)return;const [u,v,w,h]=m.uv,U0=(u+.5)/SPS[0],U1=(u+w-.5)/SPS[0],V0=(v+.5)/SPS[1],V1=(v+h-.5)/SPS[1];
-let p=[[x,y0,z0],[x,y0,z1],[x,y1,z1],[x,y1,z0]];if(XF)p=p.map(XF);const o=[0,1,2,0,2,3],t=[[U0,V1],[U1,V1],[U1,V0],[U0,V0]];
-for(const i of o){sV.push(...p[i]);sU.push(...t[i]);sS.push(shade)}}
+// Each product is a photo card that turns (around its vertical axis) to face the viewer, so it is
+// always seen from the front; the turn is limited so cards never swing out of their shelf.
+const SPR=[];
+function sprite(x,zc,hw,y0,y1,key,shade=1,turn=true){const m=SP[key];if(!m)return;const [u,v,w,h]=m.uv;
+ let b=[x,y0,zc],t=[x,y1,zc],e=[x,y0,zc+hw];if(XF){b=XF(b);t=XF(t);e=XF(e)}
+ SPR.push({x:b[0],z:b[2],y0:b[1],y1:t[1],hw:e[2]-b[2],turn,uv:[(u+.5)/SPS[0],(v+.5)/SPS[1],(u+w-.5)/SPS[0],(v+h-.5)/SPS[1]],shade})}
+function spriteGeometry(camX,camZ){const P=[];for(const s of SPR){let nx=-1,nz=0;
+ if(s.turn){let a=Math.atan2(camZ-s.z,camX-s.x),d=Math.atan2(Math.sin(a-Math.PI),Math.cos(a-Math.PI));d=Math.max(-.9,Math.min(.9,d));nx=-Math.cos(d);nz=-Math.sin(d)}
+ const rx=nz*s.hw,rz=-nx*s.hw,q=[[s.x-rx,s.y0,s.z-rz],[s.x+rx,s.y0,s.z+rz],[s.x+rx,s.y1,s.z+rz],[s.x-rx,s.y1,s.z-rz]];
+ for(const i of [0,1,2,0,2,3])P.push(...q[i])}return P}
 const vw=4096;function uvTile(id){const r=rects[id]||rects.white;return [(r[0]+2)/vw,(r[1]+2)/vw,(r[0]+r[2]-2)/vw,(r[1]+r[3]-2)/vw]}
 let XF=null;// optional point transform (used to scale a whole zone)
 function quad(a,b,c,d,texture='wall',shade=1){if(XF){a=XF(a);b=XF(b);c=XF(c);d=XF(d)}const uv=uvTile(texture),p=[a,b,c,a,c,d],t=[[uv[0],uv[3]],[uv[2],uv[3]],[uv[2],uv[1]],[uv[0],uv[3]],[uv[2],uv[1]],[uv[0],uv[1]]];for(let i=0;i<6;i++){verts.push(...p[i]);UVS.push(...t[i]);shades.push(shade)}}
@@ -105,16 +112,18 @@ for(let bay=0;bay<2;bay++){const z0=frames[bay],zc=z0+BW/2,len=BW-.04;
 // deck: cabin cases in the same order as the photo
 const cz=t=>frames[0]+t*BW*2,dy=DECK+.02;
 [['lug_silver',.13],['lug_lav',.37],['lug_char',.62],['lug_orange',.87]].forEach(([t,f])=>suitcase(cx-.02,dy,cz(f),.44,.58,.25,t));
-// products: photo cut-outs placed by their measured position between the ladder frames
-const POSTS=[[157,790],[790,1270]];
+// products: straight-on photo cut-outs, placed at their measured positions (metres from the
+// left ladder frame). Items standing on a shelf are seated on it; raised/hanging ones keep their height.
 for(const [k,m] of Object.entries(SP)){
- const [x0,y0,x1,y1]=m.px,mid=(x0+x1)/2,bay=mid<790?0:1,[L,R]=POSTS[bay],f=BW/(R-L);
- // top shelf is seen from below in the photo (its surface hidden), so its items read ~15% small
- const g=m.shelf==='C'?1.15:m.shelf==='A'?1.08:1,zc=frames[bay]+(mid-L)*f,hw=(x1-x0)*f*g/2,bottom=SH[m.shelf]-(y1-m.line)*f;
- sprite(cx-.03,zc-hw,zc+hw,bottom,bottom+(y1-y0)*f*g,k,1.04);
- if(k==='b_olivecrate')box(cx+.1,SH.B+.13,zc,.24,.26,hw*1.9,'crate',1.0);
- if(k==='b_group')box(cx+.1,SH.B+.12,zc-.04,.24,.24,hw*1.4,'crate',.9);
+ const zc=frames[0]+(m.z[0]+m.z[1])/2,hw=(m.z[1]-m.z[0])/2,h=m.y[1]-m.y[0],gap=m.y[0]-SH[m.shelf];
+ const y0=Math.abs(gap)<.06?SH[m.shelf]:m.y[0],crate=k==='b_crate'||k==='b_olivecrate';
+ sprite(crate?cx-.05:cx-.02-m.order*.002,zc,hw,y0,y0+h,k,1.05,!crate);
+ if(k==='b_crate')box(cx+.15,y0+.15,zc,.2,.3,hw*1.9,'crate',.92);
+ if(k==='b_olivecrate')box(cx+.15,y0+.14,zc,.2,.28,hw*1.8,'crate',.92);
 }
+// chrome display stands behind the hanging bags (thin in the photo, so rebuilt in 3D)
+for(const [z,top] of [[.17,1.22],[.84,1.24],[1.24,1.2],[1.77,1.16]]){const zz=frames[0]+z;
+ box(cx+.05,SH.A+.006,zz,.16,.012,.16,'metal',1.4);box(cx+.05,(SH.A+top)/2,zz,.014,top-SH.A,.014,'white',.9);box(cx+.05,top,zz,.014,.014,.2,'white',.9)}
 // TRAVEL MOVEMENT wall: rectified photo of the lettering, cork map and pegboard
 const ZP=frames[2]+.14,Y0=.36;
 xpanel(W-.005,ZP-.11,ZP+1.29,Y0+1.0,Y0+2.2,'tm_upper',.76,1);
@@ -179,7 +188,10 @@ zpanel(z+d/2+.03,x-1.08,x+1.08,.21,.48,tex,1.03);
 buildWorld();
 function mesh(V,U,S){const m={n:V.length/3};for(const [k,d,n] of [['p',V,3],['u',U,2],['s',S,1]]){m[k]=gl.createBuffer();gl.bindBuffer(gl.ARRAY_BUFFER,m[k]);gl.bufferData(gl.ARRAY_BUFFER,new Float32Array(d),gl.STATIC_DRAW)}return m}
 function bindMesh(m){for(const [k,l,n] of [['p',loc.pos,3],['u',loc.uv,2],['s',loc.shade,1]]){gl.bindBuffer(gl.ARRAY_BUFFER,m[k]);gl.enableVertexAttribArray(l);gl.vertexAttribPointer(l,n,gl.FLOAT,false,0,0)}}
-const worldMesh=mesh(verts,UVS,shades),spriteMesh=mesh(sV,sU,sS);let atlasTex=null,spriteTex=null;
+const worldMesh=mesh(verts,UVS,shades);
+for(const s of SPR){const [U0,V0,U1,V1]=s.uv;for(const t of [[U0,V1],[U1,V1],[U1,V0],[U0,V1],[U1,V0],[U0,V0]]){sU.push(...t);sS.push(s.shade)}}
+const spriteMesh=mesh(spriteGeometry(0,0),sU,sS);let lastSprCam='';
+function updateSprites(){const k=cam.x.toFixed(2)+','+cam.z.toFixed(2);if(k===lastSprCam)return;lastSprCam=k;gl.bindBuffer(gl.ARRAY_BUFFER,spriteMesh.p);gl.bufferData(gl.ARRAY_BUFFER,new Float32Array(spriteGeometry(cam.x,cam.z)),gl.DYNAMIC_DRAW)}let atlasTex=null,spriteTex=null;
 // Standard column-major camera/view matrix, all geometry positioned in world coordinates.
 function perspective(fovy,aspect,near,far){const f=1/Math.tan(fovy/2),a=1/(near-far);return new Float32Array([f/aspect,0,0,0,0,f,0,0,0,0,(far+near)*a,-1,0,0,2*far*near*a,0])}
 function lookAt(eye,target){let z=[eye[0]-target[0],eye[1]-target[1],eye[2]-target[2]];let n=Math.hypot(...z);z=z.map(a=>a/n);let x=[z[2],0,-z[0]];n=Math.hypot(...x);x=x.map(a=>a/n);const y=[z[1]*x[2]-z[2]*x[1],z[2]*x[0]-z[0]*x[2],z[0]*x[1]-z[1]*x[0]];
@@ -268,7 +280,7 @@ let lastOverlay=0;
 function render(now){const dt=Math.min(.055,(now-last)/1000||.016);last=now;animate(dt);const dpr=Math.min(window.devicePixelRatio||1,1.6);const w=Math.round(canvas.clientWidth*dpr),h=Math.round(canvas.clientHeight*dpr);if(canvas.width!==w||canvas.height!==h){canvas.width=w;canvas.height=h;gl.viewport(0,0,w,h)}
 gl.clearColor(.81,.79,.73,1);gl.clear(gl.COLOR_BUFFER_BIT|gl.DEPTH_BUFFER_BIT);
 const fw=[Math.sin(cam.yaw)*Math.cos(cam.pitch),Math.sin(cam.pitch),-Math.cos(cam.yaw)*Math.cos(cam.pitch)];const proj=perspective(Math.PI/3.1,w/h,.09,75),view=lookAt([cam.x,cam.y,cam.z],[cam.x+fw[0],cam.y+fw[1],cam.z+fw[2]]);mvp=mul(proj,view);
-gl.uniformMatrix4fv(loc.mvp,false,mvp);gl.uniform3f(loc.camera,cam.x,cam.y,cam.z);bindMesh(worldMesh);gl.bindTexture(gl.TEXTURE_2D,atlasTex);gl.uniform1f(loc.cut,-1.);gl.drawArrays(gl.TRIANGLES,0,worldMesh.n);if(spriteTex&&spriteMesh.n){bindMesh(spriteMesh);gl.bindTexture(gl.TEXTURE_2D,spriteTex);gl.uniform1f(loc.cut,.5);gl.drawArrays(gl.TRIANGLES,0,spriteMesh.n)}if(now-lastOverlay>45){updateOverlay();lastOverlay=now}requestAnimationFrame(render)}
+gl.uniformMatrix4fv(loc.mvp,false,mvp);gl.uniform3f(loc.camera,cam.x,cam.y,cam.z);bindMesh(worldMesh);gl.bindTexture(gl.TEXTURE_2D,atlasTex);gl.uniform1f(loc.cut,-1.);gl.drawArrays(gl.TRIANGLES,0,worldMesh.n);if(spriteTex&&spriteMesh.n){updateSprites();bindMesh(spriteMesh);gl.bindTexture(gl.TEXTURE_2D,spriteTex);gl.uniform1f(loc.cut,.5);gl.drawArrays(gl.TRIANGLES,0,spriteMesh.n)}if(now-lastOverlay>45){updateOverlay();lastOverlay=now}requestAnimationFrame(render)}
 function loadTex(url,fmt){return new Promise((ok,bad)=>{const im=new Image();im.onload=()=>{const t=gl.createTexture();gl.bindTexture(gl.TEXTURE_2D,t);gl.pixelStorei(gl.UNPACK_FLIP_Y_WEBGL,false);gl.texImage2D(gl.TEXTURE_2D,0,fmt,fmt,gl.UNSIGNED_BYTE,im);gl.texParameteri(gl.TEXTURE_2D,gl.TEXTURE_MIN_FILTER,gl.LINEAR_MIPMAP_LINEAR);gl.texParameteri(gl.TEXTURE_2D,gl.TEXTURE_MAG_FILTER,gl.LINEAR);gl.texParameteri(gl.TEXTURE_2D,gl.TEXTURE_WRAP_S,gl.CLAMP_TO_EDGE);gl.texParameteri(gl.TEXTURE_2D,gl.TEXTURE_WRAP_T,gl.CLAMP_TO_EDGE);gl.generateMipmap(gl.TEXTURE_2D);ok(t)};im.onerror=bad;im.src=url})}
 function launch(){gl.activeTexture(gl.TEXTURE0);gl.uniform1i(loc.sampler,0);
 Promise.all([loadTex(window.JS_ATLAS_URL,gl.RGB),window.JS_SPRITE_URL?loadTex(window.JS_SPRITE_URL,gl.RGBA).catch(()=>null):Promise.resolve(null)]).then(([a,b])=>{atlasTex=a;spriteTex=b;gl.enable(gl.DEPTH_TEST);gl.disable(gl.CULL_FACE);$('loading').hidden=true;setArea('entrance');last=performance.now();requestAnimationFrame(render)}).catch(()=>{$('loading').innerHTML='<div class="loadbox">Unable to load 3D textures. Extract the whole ZIP first.</div>'})}
