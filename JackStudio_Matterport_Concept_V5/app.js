@@ -15,10 +15,6 @@ const SP=window.JS_SPRITES||{},SPS=window.JS_SPRITE_SIZE||[1,1],sV=[],sU=[],sS=[
 // Each product is a photo card that turns (around its vertical axis) to face the viewer, so it is
 // always seen from the front; the turn is limited so cards never swing out of their shelf.
 const SPR=[];
-// Suitcase panels use their own photo sheet (JS_LUG_*): rectified lid fronts, backs and ribbed sides.
-const LUG=window.JS_LUG||{rects:{},aspect:1.6,body:.87},LR=LUG.rects,lV=[],lU=[],lS=[];
-function lt(id){const r=LR[id];return r?[(r[0]+.5)/2048,(r[1]+.5)/1024,(r[0]+r[2]-.5)/2048,(r[1]+r[3]-.5)/1024]:[0,0,.001,.001]}
-function ltri(a,b,c,ta,tb,tc,tile,sh){if(XF){a=XF(a);b=XF(b);c=XF(c)}for(const [p,t] of [[a,ta],[b,tb],[c,tc]]){lV.push(...p);lU.push(tile[0]+t[0]*(tile[2]-tile[0]),tile[1]+(1-t[1])*(tile[3]-tile[1]));lS.push(sh)}}
 function sprite(x,zc,hw,y0,y1,key,shade=1,turn=true){const m=SP[key];if(!m)return;const [u,v,w,h]=m.uv;
  let b=[x,y0,zc],t=[x,y1,zc],e=[x,y0,zc+hw];if(XF){b=XF(b);t=XF(t);e=XF(e)}
  SPR.push({x:b[0],z:b[2],y0:b[1],y1:t[1],hw:e[2]-b[2],turn,uv:[(u+.5)/SPS[0],(v+.5)/SPS[1],(u+w-.5)/SPS[0],(v+h-.5)/SPS[1]],shade})}
@@ -136,17 +132,63 @@ xpanel(W-.005,ZP-.11,ZP+1.29,Y0-.33,Y0+1.0,'tm_lower',.76,1);
 suitcase(W-.31,0,ZP+.2,'orange');suitcase(W-.31,0,ZP+.72,'orange');
 XF=null;
 }
-// 29-inch UNBREAKABLE case, dressed entirely in the product photos: the straightened front (with
-// its wheels), the back, and the side from the three-quarter shot (lid zip, expander zip, feet).
+// ---------------------------------------------------------------------------------------------
+// 29-inch UNBREAKABLE front-opening case, modelled in 3D (79 x 50 x 31 cm) and drawn with real
+// lighting: rounded polycarbonate shell, moulded horizontal ribs, front lid standing proud on a
+// black zip, expander zip round the waist, black wheel housings with 4 double spinner wheels,
+// top carry handle, side feet and the logo badge. Only the white sticker print is a decal.
+// ---------------------------------------------------------------------------------------------
+const MV=[];   // lit mesh: pos3 normal3 colour3 rib2(v, strength) uv2  -> 13 floats per vertex
+const LUGCOL={white:[.86,.85,.83],lav:[.74,.74,.80],grey:[.40,.42,.43],orange:[.80,.50,.37]};
+function mpush(p,n,c,rib,uv){if(XF)p=XF(p);MV.push(p[0],p[1],p[2],n[0],n[1],n[2],c[0],c[1],c[2],rib[0],rib[1],uv[0],uv[1])}
+function arcAxis(h,r,mid){const a=[],m=5;for(let k=m;k>0;k--)a.push(-(h-r)-r*Math.tan(k/m*Math.PI/4));
+ for(let k=0;k<=mid;k++)a.push(-(h-r)+2*(h-r)*k/mid);for(let k=1;k<=m;k++)a.push((h-r)+r*Math.tan(k/m*Math.PI/4));return a}
+// rounded box in case-local coords (u across, v up, w toward the viewer); toW maps local -> world
+function rbox(toW,c,h,r0,col,ribF,mids=[6,14,4]){
+ // per-axis corner radius (an edge can't be rounder than the slab is thick)
+ const r=h.map(v=>Math.min(r0,v*.98));
+ const ax=[arcAxis(h[0],r[0],mids[0]),arcAxis(h[1],r[1],mids[1]),arcAxis(h[2],r[2],mids[2])];
+ const map=q=>{const inner=q.map((v,i)=>Math.max(-(h[i]-r[i]),Math.min(h[i]-r[i],v))),e=q.map((v,i)=>(v-inner[i])/r[i]),l=Math.hypot(...e)||1,u=e.map(v=>v/l);
+  const nn=u.map((v,i)=>v/r[i]),nl=Math.hypot(...nn)||1;return [inner.map((v,i)=>c[i]+v+u[i]*r[i]),nn.map(v=>v/nl)]};
+ for(let i=0;i<3;i++)for(const sg of [-1,1]){const j=(i+1)%3,k=(i+2)%3,A=ax[j],B=ax[k],G=[];
+  for(const a of A){const row=[];for(const b of B){const q=[0,0,0];q[i]=sg*h[i];q[j]=a;q[k]=b;row.push(map(q))}G.push(row)}
+  for(let x=0;x<A.length-1;x++)for(let y=0;y<B.length-1;y++){const t=[G[x][y],G[x+1][y],G[x+1][y+1],G[x][y+1]];
+   for(const idx of [0,1,2,0,2,3]){const [pp,nn]=t[idx];const W=toW(pp,nn);mpush(W[0],W[1],col,ribF?ribF(pp,nn):[0,0],[-1,-1])}}}}
+function cylU(toW,c,rad,len,col,seg=18){ // cylinder with its axle across the case (local u)
+ for(let i=0;i<seg;i++){const a0=i/seg*Math.PI*2,a1=(i+1)/seg*Math.PI*2,P=(a,du)=>[c[0]+du,c[1]+Math.sin(a)*rad,c[2]+Math.cos(a)*rad],N=a=>[0,Math.sin(a),Math.cos(a)];
+  const q=[[P(a0,-len/2),N(a0)],[P(a1,-len/2),N(a1)],[P(a1,len/2),N(a1)],[P(a0,len/2),N(a0)]];
+  for(const idx of [0,1,2,0,2,3]){const W=toW(q[idx][0],q[idx][1]);mpush(W[0],W[1],col,[0,0],[-1,-1])}
+  for(const du of [-len/2,len/2]){const hub=du>0?[.62,.63,.65]:[.55,.56,.58],cc=[c[0]+du,c[1],c[2]];
+   const pts=[[cc,hub],[P(a0,du),col],[P(a1,du),col]];if(true){const ri=rad*.45;pts[0]=[cc,hub]}
+   for(const [pp,cl] of [[cc,hub],[P(a0,du),col],[P(a1,du),col]]){const W=toW(pp,[Math.sign(du),0,0]);mpush(W[0],W[1],cl,[0,0],[-1,-1])}}}}
 function suitcase(x,y,z,col,S=1){
- const W=.455*S,D=.28*S,Ht=W*LUG.aspect,yb=y+Ht*(1-LUG.body),yt=y+Ht,z0=z-W/2,z1=z+W/2,x1=x+D;
- const face=(a,b,c,d,id,sh)=>{const t=lt(id);ltri(a,b,c,[0,0],[1,0],[1,1],t,sh);ltri(a,c,d,[0,0],[1,1],[0,1],t,sh)};
- face([x,y,z0],[x,y,z1],[x,yt,z1],[x,yt,z0],'f_'+col,1.0);              // front
- face([x1,y,z1],[x1,y,z0],[x1,yt,z0],[x1,yt,z1],'b_'+col,.92);          // back
- face([x1,yb,z0],[x,yb,z0],[x,yt,z0],[x1,yt,z0],'s_'+col,.9);           // left side
- face([x1,yb,z1],[x,yb,z1],[x,yt,z1],[x1,yt,z1],'s_'+col,.86);          // right side (mirror image)
- const t=lt('f_'+col),c=[.72,.55];const ins=.02*S,yt2=yt-.004*S;          // top: shell colour sampled from the front
- ltri([x+ins,yt2,z0+ins],[x+ins,yt2,z1-ins],[x1-ins,yt2,z1-ins],c,c,c,t,1.05);ltri([x+ins,yt2,z0+ins],[x1-ins,yt2,z1-ins],[x1-ins,yt2,z0+ins],c,c,c,t,1.05);
+ const W=.455*S,D=.28*S,H=.71*S,WH=.078*S,R=.034*S,bx=x+D/2,C=LUGCOL[col]||LUGCOL.orange,K=[.06,.06,.065],dk=[.12,.12,.13];
+ const toW=(p,n)=>[[bx-p[2],y+p[1],z+p[0]],[-n[2],n[1],n[0]]];
+ const LT=.03*S,FRONT=D/2,bodyF=FRONT-LT-.004*S;          // lid thickness, body front plane
+ const ribs=(top,bot,edge)=>(p,n)=>{if(Math.abs(n[1])>.55)return [0,0];const v=p[1];
+  const s=Math.min(1,Math.max(0,(v-bot)/.012),Math.max(0,(top-v)/.012));const e=edge?Math.min(1,Math.max(0,(edge-Math.abs(p[0]))/.008)):1;return [v,s*e]};
+ // back shell + base (ribbed between a plain top band and a plain base band)
+ const bH=(H-WH)/2,bC=WH+bH,bD=(bodyF+D/2)/2,bZc=(bodyF-D/2)/2;
+ rbox(toW,[0,bC,bZc],[W/2,bH,bD],R,C,ribs(H-.045*S,WH+.055*S),[6,16,6]);
+ // expander zip: black band round the waist of the shell
+ rbox(toW,[0,bC,-.035*S],[W/2+.0025*S,bH+.0025*S,.006*S],R+.0025*S,K,null,[3,4,1]);
+ // lid zip (black rubber rim) and the front lid itself
+ const LW=W/2-.004*S,L0=.098*S,L1=H-.004*S,lC=(L0+L1)/2,lH=(L1-L0)/2;
+ rbox(toW,[0,lC,bodyF+.006*S],[LW+.003*S,lH+.003*S,.008*S],R*.9,K,null,[3,4,1]);
+ rbox(toW,[0,lC,FRONT-LT/2],[LW,lH,LT/2],R*.85,C,ribs(L1-.03*S,L0+.022*S,LW-.012*S),[8,18,2]);
+ // logo badge (top right of the lid) and the sticker print decal
+ rbox(toW,[LW-.075*S,L1-.12*S,FRONT+.002*S],[.016*S,.016*S,.003*S],.004*S,C.map(v=>v*.82),null,[1,1,1]);
+ {const z0=FRONT+.0012*S,u0=-LW,u1=LW,v0=L0,v1=L1,c=[1,1,1],q=[[u0,v0,0,1],[u1,v0,1,1],[u1,v1,1,0],[u0,v1,0,0]];
+  for(const idx of [0,1,2,0,2,3]){const [u,v,tu,tv]=q[idx],Wd=toW([u,v,z0],[0,0,1]);mpush(Wd[0],Wd[1],c,[0,0],[tu,tv])}}
+ // base: front grip recess, black wheel housings, double spinner wheels
+ rbox(toW,[0,WH+.03*S,bodyF+.004*S],[.075*S,.012*S,.006*S],.004*S,dk,null,[1,1,1]);
+ for(const su of [-1,1])for(const sw of [-1,1]){const hu=su*(W/2-.047*S),hw=sw*(D/2-.055*S);
+  rbox(toW,[hu,WH-.002*S,hw],[.042*S,.016*S,.045*S],.012*S,K,null,[2,1,2]);
+  rbox(toW,[hu,.052*S,hw],[.016*S,.012*S,.016*S],.005*S,dk,null,[1,1,1]);
+  for(const du of [-.0125,.0125])cylU(toW,[hu+du*S,.027*S,hw],.027*S,.016*S,[.08,.08,.09])}
+ // top carry handle (towards the back) and the side feet
+ rbox(toW,[0,H+.006*S,-D/2+.075*S],[.085*S,.01*S,.032*S],.008*S,K,null,[2,1,2]);
+ for(const v of [.17,.6])for(const w of [-D/2+.06*S,bodyF-.05*S])rbox(toW,[-W/2-.004*S,v*S,w],[.006*S,.018*S,.012*S],.004*S,K,null,[1,1,1]);
 }
 function bagZ(x,y,z,len,h,dep,tex){box(x,y+h/2,z,dep,h,len,tex,1);box(x-dep/2-.004,y+h*.62,z,.01,.018,len*.75,'brass',.9);
 const t=y+h;line3([x,t,z-len*.25],[x,t+h*.6,z-len*.15],.016,tex);line3([x,t+h*.6,z-len*.15],[x,t+h*.6,z+len*.15],.016,tex);line3([x,t+h*.6,z+len*.15],[x,t,z+len*.25],.016,tex);}
@@ -199,7 +241,29 @@ zpanel(z+d/2+.03,x-1.08,x+1.08,.21,.48,tex,1.03);
 buildWorld();
 function mesh(V,U,S){const m={n:V.length/3};for(const [k,d,n] of [['p',V,3],['u',U,2],['s',S,1]]){m[k]=gl.createBuffer();gl.bindBuffer(gl.ARRAY_BUFFER,m[k]);gl.bufferData(gl.ARRAY_BUFFER,new Float32Array(d),gl.STATIC_DRAW)}return m}
 function bindMesh(m){for(const [k,l,n] of [['p',loc.pos,3],['u',loc.uv,2],['s',loc.shade,1]]){gl.bindBuffer(gl.ARRAY_BUFFER,m[k]);gl.enableVertexAttribArray(l);gl.vertexAttribPointer(l,n,gl.FLOAT,false,0,0)}}
-const worldMesh=mesh(verts,UVS,shades),lugMesh=mesh(lV,lU,lS);let lugTex=null;
+const worldMesh=mesh(verts,UVS,shades);
+const litVS=`attribute vec3 aP,aN,aC;attribute vec2 aR,aT;uniform mat4 uVP;varying vec3 vW,vN,vC;varying vec2 vR,vT;void main(){gl_Position=uVP*vec4(aP,1.);vW=aP;vN=aN;vC=aC;vR=aR;vT=aT;}`;
+const litFS=`precision highp float;varying vec3 vW,vN,vC;varying vec2 vR,vT;uniform vec3 uCam;uniform sampler2D uDec;uniform float uPer;
+void main(){vec3 n=normalize(vN);float ao=1.;
+ if(vR.y>.01){float ph=vR.x*6.2831853/uPer;n=normalize(n+vec3(0.,sin(ph)*.62*vR.y,0.));ao=1.-.16*vR.y*smoothstep(.55,1.,cos(ph));}
+ vec3 V=normalize(uCam-vW),L1=normalize(vec3(.12,1.,.18)),L2=normalize(vec3(-1.,.45,.2)),H2=normalize(L2+V),H1=normalize(L1+V);
+ float dif=.40+.40*max(dot(n,L1),0.)+.34*max(dot(n,L2),0.)+.06*max(-n.y,0.);
+ float sp=.09*pow(max(dot(n,H2),0.),26.)+.06*pow(max(dot(n,H1),0.),40.);
+ float rim=pow(1.-max(dot(n,V),0.),3.)*.08;
+ vec3 col=vC*dif*ao+vec3(sp+rim);
+ if(vT.x>=0.){vec4 d=texture2D(uDec,vT);if(d.a<.5)discard;col=vec3(.95)*(.55+.45*dif)+vec3(sp*.6);}
+ col=mix(col,vec3(.81,.78,.74),clamp((distance(vW,uCam)-10.)/24.,0.,.28));gl_FragColor=vec4(col,1.);}`;
+const litProg=gl.createProgram();gl.attachShader(litProg,shader(gl.VERTEX_SHADER,litVS));gl.attachShader(litProg,shader(gl.FRAGMENT_SHADER,litFS));gl.linkProgram(litProg);
+if(!gl.getProgramParameter(litProg,gl.LINK_STATUS))throw Error(gl.getProgramInfoLog(litProg));
+const LL={P:gl.getAttribLocation(litProg,'aP'),N:gl.getAttribLocation(litProg,'aN'),C:gl.getAttribLocation(litProg,'aC'),R:gl.getAttribLocation(litProg,'aR'),T:gl.getAttribLocation(litProg,'aT'),
+ vp:gl.getUniformLocation(litProg,'uVP'),cam:gl.getUniformLocation(litProg,'uCam'),dec:gl.getUniformLocation(litProg,'uDec'),per:gl.getUniformLocation(litProg,'uPer')};
+const litBuf=gl.createBuffer();gl.bindBuffer(gl.ARRAY_BUFFER,litBuf);gl.bufferData(gl.ARRAY_BUFFER,new Float32Array(MV),gl.STATIC_DRAW);const litN=MV.length/13;let decTex=null;
+function drawLit(){if(!litN)return;gl.useProgram(litProg);gl.bindBuffer(gl.ARRAY_BUFFER,litBuf);
+ for(let i=0;i<8;i++)gl.disableVertexAttribArray(i);
+ for(const [l,n,o] of [[LL.P,3,0],[LL.N,3,3],[LL.C,3,6],[LL.R,2,9],[LL.T,2,11]]){if(l<0)continue;gl.enableVertexAttribArray(l);gl.vertexAttribPointer(l,n,gl.FLOAT,false,52,o*4)}
+ gl.uniformMatrix4fv(LL.vp,false,mvp);gl.uniform3f(LL.cam,cam.x,cam.y,cam.z);gl.uniform1f(LL.per,.0136);gl.activeTexture(gl.TEXTURE0);gl.bindTexture(gl.TEXTURE_2D,decTex);gl.uniform1i(LL.dec,0);
+ gl.drawArrays(gl.TRIANGLES,0,litN);
+ for(let i=0;i<8;i++)gl.disableVertexAttribArray(i);gl.useProgram(program)}
 for(const s of SPR){const [U0,V0,U1,V1]=s.uv;for(const t of [[U0,V1],[U1,V1],[U1,V0],[U0,V1],[U1,V0],[U0,V0]]){sU.push(...t);sS.push(s.shade)}}
 const spriteMesh=mesh(spriteGeometry(Math.PI/2),sU,sS);let lastSprCam='';
 function updateSprites(){const k=cam.yaw.toFixed(3);if(k===lastSprCam)return;lastSprCam=k;gl.bindBuffer(gl.ARRAY_BUFFER,spriteMesh.p);gl.bufferData(gl.ARRAY_BUFFER,new Float32Array(spriteGeometry(cam.yaw)),gl.DYNAMIC_DRAW)}let atlasTex=null,spriteTex=null;
@@ -291,9 +355,9 @@ let lastOverlay=0;
 function render(now){const dt=Math.min(.055,(now-last)/1000||.016);last=now;animate(dt);const dpr=Math.min(window.devicePixelRatio||1,1.6);const w=Math.round(canvas.clientWidth*dpr),h=Math.round(canvas.clientHeight*dpr);if(canvas.width!==w||canvas.height!==h){canvas.width=w;canvas.height=h;gl.viewport(0,0,w,h)}
 gl.clearColor(.81,.79,.73,1);gl.clear(gl.COLOR_BUFFER_BIT|gl.DEPTH_BUFFER_BIT);
 const fw=[Math.sin(cam.yaw)*Math.cos(cam.pitch),Math.sin(cam.pitch),-Math.cos(cam.yaw)*Math.cos(cam.pitch)];const proj=perspective(Math.PI/3.1,w/h,.09,75),view=lookAt([cam.x,cam.y,cam.z],[cam.x+fw[0],cam.y+fw[1],cam.z+fw[2]]);mvp=mul(proj,view);
-gl.uniformMatrix4fv(loc.mvp,false,mvp);gl.uniform3f(loc.camera,cam.x,cam.y,cam.z);bindMesh(worldMesh);gl.bindTexture(gl.TEXTURE_2D,atlasTex);gl.uniform1f(loc.cut,-1.);gl.drawArrays(gl.TRIANGLES,0,worldMesh.n);if(lugTex&&lugMesh.n){bindMesh(lugMesh);gl.bindTexture(gl.TEXTURE_2D,lugTex);gl.uniform1f(loc.cut,.5);gl.drawArrays(gl.TRIANGLES,0,lugMesh.n);gl.uniform1f(loc.cut,-1.)}if(spriteTex&&spriteMesh.n){updateSprites();bindMesh(spriteMesh);gl.bindTexture(gl.TEXTURE_2D,spriteTex);gl.uniform1f(loc.cut,.5);gl.drawArrays(gl.TRIANGLES,0,spriteMesh.n)}if(now-lastOverlay>45){updateOverlay();lastOverlay=now}requestAnimationFrame(render)}
+gl.uniformMatrix4fv(loc.mvp,false,mvp);gl.uniform3f(loc.camera,cam.x,cam.y,cam.z);bindMesh(worldMesh);gl.bindTexture(gl.TEXTURE_2D,atlasTex);gl.uniform1f(loc.cut,-1.);gl.drawArrays(gl.TRIANGLES,0,worldMesh.n);if(decTex)drawLit();if(spriteTex&&spriteMesh.n){updateSprites();bindMesh(spriteMesh);gl.bindTexture(gl.TEXTURE_2D,spriteTex);gl.uniform1f(loc.cut,.5);gl.drawArrays(gl.TRIANGLES,0,spriteMesh.n)}if(now-lastOverlay>45){updateOverlay();lastOverlay=now}requestAnimationFrame(render)}
 function loadTex(url,fmt){return new Promise((ok,bad)=>{const im=new Image();im.onload=()=>{const t=gl.createTexture();gl.bindTexture(gl.TEXTURE_2D,t);gl.pixelStorei(gl.UNPACK_FLIP_Y_WEBGL,false);gl.texImage2D(gl.TEXTURE_2D,0,fmt,fmt,gl.UNSIGNED_BYTE,im);gl.texParameteri(gl.TEXTURE_2D,gl.TEXTURE_MIN_FILTER,gl.LINEAR_MIPMAP_LINEAR);gl.texParameteri(gl.TEXTURE_2D,gl.TEXTURE_MAG_FILTER,gl.LINEAR);gl.texParameteri(gl.TEXTURE_2D,gl.TEXTURE_WRAP_S,gl.CLAMP_TO_EDGE);gl.texParameteri(gl.TEXTURE_2D,gl.TEXTURE_WRAP_T,gl.CLAMP_TO_EDGE);gl.generateMipmap(gl.TEXTURE_2D);ok(t)};im.onerror=bad;im.src=url})}
 function launch(){gl.activeTexture(gl.TEXTURE0);gl.uniform1i(loc.sampler,0);
-Promise.all([loadTex(window.JS_ATLAS_URL,gl.RGB),window.JS_SPRITE_URL?loadTex(window.JS_SPRITE_URL,gl.RGBA).catch(()=>null):Promise.resolve(null),window.JS_LUG_URL?loadTex(window.JS_LUG_URL,gl.RGBA).catch(()=>null):Promise.resolve(null)]).then(([a,b,c])=>{atlasTex=a;spriteTex=b;lugTex=c;gl.enable(gl.DEPTH_TEST);gl.disable(gl.CULL_FACE);$('loading').hidden=true;setArea('entrance');last=performance.now();requestAnimationFrame(render)}).catch(()=>{$('loading').innerHTML='<div class="loadbox">Unable to load 3D textures. Extract the whole ZIP first.</div>'})}
+Promise.all([loadTex(window.JS_ATLAS_URL,gl.RGB),window.JS_SPRITE_URL?loadTex(window.JS_SPRITE_URL,gl.RGBA).catch(()=>null):Promise.resolve(null),window.JS_DECAL_URL?loadTex(window.JS_DECAL_URL,gl.RGBA).catch(()=>null):Promise.resolve(null)]).then(([a,b,c])=>{atlasTex=a;spriteTex=b;decTex=c;gl.enable(gl.DEPTH_TEST);gl.disable(gl.CULL_FACE);$('loading').hidden=true;setArea('entrance');last=performance.now();requestAnimationFrame(render)}).catch(()=>{$('loading').innerHTML='<div class="loadbox">Unable to load 3D textures. Extract the whole ZIP first.</div>'})}
 launch();
 })();
