@@ -46,7 +46,7 @@ const C=[[1,1],[-1,1],[-1,-1],[1,-1]],sh=[1.02,.9,.7,.86];
 for(let i=0;i<4;i++){const [s1,u1]=C[i],[s2,u2]=C[(i+1)%4];quad(P(a,s1,u1),P(a,s2,u2),P(b,s2,u2),P(b,s1,u1),tex,.83*sh[i])}}
 // Environment geometry: phototextured racks in a walkable world, not panorama cards.
 // Our Story recess under the staircase (left wall): runs from m=-.45 to 3.2 along the wall, 0.75 m deep
-const OS={zs:.3,W:3.2,m2:-.45,SW:.3,d:m=>.9+.85*m};
+const OS={zs:.32,W:3.2,m2:0,SW:.3,d:m=>.9+.85*m};
 const FRONT=4.55,RC=(-10.22+FRONT)/2,RL=FRONT+10.22; // room front (entrance) and centre/length along z
 function buildWorld(){
 // Floor: repeated genuine volumetric floor geometry, light-oak texture.
