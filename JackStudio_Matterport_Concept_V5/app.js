@@ -74,7 +74,7 @@ backWall();
 rack(-1,2.65,'essential','ESSENTIAL');rack(-1,-2.15,'heritage','CRAFT HERITAGE');rack(-1,-7.10,'fashion','EVERYDAY STYLE');
 urbanZone();profZone();travelZone();
 // Main freestanding display islands, with three-dimensional leather products.
-craftInnovative(0.3,0.35);craftHeritage(0,-2.25);
+craftInnovative(0.3,0.35);craftHeritage(0,-2.25);giftTable(-2.0,-5.6);
 }
 // Back of store, rebuilt from the storefront photo: lit JACK STUDiO letters over a wide
 // solid white end wall, nothing else on the wall.
@@ -200,6 +200,19 @@ function craftHeritage(cx,cz){
   if(k==='chp_1'){const top=H(277);box(x-.04,(y+top)/2,Z(783),.02,top-y,.02,'white',.9);box(x-.04,y+.008,Z(783),.16,.016,.16,'white',.85);
    for(const sz of [-1,1])line3([x-.04,top,Z(783)],[x-.04,top-.05,Z(783)+sz*.13],.014,'white')}   // chrome hanging stand
  }
+}
+// GIFTING / MAKE IT PERSONAL table at the back, from the store photos: a live-edge teak table on
+// black U-frame legs, facing the entrance; everything on it (gift boxes, Just for You cards, sticker
+// pack, MAKE IT PERSONAL and ENGRAVING signs, paper bag, keychain board, wrapping tray) is one
+// cut-out from the straight-on photo, standing on the table.
+function giftTable(cx,cz){
+ const L=1.55,DP=.7,TH=.76,T=.045,front=cz+DP/2,y=TH;
+ box(cx,y-T/2,cz,L,T,DP,'wood',.9);box(cx,y-T-.006,cz,L-.04,.012,DP-.04,'wood',.55);
+ for(const sx of [-1,1]){const lx=cx+sx*(L/2-.22);
+  for(const z of [front-.06,cz-DP/2+.06])box(lx,(y-T)/2,z,.05,y-T,.05,'metal',1);
+  box(lx,.025,cz,.05,.05,DP-.08,'metal',1);box(lx,y-T-.025,cz,.05,.05,DP-.08,'metal',.9)}
+ const m=SP.gt_items;if(m){const w=1.58,h=w*m.aspect,zc=cz-.12;
+  photoQuad('gt_items',[[cx-w/2+.02,y,zc],[cx+w/2+.02,y,zc],[cx+w/2+.02,y+h,zc],[cx-w/2+.02,y+h,zc]],1.08)}
 }
 function travelZone(){
 const W=5.43,FR=W-.45;
@@ -484,7 +497,7 @@ function wrap(a){return Math.atan2(Math.sin(a),Math.cos(a))}
 function updateArea(){const s=nearestStop();if(s.id!==activeID){activeID=s.id;$('areaTitle').textContent=s.name;$('areaDescription').textContent=s.desc}}
 function blocked(x,z,r=.32){if(Math.abs(x)>5.04-r||z< -9.52+r||z>FRONT-.25-r)return true;
 // central island & service counter; white glass door not obstructed
-for(const obj of [{x:.3,z:.35,w:.75,h:.62},{x:.3-.78,z:.31,w:.5,h:.42},{x:0,z:-2.25,w:1.08,h:3.1}])
+for(const obj of [{x:.3,z:.35,w:.75,h:.62},{x:.3-.78,z:.31,w:.5,h:.42},{x:0,z:-2.25,w:1.08,h:3.1},{x:-2.0,z:-5.6,w:1.6,h:.75}])
 if(Math.abs(x-obj.x)<obj.w/2+r&&Math.abs(z-obj.z)<obj.h/2+r)return true;
 return false}
 function gridPath(tx,tz){tx=clamp(tx,-4.6,4.6);tz=clamp(tz,-9.04,FRONT-.6);const step=.4,nx=25,nz=46,x0=-4.8,z0=-9.1;
