@@ -74,7 +74,7 @@ backWall();
 rack(-1,2.65,'essential','ESSENTIAL');rack(-1,-2.15,'heritage','CRAFT HERITAGE');rack(-1,-7.10,'fashion','EVERYDAY STYLE');
 urbanZone();profZone();travelZone();
 // Main freestanding display islands, with three-dimensional leather products.
-craftInnovative(0.3,0.35);craftHeritage(0,-2.25);giftTable(0,-7.4);
+craftInnovative(0.3,0.35);craftHeritage(0,-2.25);giftTable(0,-7.4);walletCounter(0,-9.05);
 }
 // Back of store, rebuilt from the storefront photo: lit JACK STUDiO letters over a wide
 // solid white end wall, nothing else on the wall.
@@ -213,6 +213,40 @@ function giftTable(cx,cz){
   box(lx,.025,cz,.05,.05,DP-.08,'metal',1);box(lx,y-T-.025,cz,.05,.05,DP-.08,'metal',.9)}
  const m=SP.gt_items;if(m){const w=1.58,h=w*m.aspect,zc=cz-.12;
   photoQuad('gt_items',[[cx-w/2+.02,y,zc],[cx+w/2+.02,y,zc],[cx+w/2+.02,y+h,zc],[cx-w/2+.02,y+h,zc]],1.08)}
+}
+// Wallet counter behind the gifting table: light-wood top on a black frame with the black
+// JACK STUDIO cloth hanging in front (photo), dressed like the wallet display photo - two linen
+// trays (one raised on a black wire stand), black step racks of wallets, a chrome keychain spinner
+// and a small easel card.
+function walletCounter(cx,cz){
+ const L=1.5,DP=.66,H=.9,front=cz+DP/2,back=cz-DP/2,y=H+.03,K='metal',lin='birch';
+ box(cx,H+.015,cz,L+.04,.03,DP+.04,'birch',1.1);
+ for(const sx of [-1,1])for(const z of [front-.02,back+.02])box(cx+sx*(L/2-.02),H/2,z,.04,H,.04,'metal',1);
+ box(cx,H-.02,back+.02,L,.04,.04,'metal',1);box(cx,.03,back+.02,L,.04,.04,'metal',1);
+ for(const sx of [-1,1])box(cx+sx*(L/2-.02),H/2,cz,.03,H-.05,DP-.04,'metal',.55);
+ photoQuad('ct_front',[[cx-L/2,.0,front+.004],[cx+L/2,.0,front+.004],[cx+L/2,H,front+.004],[cx-L/2,H,front+.004]],.72);
+ const tray=(x,yb,z,w,d)=>{box(x,yb+.004,z,w,.008,d,lin,.86);for(const [dx,dz,ww,dd] of [[0,d/2,w,.012],[0,-d/2,w,.012],[w/2,0,.012,d],[-w/2,0,.012,d]])box(x+dx,yb+.025,z+dz,ww,.05,dd,lin,.92)};
+ const wallet=(x,yb,z,w,d,tex='darkleather')=>box(x,yb+.009,z,w,.018,d,tex,1);
+ // front tray (on the counter) with wallets laid out in two rows
+ const t1x=cx-.18,t1z=cz+.1;tray(t1x,y,t1z,.62,.3);
+ for(let i=0;i<4;i++)wallet(t1x-.22+i*.12,y+.008,t1z-.07,.1,.12,i===1?'brownleather':'darkleather');
+ for(let i=0;i<3;i++)wallet(t1x-.17+i*.16,y+.008,t1z+.07,.13,.1,i===1?'brownleather':'darkleather');
+ // raised tray on a black wire stand, behind
+ const t2x=cx-.05,t2z=cz-.13,t2y=y+.13;
+ for(let i=0;i<5;i++)box(t2x-.26+i*.13,y+.065,t2z,.008,.13,.24,'metal',1);
+ box(t2x,y+.004,t2z,.6,.008,.24,'metal',.9);tray(t2x,t2y,t2z,.62,.26);
+ wallet(t2x+.12,t2y+.008,t2z+.03,.12,.09,'brownleather');wallet(t2x+.2,t2y+.008,t2z-.02,.12,.09,'darkleather');
+ // keychain spinner + easel card on the raised tray
+ const sx=t2x-.2,sz=t2z;box(sx,t2y+.15,sz,.01,.3,.01,'white',.95);
+ for(let i=0;i<6;i++){const a=i/6*Math.PI*2;line3([sx,t2y+.27,sz],[sx+Math.cos(a)*.07,t2y+.25,sz+Math.sin(a)*.07],.006,'white');
+  box(sx+Math.cos(a)*.07,t2y+.2,sz+Math.sin(a)*.07,.03,.08,.015,i%2?'darkleather':'brownleather',1)}
+ box(t2x-.06,t2y+.07,t2z+.04,.08,.11,.006,'brownleather',1.15);line3([t2x-.06,t2y,t2z+.08],[t2x-.06,t2y+.12,t2z+.04],.006,'wood');
+ // black step racks of standing wallets (left and right ends)
+ const rack=(x,z,n,dir)=>{for(let i=0;i<n;i++){const zz=z-i*.05*dir,yy=y+.04+i*.025;box(x,yy+.05,zz,.11,.1,.016,'darkleather',.55-.02*i);box(x,yy,zz,.12,.004,.03,'metal',1)}
+  line3([x-.06,y,z+.02*dir],[x-.06,y+.04+n*.025+.1,z-(n-1)*.05*dir],.006,'metal');line3([x+.06,y,z+.02*dir],[x+.06,y+.04+n*.025+.1,z-(n-1)*.05*dir],.006,'metal')};
+ rack(cx-.6,cz+.18,5,1);rack(cx+.48,cz+.2,6,1);
+ // price tags
+ for(const [x,z] of [[cx-.6,cz+.25],[cx+.48,cz+.27],[t1x,t1z+.16]])box(x,y+.03,z,.08,.05,.006,'white',1.2);
 }
 function travelZone(){
 const W=5.43,FR=W-.45;
@@ -497,7 +531,7 @@ function wrap(a){return Math.atan2(Math.sin(a),Math.cos(a))}
 function updateArea(){const s=nearestStop();if(s.id!==activeID){activeID=s.id;$('areaTitle').textContent=s.name;$('areaDescription').textContent=s.desc}}
 function blocked(x,z,r=.32){if(Math.abs(x)>5.04-r||z< -9.52+r||z>FRONT-.25-r)return true;
 // central island & service counter; white glass door not obstructed
-for(const obj of [{x:.3,z:.35,w:.75,h:.62},{x:.3-.78,z:.31,w:.5,h:.42},{x:0,z:-2.25,w:1.08,h:3.1},{x:0,z:-7.4,w:1.6,h:.75}])
+for(const obj of [{x:.3,z:.35,w:.75,h:.62},{x:.3-.78,z:.31,w:.5,h:.42},{x:0,z:-2.25,w:1.08,h:3.1},{x:0,z:-7.4,w:1.6,h:.75},{x:0,z:-9.05,w:1.6,h:.75}])
 if(Math.abs(x-obj.x)<obj.w/2+r&&Math.abs(z-obj.z)<obj.h/2+r)return true;
 return false}
 function gridPath(tx,tz){tx=clamp(tx,-4.6,4.6);tz=clamp(tz,-9.04,FRONT-.6);const step=.4,nx=25,nz=46,x0=-4.8,z0=-9.1;
