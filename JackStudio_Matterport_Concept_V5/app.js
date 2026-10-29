@@ -200,9 +200,6 @@ function craftHeritage(cx,cz){
   if(k==='chp_1'){const top=H(277);box(x-.04,(y+top)/2,Z(783),.02,top-y,.02,'white',.9);box(x-.04,y+.008,Z(783),.16,.016,.16,'white',.85);
    for(const sz of [-1,1])line3([x-.04,top,Z(783)],[x-.04,top-.05,Z(783)+sz*.13],.014,'white')}   // chrome hanging stand
  }
- // white plinth with wallets, behind the table's left end (as seen from the display side)
- const pz=cz+1.58*S,px=back-.32*S,PW=.5*S,PH=.9*S;box(px,PH/2,pz,PW,PH,PW,'white',.97);
- const q=SP.ch_plinth;if(q){const w=.42*S,h=w*q.aspect;photoQuad('ch_plinth',[[px,PH,pz+w/2],[px,PH,pz-w/2],[px,PH+h,pz-w/2],[px,PH+h,pz+w/2]],1.05)}
 }
 function travelZone(){
 const W=5.43,FR=W-.45;
@@ -487,7 +484,7 @@ function wrap(a){return Math.atan2(Math.sin(a),Math.cos(a))}
 function updateArea(){const s=nearestStop();if(s.id!==activeID){activeID=s.id;$('areaTitle').textContent=s.name;$('areaDescription').textContent=s.desc}}
 function blocked(x,z,r=.32){if(Math.abs(x)>5.04-r||z< -9.52+r||z>FRONT-.25-r)return true;
 // central island & service counter; white glass door not obstructed
-for(const obj of [{x:.3,z:2.0,w:.75,h:.62},{x:.3-.78,z:1.96,w:.5,h:.42},{x:0,z:-2.25,w:1.08,h:3.1},{x:-.89,z:-.43,w:.6,h:.6}])
+for(const obj of [{x:.3,z:2.0,w:.75,h:.62},{x:.3-.78,z:1.96,w:.5,h:.42},{x:0,z:-2.25,w:1.08,h:3.1}])
 if(Math.abs(x-obj.x)<obj.w/2+r&&Math.abs(z-obj.z)<obj.h/2+r)return true;
 return false}
 function gridPath(tx,tz){tx=clamp(tx,-4.6,4.6);tz=clamp(tz,-9.04,FRONT-.6);const step=.4,nx=25,nz=46,x0=-4.8,z0=-9.1;
