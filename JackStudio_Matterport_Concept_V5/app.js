@@ -71,7 +71,7 @@ for(const x of [-2.5,2.5]){
 for(const z of [-7.3,-2.1,3.1])box(0,4.0,z,3.2,.06,.06,'metal',.8);
 backWall();
 // Main wall arrays with actual store photos integrated into the display backing.
-rack(-1,2.65,'essential','ESSENTIAL');rack(-1,-2.15,'heritage','CRAFT HERITAGE');rack(-1,-7.10,'fashion','EVERYDAY STYLE');
+essentialZone();rack(-1,-2.15,'heritage','CRAFT HERITAGE');rack(-1,-7.10,'fashion','EVERYDAY STYLE');
 urbanZone();profZone();travelZone();
 // Main freestanding display islands, with three-dimensional leather products.
 craftInnovative(0.3,0.35);craftHeritage(0,-2.25);giftTable(0,-5.8);walletCounter(0,-7.45);
@@ -247,6 +247,22 @@ function walletCounter(cx,cz){
  rack(cx-.6,cz+.18,5,1);rack(cx+.48,cz+.2,6,1);
  // price tags
  for(const [x,z] of [[cx-.6,cz+.25],[cx+.48,cz+.27],[t1x,t1z+.16]])box(x,y+.03,z,.08,.05,.006,'white',1.2);
+}
+// ESSENTIAL (left wall, by the entrance), from the store photo: lettering, MADE FOR EVERYDAY EASE
+// poster, pegboard with belts and wallets (wall photo, mannequin painted out), the bust mannequin
+// standing in front, and the tall black ladder shelf with its two rows of bags (photo cut-outs).
+// Photo units: 350 px = 1 u, scaled by G; viewer faces -x, so photo-right is -z.
+function essentialZone(){
+ const G=1.12,X=-5.43,zL=4.15,Z=u=>zL-u*G,P=350;
+ const w=SP.es_wall;if(w)photoQuad('es_wall',[[X+.006,w.v0*G,Z(w.u0)],[X+.006,w.v0*G,Z(w.u1)],[X+.006,w.v1*G,Z(w.u1)],[X+.006,w.v1*G,Z(w.u0)]],.86);
+ const m=SP.es_mq;if(m){const h=m.ph/P*G;sprite(X+.45,Z(1.25),m.pw/P*G/2,0,h,'es_mq',1.0,true)}
+ // tall ladder shelf: ladder sides at both ends, four birch shelves, LED strips under the top two
+ const xf=X+.5*G,xb=X+.03,xm=(xf+xb)/2,zl=Z(1.6),zr=Z(2.64),top=3.16*G,LV=[.13,.97,1.84,2.54].map(v=>v*G);
+ for(const z of [zl,zr]){box(xf,top/2,z,.04,top,.04,'metal',1);box(xb,top/2,z,.04,top,.04,'metal',1);box(xm,top,z,xb-xf,.04,.04,'metal',1);
+  for(let y=.3;y<top-.2;y+=.3)box(xm,y,z,xb-xf,.035,.035,'metal',1)}
+ for(const y of LV){box(xm,y-.015,(zl+zr)/2,xb-xf-.02,.03,zl-zr-.03,'birch',1.1);if(y>2)box(xf+.06,y-.034,(zl+zr)/2,.02,.008,zl-zr-.1,'white',1.6)}
+ box(xm,LV[1]+.45,(zl+zr)/2,.03,.03,zl-zr,'metal',1);line3([xb-.01,LV[0]+.03,zl-.03],[xb-.01,LV[1]-.03,zr+.03],.014,'metal');line3([xb-.01,LV[1]-.03,zl-.03],[xb-.01,LV[0]+.03,zr+.03],.014,'metal');
+ for(const [k,lv] of [['es_top',2],['es_mid',1]]){const q=SP[k];if(!q)continue;const ww=q.pw/P*G*1.35,hh=q.ph/P*G*1.35;sprite(xf+.16,(zl+zr)/2,ww/2,LV[lv],LV[lv]+hh,k,1.05,true)}
 }
 function travelZone(){
 const W=5.43,FR=W-.45;
