@@ -75,7 +75,7 @@ for(const x of [-2.5,2.5]){
 for(const z of [-7.3,-2.1,3.1])box(0,4.0,z,3.2,.06,.06,'metal',.8);
 backWall();
 // Main wall arrays with actual store photos integrated into the display backing.
-brandWalls();essentialZone(-6.75);
+brandWalls();essentialZone();
 urbanZone();profZone();travelZone();
 // Main freestanding display islands, with three-dimensional leather products.
 craftInnovative(0.3,0.35);craftHeritage(0,-2.25);giftTable(0,-5.8);walletCounter(0,-7.45);
@@ -256,19 +256,40 @@ function walletCounter(cx,cz){
 // poster, pegboard with belts and wallets (wall photo, mannequin painted out), the bust mannequin
 // standing in front, and the tall black ladder shelf with its two rows of bags (photo cut-outs).
 // Photo units: 350 px = 1 u, scaled by G; viewer faces -x, so photo-right is -z.
-function essentialZone(zL){
- const G=1.27,X=-5.43,Z=u=>zL-u*G,P=350;
- // wall graphics (ESSENTIAL lettering, poster, pegboard with belts) as separate cut-outs, spread along the bay
- const SH=-2.3,EU=x=>Z(x/P+SH),EV=y=>(3.0428-y/P)*G;
- for(const [k,sh] of [['lw_esstext',.9],['lw_poster',1],['lw_peg',1]]){const q=SP[k];if(!q)continue;const [x0,y0,x1,y1]=q.px;photoQuad(k,[[X+.012,EV(y1),EU(x0)],[X+.012,EV(y1),EU(x1)],[X+.012,EV(y0),EU(x1)],[X+.012,EV(y0),EU(x0)]],sh)}
- const m=SP.es_mq;if(m){const h=m.ph/P*G;sprite(X+.6,Z(-.43),m.pw/P*G/2,0,h,'es_mq',1.0,true)}
- // tall ladder shelf: ladder sides at both ends, four birch shelves, LED strips under the top two
- const xf=X+.5*G,xb=X+.03,xm=(xf+xb)/2,zl=Z(1.6),zr=Z(2.64),top=3.16*G,LV=[.13,.97,1.84,2.54].map(v=>v*G);
- for(const z of [zl,zr]){box(xf,top/2,z,.04,top,.04,'metal',1);box(xb,top/2,z,.04,top,.04,'metal',1);box(xm,top,z,xb-xf,.04,.04,'metal',1);
-  for(let y=.3;y<top-.2;y+=.3)box(xm,y,z,xb-xf,.035,.035,'metal',1)}
- for(const y of LV){box(xm,y-.015,(zl+zr)/2,xb-xf-.02,.03,zl-zr-.03,'birch',1.1);if(y>2)box(xf+.06,y-.034,(zl+zr)/2,.02,.008,zl-zr-.1,'white',1.6)}
- box(xm,LV[1]+.45,(zl+zr)/2,.03,.03,zl-zr,'metal',1);line3([xb-.01,LV[0]+.03,zl-.03],[xb-.01,LV[1]-.03,zr+.03],.014,'metal');line3([xb-.01,LV[1]-.03,zl-.03],[xb-.01,LV[0]+.03,zr+.03],.014,'metal');
- for(const [k,lv] of [['es_top',2],['es_mid',1]]){const q=SP[k];if(!q)continue;const ww=q.pw/P*G*1.35,hh=q.ph/P*G*1.35;sprite(xf+.16,(zl+zr)/2,ww/2,LV[lv],LV[lv]+hh,k,1.05,true)}
+// ESSENTIAL corner (left wall, back), built from the straight-on store photo (500 px = 1 m at the
+// shelf, 450 px = 1 m on the wall): ESSENTIAL lettering, framed poster, birch pegboard with ledges,
+// wallets, waist bag and hanging belts, the bust mannequin on its red base, and the tall black
+// ladder shelf (four birch shelves, LED strips, crossbar with the red JACK STUDIO sign, X bracing)
+// with its three rows of bags standing on the shelves. Viewer faces -x, photo-right = -z.
+function essentialZone(){
+ const X=-5.43,P=500,PW=450,zR=-10.08,Z=x=>zR+(1585-x)/P,ZW=x=>zR+(1585-x)/P,Y=y=>(1490-y)/P,YW=y=>(1335-y)/PW;
+ const on=(k,x,d,sh)=>{const m=SP[k];if(!m)return;const [x0,y0,x1,y1]=m.px;photoQuad(k,[[X+d,YW(y1),ZW(x0)],[X+d,YW(y1),ZW(x1)],[X+d,YW(y0),ZW(x1)],[X+d,YW(y0),ZW(x0)]],sh)};
+ on('e2_text',0,.012,1.0);
+ // poster in a slim black frame
+ {const [x0,y0,x1,y1]=[607,343,850,692],zc=(ZW(x0)+ZW(x1))/2,yc=(YW(y0)+YW(y1))/2,w=ZW(x0)-ZW(x1),h=YW(y0)-YW(y1);
+  box(X+.012,yc,zc,.024,h,w,'metal',.55);on('e2_poster',0,.026,1.02)}
+ // pegboard (birch board 18 mm off the wall) with its print, ledges with the wallets
+ {const [x0,y0,x1,y1]=[488,728,949,887],zc=(ZW(x0)+ZW(x1))/2,yc=(YW(y0)+YW(y1))/2;
+  box(X+.02,yc,zc,.02,YW(y0)-YW(y1),ZW(x0)-ZW(x1),'birch',1.0);on('e2_peg',0,.031,1.0);
+  for(const [a,b,y] of [[790,912,741],[658,775,808],[762,880,838]])box(X+.06,YW(y),(ZW(a)+ZW(b))/2,.06,.012,ZW(a)-ZW(b),'birch',1.1);
+  on('e2_belts',0,.034,1.0)}
+ // bust mannequin on its red base, standing in front of the wall
+ {const m=SP.e2_mq;if(m){const [x0,y0,x1,y1]=m.px;sprite(X+.55,Z((x0+x1)/2),(x1-x0)/P/2,0,(y1-y0)/P,'e2_mq',1.02,true)}}
+ // tall ladder shelf in the corner
+ const xf=X+.45,xb=X+.03,xm=(xf+xb)/2,zl=Z(985),zr=Z(1585),TOP=3.5,LV=[1395,1030,590,245].map(y=>Y(y));
+ for(const z of [zl,zr]){for(const x of [xf,xb])box(x,TOP/2,z,.035,TOP,.035,'metal',1);box(xm,TOP,z,xb-xf,.035,.035,'metal',1);
+  for(let y=.25;y<TOP-.1;y+=.27)box(xm,y,z,xb-xf,.03,.03,'metal',1)}
+ box(xf,TOP,(zl+zr)/2,.035,.035,zl-zr,'metal',1);box(xb,TOP,(zl+zr)/2,.035,.035,zl-zr,'metal',1);
+ for(const y of LV){box(xm,y-.014,(zl+zr)/2,xb-xf-.02,.028,zl-zr-.03,'birch',1.1)}
+ for(const y of [LV[2],LV[3]])box(xf+.05,y-.033,(zl+zr)/2,.02,.008,zl-zr-.1,'white',1.6);
+ const bar=Y(705);box(xf,bar,(zl+zr)/2,.035,.035,zl-zr,'metal',1);
+ for(const [y0,y1] of [[bar,LV[1]],[LV[1],LV[0]]]){line3([xb+.01,y0-.03,zl-.03],[xb+.01,y1+.03,zr+.03],.014,'metal');line3([xb+.01,y1+.03,zl-.03],[xb+.01,y0-.03,zr+.03],.014,'metal')}
+ // red JACK STUDIO sign hanging on the crossbar
+ {const m=SP.e2_sign;if(m){const [x0,y0,x1,y1]=m.px,zc=(Z(x0)+Z(x1))/2,w=(x1-x0)/P,h=(y1-y0)/P,yc=Y((y0+y1)/2);
+  box(xf+.006,yc,zc,.008,h,w,'metal',.6);photoQuad('e2_sign',[[xf+.012,yc-h/2,zc+w/2],[xf+.012,yc-h/2,zc-w/2],[xf+.012,yc+h/2,zc-w/2],[xf+.012,yc+h/2,zc+w/2]],1.05)}}
+ // the three rows of bags
+ for(const [k,lv] of [['e2_rowA',2],['e2_rowB',1],['e2_rowC',0]]){const m=SP[k];if(!m)continue;const [x0,y0,x1,y1]=m.px;
+  sprite(xm+.03,Z((x0+x1)/2),(x1-x0)/P/2,LV[lv],LV[lv]+(y1-y0)/P,k,1.04,Math.PI)}
 }
 // Left wall from the entrance, built as real pieces (no photo rectangles):
 // 1) BRAND PROMISE: wall lettering and the acrylic promise panel as cut-out graphics on the wall,
