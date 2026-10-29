@@ -283,32 +283,50 @@ function loft(cx,cz,rings,col,N=22){ // rings: [y, half-width (z), half-depth (x
    for(const id of [0,1,2,0,2,3])mpush(q[id][0],q[id][1],col,[0,0],[-1,-1])}}
  const [yt,at,bt]=rings[rings.length-1];for(let i=0;i<N;i++){const t0=i/N*Math.PI*2,t1=(i+1)/N*Math.PI*2;
   for(const p of [[cx,yt,cz],[cx+Math.cos(t0)*bt,yt,cz+Math.sin(t0)*at],[cx+Math.cos(t1)*bt,yt,cz+Math.sin(t1)*at]])mpush(p,[0,1,0],col,[0,0],[-1,-1])}}
-function dressForm(cx,cz,S,yaw=0){const c=Math.cos(yaw),sn=Math.sin(yaw);
- const RED=[.33,.07,.05],WOOD=[.3,.09,.06],CREAM=[.9,.87,.8],BLK=[.065,.065,.075],CH=[.8,.81,.82],HAND=[.17,.12,.1],id=(p,n)=>[p,n];
+// Bust mannequin modelled on the studio reference photo (sizes taken from it in px, 1310 px = full
+// height): glossy mahogany two-step square base and turned baluster column, chrome pole, cream neck
+// with an oval mahogany cap, boxy black long-sleeve with drop shoulders and ribbed cuffs, one arm
+// hanging and one bent forward with jointed wooden hands, crossbody strap with buckle, a small black
+// bag at the hip, tan leather tag, white chest print. Faces +x (the room); viewer's left is +z.
+function dressForm(cx,cz,S,yaw=0){const c=Math.cos(yaw),sn=Math.sin(yaw),u=1.27*S/1310,Y=v=>(1440-v)*u,W=v=>v*u;
+ const MAH=[.36,.07,.05],MAH2=[.42,.09,.06],CREAM=[.9,.87,.8],BLK=[.07,.07,.075],RIB=[.055,.055,.06],CH=[.82,.83,.85],HAND=[.2,.12,.09],TAN=[.85,.6,.38],id=(p,n)=>[p,n];
  XF=p=>{const dx=p[0]-cx,dz=p[2]-cz;return [cx+dx*c-dz*sn,p[1],cz+dx*sn+dz*c]};XFN=n=>[n[0]*c-n[2]*sn,n[1],n[0]*sn+n[2]*c];
- // square stepped base, turned wooden column, chrome pole
- rbox(id,[cx,.022*S,cz],[.2*S,.022*S,.2*S],.008,RED,null,[1,1,1]);rbox(id,[cx,.058*S,cz],[.15*S,.016*S,.15*S],.008,RED.map(v=>v*1.12),null,[1,1,1]);
- tube([cx,.074*S,cz],[cx,.11*S,cz],.05*S,.035*S,WOOD);tube([cx,.11*S,cz],[cx,.2*S,cz],.025*S,.04*S,WOOD);tube([cx,.2*S,cz],[cx,.26*S,cz],.04*S,.02*S,WOOD);tube([cx,.26*S,cz],[cx,.34*S,cz],.02*S,.028*S,WOOD);
- tube([cx,.34*S,cz],[cx,.63*S,cz],.011*S,.011*S,CH);
- // the form in the black sweatshirt: ribbed hem, waist, chest, broad rounded shoulders
- const y0=.6*S;loft(cx,cz,[[y0,.16*S,.1*S],[y0+.035*S,.162*S,.1*S],[y0+.04*S,.157*S,.097*S],[y0+.16*S,.155*S,.1*S],[y0+.3*S,.17*S,.115*S],[y0+.4*S,.185*S,.112*S],[y0+.46*S,.18*S,.1*S],[y0+.5*S,.14*S,.085*S],[y0+.535*S,.07*S,.055*S]],BLK,26);
- tube([cx,y0+.53*S,cz],[cx,y0+.64*S,cz],.043*S,.045*S,CREAM);tube([cx,y0+.64*S,cz],[cx,y0+.665*S,cz],.05*S,.04*S,WOOD);
- // left arm hangs to the hip; right arm bends forward at chest height (as in the store); dark hands
- const shL=[cx,y0+.44*S,cz-.175*S],elL=[cx+.01*S,y0+.2*S,cz-.205*S],wrL=[cx+.04*S,y0+.02*S,cz-.18*S];
- tube(shL,elL,.055*S,.05*S,BLK,[0,0],14);tube(elL,wrL,.05*S,.042*S,BLK,[0,0],14);tube(wrL,[wrL[0]+.02*S,wrL[1]-.09*S,wrL[2]-.01*S],.024*S,.02*S,HAND);
- const shR=[cx,y0+.44*S,cz+.175*S],elR=[cx+.05*S,y0+.22*S,cz+.215*S],wrR=[cx+.28*S,y0+.27*S,cz+.17*S];
- tube(shR,elR,.055*S,.05*S,BLK,[0,0],14);tube(elR,wrR,.05*S,.042*S,BLK,[0,0],14);tube(wrR,[wrR[0]+.09*S,wrR[1]+.005*S,wrR[2]+.02*S],.024*S,.021*S,HAND);
- // leather strap over the shoulder with its silver buckle, and the price tag
- tube([cx+.06*S,y0+.5*S,cz-.13*S],[cx+.12*S,y0+.2*S,cz+.1*S],.012*S,.012*S,[.11,.09,.08],[0,-1],6);
- rbox(id,[cx+.1*S,y0+.43*S,cz-.08*S],[.004*S,.012*S,.018*S],.003,[.62,.62,.64],null,[1,1,1]);
- rbox(id,[cx+.113*S,y0+.37*S,cz-.1*S],[.002*S,.02*S,.013*S],.002,[.72,.55,.4],null,[1,1,1]);
+ const P=(dx,y,dz)=>[cx+W(dx),Y(y),cz+W(dz)];
+ // base: two square steps
+ rbox(id,P(0,1418,0),[W(165),W(22),W(165)],W(6),MAH,null,[1,1,1]);rbox(id,P(0,1382,0),[W(128),W(15),W(128)],W(5),MAH2,null,[1,1,1]);
+ // turned baluster column
+ const col=[[1367,34],[1355,34],[1345,22],[1320,18],[1290,26],[1240,33],[1190,30],[1130,18],[1085,14],[1040,16],[1010,22],[995,22],[985,14],[968,12]];
+ for(let i=0;i<col.length-1;i++)tube(P(0,col[i][0],0),P(0,col[i+1][0],0),W(col[i][1]),W(col[i+1][1]),MAH2,[0,0],16);
+ tube(P(0,968,0),P(0,700,0),W(9),W(9),CH,[0,0],12);
+ // torso in the sweatshirt: hem, boxy body, drop shoulders, neckline
+ loft(cx,cz,[[Y(905),W(185),W(112)],[Y(895),W(188),W(114)],[Y(700),W(190),W(118)],[Y(480),W(195),W(122)],[Y(380),W(200),W(118)],[Y(330),W(185),W(100)],[Y(290),W(130),W(80)],[Y(262),W(68),W(55)]],BLK,28);
+ for(let i=0;i<3;i++)loft(cx,cz,[[Y(905-i*4),W(186),W(113)],[Y(903-i*4),W(187),W(114)]],RIB,28);
+ // neck and oval cap
+ tube(P(0,265,0),P(0,178,0),W(52),W(50),CREAM,[0,0],18);
+ loft(cx,cz,[[Y(182),W(72),W(48)],[Y(165),W(74),W(50)],[Y(150),W(70),W(47)],[Y(142),W(60),W(40)]],MAH,24);
+ // arms: viewer-right (-z) hangs straight; viewer-left (+z) bends forward at the elbow
+ const sleeve=(a,b,r0,r1)=>tube(a,b,r0,r1,BLK,[0,0],16);
+ const shR=P(0,345,-185),elR=P(10,620,-215),wrR=P(25,870,-208);sleeve(shR,elR,W(56),W(50));sleeve(elR,wrR,W(50),W(42));
+ tube(wrR,P(28,890,-207),W(43),W(40),RIB,[0,0],16);
+ const shL=P(0,345,185),elL=P(-20,560,250),wrL=P(160,520,215);sleeve(shL,elL,W(56),W(50));sleeve(elL,wrL,W(50),W(42));
+ tube(wrL,P(180,522,212),W(43),W(40),RIB,[0,0],16);
+ // jointed wooden hands
+ const hand=(base,dir,side)=>{const n=Math.hypot(...dir),d=dir.map(v=>v/n),L=W(95);
+  const palm=base.map((v,i)=>v+d[i]*L*.55);tube(base,palm,W(26),W(30),HAND,[0,0],10);
+  for(let f=0;f<4;f++){const off=(f-1.5)*W(15),q=[palm[0]+side[0]*off,palm[1]+side[1]*off,palm[2]+side[2]*off];
+   tube(q,q.map((v,i)=>v+d[i]*L*.5),W(8),W(7),HAND,[0,0],6)}
+  tube(base.map((v,i)=>v+d[i]*L*.2+side[i]*W(26)),base.map((v,i)=>v+d[i]*L*.55+side[i]*W(32)),W(8),W(7),HAND,[0,0],6)};
+ hand(P(28,890,-207),[W(30),-W(100),W(5)],[0,0,1]);
+ hand(P(180,522,212),[W(110),-W(10),-W(10)],[0,-1,0]);
+ // crossbody strap, buckle, small bag at the hip, leather tag
+ tube(P(70,300,-120),P(100,390,-150),W(10),W(10),[.05,.05,.055],[0,-1],6);
+ tube(P(118,360,-150),P(125,640,170),W(11),W(11),[.05,.05,.055],[0,-1],6);
+ rbox(id,P(108,335,-150),[W(4),W(16),W(26)],W(3),[.7,.7,.72],null,[1,1,1]);
+ rbox(id,P(122,680,195),[W(30),W(55),W(42)],W(10),[.06,.06,.065],null,[1,1,1]);
+ rbox(id,P(122,450,-105),[W(3),W(38),W(24)],W(4),TAN,null,[1,1,1]);
  XF=null;XFN=null;
- const q=SP.e3_print;if(q){const w=.2*S,h=w*q.aspect,yc=y0+.3*S,X0=.118*S;const R=(dx,dz)=>[cx+dx*c-dz*sn,0,cz+dx*sn+dz*c];
-  const pA=R(X0,w/2),pB=R(X0,-w/2);photoQuad('e3_print',[[pA[0],yc-h/2,pA[2]],[pB[0],yc-h/2,pB[2]],[pB[0],yc+h/2,pB[2]],[pA[0],yc+h/2,pA[2]]],1)}}
-// ESSENTIAL (left wall), built to the reference layout: ESSENTIAL lettering, framed poster and the
-// birch pegboard right beside a tall black shelf (posts on both sides, ladder on the right, open top
-// tier, four birch shelves with LED strips, crossbar with the red JACK STUDIO sign, X bracing), the
-// bust mannequin in front. Reference image px -> metres: 228 px = 1 m, floor at y=935.
+ const q=SP.e3_print;if(q){const w=W(300),h=w*q.aspect,yc=Y(540),X0=W(127);const R=(dx,dz)=>[cx+dx*c-dz*sn,0,cz+dx*sn+dz*c];
+  const pA=R(X0,w/2+W(10)),pB=R(X0,-w/2+W(10));photoQuad('e3_print',[[pA[0],yc-h/2,pA[2]],[pB[0],yc-h/2,pB[2]],[pB[0],yc+h/2,pB[2]],[pA[0],yc+h/2,pA[2]]],1)}}
 function essentialZone(){
  const X=-5.43,K=228,zR=-8.8,Z=x=>zR+(1145-x)/K,Y=y=>(935-y)/K,id=(p,n)=>[p,n];
  const flat=(k,d,sh)=>{const m=SP[k];if(!m)return;const [x0,y0,x1,y1]=m.px;photoQuad(k,[[X+d,Y(y1),Z(x0)],[X+d,Y(y1),Z(x1)],[X+d,Y(y0),Z(x1)],[X+d,Y(y0),Z(x0)]],sh)};
