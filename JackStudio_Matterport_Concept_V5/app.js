@@ -181,29 +181,28 @@ function craftInnovative(cx,cz){
  for(const dx of [-pw*.3,pw*.3]){box(px+dx,ptop+.025*S,sz+.006,.008,.05*S,.006,ch,.8);box(px+dx,ptop+.002,sz+.006,.025,.02,.012,ch,.95)}
 }
 // CRAFT HERITAGE: the long walnut table with black U-frame legs, rebuilt from the store photos.
-// The table top is the straightened photo of the top (belts, wallets, leather swatches lying flat);
-// everything standing on it (bags, owl backpack, lamp, stamping press, sign, hanging rack) is one
-// cut-out from the same photo. White plinth with wallets behind its left end.
+// As in the store it stands lengthways (long side along the room); its display side faces the
+// right-hand wall (+x), so from the entrance you see its end. The table top is the straightened
+// photo of the top; everything standing on it is cut out of the same photo and set at its own depth.
 function craftHeritage(cx,cz){
- const S=1.15,L=2.66*S,DP=.9*S,TH=.75*S,T=.05*S,front=cz+DP/2,back=cz-DP/2,y=TH;
- box(cx,y-T/2,cz,L,T,DP,'wood',.48);                                   // dark walnut slab
- photoQuad('ch_top',[[cx-L/2,y+.002,front],[cx+L/2,y+.002,front],[cx+L/2,y+.002,back],[cx-L/2,y+.002,back]],1.0);
- for(const sx of [-1,1]){const lx=cx+sx*(L/2-.35*S);                     // U-frame legs
-  for(const z of [front-.07*S,back+.07*S])box(lx,(y-T)/2,z,.06*S,y-T,.06*S,'metal',1);
-  box(lx,.03*S,cz,.06*S,.06*S,DP-.08*S,'metal',1);box(lx,y-T-.03*S,cz,.06*S,.06*S,DP-.08*S,'metal',.9)}
- // standing products: each cut-out sits on the table at the depth its base had in the photo
- // (lower in the photo = nearer the front), sized with the photo's perspective at that depth
+ const S=1.15,L=2.66*S,DP=.9*S,TH=.75*S,T=.05*S,front=cx+DP/2,back=cx-DP/2,y=TH;
+ box(cx,y-T/2,cz,DP,T,L,'wood',.48);                                   // dark walnut slab
+ photoQuad('ch_top',[[front,y+.002,cz+L/2],[front,y+.002,cz-L/2],[back,y+.002,cz-L/2],[back,y+.002,cz+L/2]],1.0);
+ for(const sz of [-1,1]){const lz=cz+sz*(L/2-.35*S);                     // U-frame legs at both ends
+  for(const x of [front-.07*S,back+.07*S])box(x,(y-T)/2,lz,.06*S,y-T,.06*S,'metal',1);
+  box(cx,.03*S,lz,DP-.08*S,.06*S,.06*S,'metal',1);box(cx,y-T-.03*S,lz,DP-.08*S,.06*S,.06*S,'metal',.9)}
+ // standing products: lower in the photo = nearer the display side; viewer's left is +z
  for(const [k,m] of Object.entries(SP)){if(!k.startsWith('chp_'))continue;
-  const t=Math.max(0,Math.min(1,(478-m.yb)/78)),ppm=316/(1+.6*t)/S,w=m.w/ppm,h=m.h/ppm,x=cx+(m.xc-558)/ppm,z=front-.06*S-t*(DP-.16*S);
-  sprite(x,z,w/2,y+.002,y+.002+h,k,1.08,-Math.PI/2);
-  const P=u=>x+(u-m.xc)/ppm,H=v=>y+(m.yb-v)/ppm;     // photo px -> world, for this card
-  if(k==='chp_0'){box(P(372),(y+H(300))/2,z-.03,.018,H(300)-y,.018,'metal',1);box(P(372),y+.01,z-.03,.12,.02,.12,'metal',1)}   // desk-lamp stem
-  if(k==='chp_1'){const top=H(277);box(P(783),(y+top)/2,z-.04,.02,top-y,.02,'white',.9);box(P(783),y+.008,z-.04,.16,.016,.16,'white',.85);
-   for(const sx of [-1,1])line3([P(783),top,z-.04],[P(783)+sx*.13,top-.05,z-.04],.014,'white')}            // chrome hanging stand
+  const t=Math.max(0,Math.min(1,(478-m.yb)/78)),ppm=316/(1+.6*t)/S,w=m.w/ppm,h=m.h/ppm,z=cz-(m.xc-558)/ppm,x=front-.06*S-t*(DP-.16*S);
+  sprite(x,z,w/2,y+.002,y+.002+h,k,1.08,Math.PI);
+  const Z=u=>z-(u-m.xc)/ppm,H=v=>y+(m.yb-v)/ppm;
+  if(k==='chp_0'){box(x-.03,(y+H(300))/2,Z(372),.018,H(300)-y,.018,'metal',1);box(x-.03,y+.01,Z(372),.12,.02,.12,'metal',1)}   // desk-lamp stem
+  if(k==='chp_1'){const top=H(277);box(x-.04,(y+top)/2,Z(783),.02,top-y,.02,'white',.9);box(x-.04,y+.008,Z(783),.16,.016,.16,'white',.85);
+   for(const sz of [-1,1])line3([x-.04,top,Z(783)],[x-.04,top-.05,Z(783)+sz*.13],.014,'white')}   // chrome hanging stand
  }
- // white plinth behind the left end
- const px=cx-1.58*S,pz=back-.32*S,PW=.5*S,PH=.9*S;box(px,PH/2,pz,PW,PH,PW,'white',.97);
- const q=SP.ch_plinth;if(q){const w=.42*S,h=w*q.aspect;photoQuad('ch_plinth',[[px-w/2,PH,pz],[px+w/2,PH,pz],[px+w/2,PH+h,pz],[px-w/2,PH+h,pz]],1.05)}
+ // white plinth with wallets, behind the table's left end (as seen from the display side)
+ const pz=cz+1.58*S,px=back-.32*S,PW=.5*S,PH=.9*S;box(px,PH/2,pz,PW,PH,PW,'white',.97);
+ const q=SP.ch_plinth;if(q){const w=.42*S,h=w*q.aspect;photoQuad('ch_plinth',[[px,PH,pz+w/2],[px,PH,pz-w/2],[px,PH+h,pz-w/2],[px,PH+h,pz+w/2]],1.05)}
 }
 function travelZone(){
 const W=5.43,FR=W-.45;
@@ -488,7 +487,7 @@ function wrap(a){return Math.atan2(Math.sin(a),Math.cos(a))}
 function updateArea(){const s=nearestStop();if(s.id!==activeID){activeID=s.id;$('areaTitle').textContent=s.name;$('areaDescription').textContent=s.desc}}
 function blocked(x,z,r=.32){if(Math.abs(x)>5.04-r||z< -9.52+r||z>FRONT-.25-r)return true;
 // central island & service counter; white glass door not obstructed
-for(const obj of [{x:.3,z:2.0,w:.75,h:.62},{x:.3-.78,z:1.96,w:.5,h:.42},{x:0,z:-2.25,w:3.1,h:1.08},{x:-1.82,z:-3.12,w:.6,h:.6}])
+for(const obj of [{x:.3,z:2.0,w:.75,h:.62},{x:.3-.78,z:1.96,w:.5,h:.42},{x:0,z:-2.25,w:1.08,h:3.1},{x:-.89,z:-.43,w:.6,h:.6}])
 if(Math.abs(x-obj.x)<obj.w/2+r&&Math.abs(z-obj.z)<obj.h/2+r)return true;
 return false}
 function gridPath(tx,tz){tx=clamp(tx,-4.6,4.6);tz=clamp(tz,-9.04,FRONT-.6);const step=.4,nx=25,nz=46,x0=-4.8,z0=-9.1;
