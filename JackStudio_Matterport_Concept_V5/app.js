@@ -55,7 +55,7 @@ quad([x,0,z+1.6],[x+1.35,0,z+1.6],[x+1.35,0,z],[x,0,z],'floor',.95+((Math.round(
 box(0,4.14,RC,11,0.17,RL,'cream',1.04);
 // White plaster walls, room boundary and entrance side returns.
 box(5.52,2,RC,.18,4,RL,'wall',.99);
-{const zA=OS.zs-OS.m2,zB=OS.zs-OS.W;box(-5.52+OS.SW/2,2,(FRONT+zA)/2,.18+OS.SW,4,FRONT-zA,'wall',.95);box(-5.52,2,(zB-10.22)/2,.18,4,zB+10.22,'wall',.95);
+{const zA=OS.zs-OS.m2,zB=OS.zs-OS.W;box(-5.52+OS.SW/2,2.03,(FRONT+zA)/2,.18+OS.SW,4.06,FRONT-zA,'wall',.95);box(-5.52,2,(zB-10.22)/2,.18,4,zB+10.22,'wall',.95);
  {const m0=OS.m2,m1=OS.W;quad([-5.43,OS.d(m0),OS.zs-m0],[-5.43,OS.d(m1),OS.zs-m1],[-5.43,4.06,OS.zs-m1],[-5.43,4.06,OS.zs-m0],'wall',.82)}}
 box(-4.4,2,FRONT,2.2,4,.16,'wall',1);box(4.4,2,FRONT,2.2,4,.16,'wall',1);
 box(-1.61,2,FRONT,.13,4,.15,'metal');box(1.61,2,FRONT,.13,4,.15,'metal');box(0,3.7,FRONT,3.2,.14,.12,'metal');
@@ -315,7 +315,7 @@ function brandWalls(){
  // the stair: a white mass standing out SW from the wood, flush with the Brand Promise wall; its sloped
  // underside shows along the top of the wood; above the slope its face runs up to the ceiling
  for(let k=0;k<24;k++){const a=m2+(W-m2)*k/24,b=m2+(W-m2)*(k+1)/24;quad([X,d(a),Z(a)],[X,d(b),Z(b)],[X+SW,d(b),Z(b)],[X+SW,d(a),Z(a)],'white',.8)}
- quad([X+SW,d(m2),Z(m2)],[X+SW,d(W),Z(W)],[X+SW,4.06,Z(W)],[X+SW,4.06,Z(m2)],'wall',.86);
+ quad([X+SW,d(m2),Z(m2)],[X+SW,d(W),Z(W)],[X+SW,4.06,Z(W)],[X+SW,4.06,Z(m2)],'wall',.865);
  quad([X,d(W),Z(W)],[X+SW,d(W),Z(W)],[X+SW,4.06,Z(W)],[X,4.06,Z(W)],'wall',.78);
 
  // OUR STORY: frosted acrylic, 0.64 x 0.66 m, 2 cm off the panel on four chrome stand-offs
