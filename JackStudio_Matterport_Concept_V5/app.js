@@ -274,21 +274,27 @@ function loft(cx,cz,rings,col,N=22){ // rings: [y, half-width (z), half-depth (x
    for(const id of [0,1,2,0,2,3])mpush(q[id][0],q[id][1],col,[0,0],[-1,-1])}}
  const [yt,at,bt]=rings[rings.length-1];for(let i=0;i<N;i++){const t0=i/N*Math.PI*2,t1=(i+1)/N*Math.PI*2;
   for(const p of [[cx,yt,cz],[cx+Math.cos(t0)*bt,yt,cz+Math.sin(t0)*at],[cx+Math.cos(t1)*bt,yt,cz+Math.sin(t1)*at]])mpush(p,[0,1,0],col,[0,0],[-1,-1])}}
-function dressForm(cx,cz,S){const RED=[.34,.09,.07],WOOD=[.22,.12,.08],CREAM=[.86,.83,.76],BLK=[.07,.07,.08],CH=[.75,.76,.78],id=(p,n)=>[p,n];
- rbox(id,[cx,.03*S,cz],[.21*S,.03*S,.21*S],.01,RED,null,[1,1,1]);rbox(id,[cx,.075*S,cz],[.15*S,.02*S,.15*S],.01,RED.map(v=>v*1.1),null,[1,1,1]);
- tube([cx,.09*S,cz],[cx,.33*S,cz],.03*S,.02*S,WOOD);tube([cx,.33*S,cz],[cx,.62*S,cz],.011*S,.011*S,CH);
- const y0=.62*S;loft(cx,cz,[[y0,.17*S,.1*S],[y0+.12*S,.165*S,.105*S],[y0+.3*S,.18*S,.12*S],[y0+.42*S,.2*S,.115*S],[y0+.5*S,.19*S,.1*S],[y0+.54*S,.12*S,.08*S],[y0+.56*S,.06*S,.05*S]],BLK);
- tube([cx,y0+.55*S,cz],[cx,y0+.64*S,cz],.045*S,.045*S,CREAM);tube([cx,y0+.64*S,cz],[cx,y0+.67*S,cz],.05*S,.02*S,WOOD);
- for(const sz of [-1,1]){const sh=[cx,y0+.47*S,cz+sz*.2*S],el=[cx+.02*S,y0+.22*S,cz+sz*.25*S],wr=[cx+(sz>0?.22:.05)*S,y0+(sz>0?.12:.02)*S,cz+sz*(sz>0?.18:.24)*S];
-  tube(sh,el,.055*S,.05*S,BLK);tube(el,wr,.05*S,.042*S,BLK);tube(wr,wr.map((v,i)=>v+(i===0?.07*S:i===1?-.01*S:0)),.025*S,.022*S,WOOD)}
- // crossbody strap and the white print on the chest
- tube([cx+.11*S,y0+.47*S,cz-.13*S],[cx+.12*S,y0+.12*S,cz+.17*S],.008*S,.008*S,[.12,.1,.09],[0,-1],6);
- const q=SP.e3_print;if(q){const w=.16*S,h=w*q.aspect,yc=y0+.33*S,X=cx+.125*S;photoQuad('e3_print',[[X,yc-h/2,cz+w/2],[X,yc-h/2,cz-w/2],[X,yc+h/2,cz-w/2],[X,yc+h/2,cz+w/2]],1)}}
+function dressForm(cx,cz,S){const RED=[.36,.08,.06],WOOD=[.25,.11,.07],CREAM=[.88,.85,.78],BLK=[.075,.075,.085],CH=[.78,.79,.8],HAND=[.2,.12,.08],id=(p,n)=>[p,n];
+ // stepped base + turned wooden foot + chrome pole
+ rbox(id,[cx,.025*S,cz],[.2*S,.025*S,.2*S],.012,RED,null,[1,1,1]);rbox(id,[cx,.065*S,cz],[.14*S,.018*S,.14*S],.01,RED.map(v=>v*1.12),null,[1,1,1]);
+ tube([cx,.08*S,cz],[cx,.16*S,cz],.035*S,.022*S,WOOD);tube([cx,.16*S,cz],[cx,.3*S,cz],.022*S,.03*S,WOOD);tube([cx,.3*S,cz],[cx,.36*S,cz],.03*S,.016*S,WOOD);
+ tube([cx,.36*S,cz],[cx,.66*S,cz],.011*S,.011*S,CH);
+ // torso wearing the sweatshirt (ribbed hem, chest, rounded shoulders)
+ const y0=.62*S;loft(cx,cz,[[y0,.165*S,.095*S],[y0+.04*S,.16*S,.095*S],[y0+.16*S,.155*S,.1*S],[y0+.3*S,.17*S,.115*S],[y0+.4*S,.185*S,.11*S],[y0+.46*S,.18*S,.1*S],[y0+.5*S,.14*S,.085*S],[y0+.53*S,.07*S,.055*S]],BLK);
+ tube([cx,y0+.52*S,cz],[cx,y0+.63*S,cz],.042*S,.04*S,CREAM);tube([cx,y0+.63*S,cz],[cx,y0+.66*S,cz],.048*S,.03*S,RED);
+ // arms: one hanging, one bent forward like the store mannequin; wooden hands
+ const shL=[cx,y0+.44*S,cz+.18*S],elL=[cx+.02*S,y0+.2*S,cz+.21*S],wrL=[cx+.05*S,y0+.0*S,cz+.17*S];
+ tube(shL,elL,.05*S,.045*S,BLK);tube(elL,wrL,.045*S,.038*S,BLK);tube(wrL,[wrL[0]+.01*S,wrL[1]-.08*S,wrL[2]],.022*S,.02*S,HAND);
+ const shR=[cx,y0+.44*S,cz-.18*S],elR=[cx+.08*S,y0+.24*S,cz-.22*S],wrR=[cx+.3*S,y0+.26*S,cz-.2*S];
+ tube(shR,elR,.05*S,.045*S,BLK);tube(elR,wrR,.045*S,.038*S,BLK);tube(wrR,[wrR[0]+.08*S,wrR[1]+.01*S,wrR[2]+.01*S],.022*S,.02*S,HAND);
+ // crossbody strap with a small black bag at the shoulder, and the print on the chest
+ tube([cx+.1*S,y0+.47*S,cz-.12*S],[cx+.12*S,y0+.12*S,cz+.15*S],.007*S,.007*S,[.16,.14,.13],[0,-1],6);
+ rbox(id,[cx+.12*S,y0+.42*S,cz-.08*S],[.025*S,.04*S,.035*S],.008,[.1,.1,.11],null,[1,1,1]);
+ const q=SP.e3_print;if(q){const w=.15*S,h=w*q.aspect,yc=y0+.3*S,X=cx+.118*S;photoQuad('e3_print',[[X,yc-h/2,cz+w/2],[X,yc-h/2,cz-w/2],[X,yc+h/2,cz-w/2],[X,yc+h/2,cz+w/2]],1)}}
 function essentialZone(){
- // shelf at 1.15x real size in the corner, wall graphics at 1.2x; the three left-wall sections (Brand
- // Promise, Our Story, Essential) are spaced evenly along the wall
- const X=-5.43,P=500/1.15,PW=450/1.2,zR=-9.85,Z=x=>zR+(1585-x)/P,zL=Z(985)-.15,zS=OS.zs-OS.W,zc=zL-(zL-zS)*.32,
-  ZW=x=>zc+(718-x)/PW,Y=y=>(1490-y)/P,YW=y=>(1335-y)/PW;
+ // laid out exactly like the store photo at 1.15x (shelf, poster, pegboard and mannequin keep their
+ // photo spacing); the whole group sits in the open stretch of wall after Our Story, clear of the corner
+ const X=-5.43,P=500/1.15,PW=P,zR=-8.95,Z=x=>zR+(1585-x)/P,ZW=Z,Y=y=>(1490-y)/P,YW=y=>(1490-y)/P;
  const on=(k,x,d,sh)=>{const m=SP[k];if(!m)return;const [x0,y0,x1,y1]=m.px;photoQuad(k,[[X+d,YW(y1),ZW(x0)],[X+d,YW(y1),ZW(x1)],[X+d,YW(y0),ZW(x1)],[X+d,YW(y0),ZW(x0)]],sh)};
  on('e2_text',0,.012,1.0);
  // poster in a slim black frame
@@ -309,7 +315,7 @@ function essentialZone(){
    box(X+.042,(yt-.045+yb)/2,z,.006,yt-.045-yb,.038,'metal',1.15);box(X+.048,(yt-.06+yb+.06)/2,z-.012,.006,yt-yb-.12,.038,'metal',.95)}}
  // bust mannequin (modelled): red-brown stepped base, turned wood + chrome pole, cream form wearing the
  // black sweatshirt with its white print, jointed wooden hands, crossbody strap
- {const m=SP.e2_mq;const zc=ZW(813)-.15;dressForm(X+.75,zc,1.15)}
+ dressForm(X+.75,ZW(800),1.12);
  // tall ladder shelf in the corner
  const xf=X+.6,xb=X+.1,xm=(xf+xb)/2,zl=Z(985),zr=Z(1585),TOP=3.95,LV=[1395,1030,590,245].map(y=>Y(y));
  for(const z of [zl,zr]){for(const x of [xf,xb])box(x,TOP/2,z,.035,TOP,.035,'metal',1);box(xm,TOP,z,xb-xf,.035,.035,'metal',1);
@@ -322,12 +328,16 @@ function essentialZone(){
  // red JACK STUDIO sign hanging on the crossbar
  {const m=SP.e2_sign;if(m){const [x0,y0,x1,y1]=m.px,zc=(Z(x0)+Z(x1))/2,w=(x1-x0)/P,h=(y1-y0)/P,yc=Y((y0+y1)/2);
   box(xf+.006,yc,zc,.008,h,w,'metal',.6);photoQuad('e2_sign',[[xf+.012,yc-h/2,zc+w/2],[xf+.012,yc-h/2,zc-w/2],[xf+.012,yc+h/2,zc-w/2],[xf+.012,yc+h/2,zc+w/2]],1.05)}}
- // the products: every bag cut out on its own and set on its shelf; the larger ones stand at the back
- // on chrome display stands, the small ones in front
- for(const [k,m] of Object.entries(SP)){if(!k.startsWith('e3_')||m.lv===undefined)continue;const [x0,y0,x1,y1]=m.px,w=(x1-x0)/P,h=(y1-y0)/P,z=Z((x0+x1)/2);
-  const sh=LV[m.lv],back=m.dp==='b',x=back?xm+.08:xm-.06,yb=Math.max(sh+.004,Y(y1));
+ // the products, set out neatly: evenly spaced in straight rows, the larger bags raised on chrome
+ // stands at the back, small pieces in front. Each has a solid body behind its photo face.
+ const LAY={A1:[.18,'b',.17],A4:[.27,'f',0],A2:[.5,'b',.17],A5:[.59,'f',0],A3:[.82,'b',.17],A6:[.9,'f',0],
+  B1:[.1,'f',0],B2:[.27,'b',.06],B3:[.27,'f',0],B4:[.4,'f',0],B5:[.47,'b',.08],B6:[.63,'b',.08],B7:[.76,'f',0],B8:[.9,'b',0],
+  C1:[.17,'b',.36],C2:[.17,'f',0],C3:[.5,'f',0],C4:[.82,'f',0]};
+ for(const [n,[f,dp,lift]] of Object.entries(LAY)){const k='e3_'+n,m=SP[k];if(!m)continue;const [x0,y0,x1,y1]=m.px,w=(x1-x0)/P,h=(y1-y0)/P,z=zl-(zl-zr)*f;
+  const sh=LV[m.lv],back=dp==='b',x=back?xm+.06:xm-.08,yb=sh+.004+lift;
+  if(m.col&&n!=='B1'){const d=Math.min(.12,w*.45);rbox((p,nn)=>[p,nn],[x-d/2-.004,yb+h*.45,z],[d/2,h*.42,w*.4],Math.min(.02,d/3),m.col,null,[1,1,1])}
   sprite(x,z,w/2,yb,yb+h,k,1.04,Math.PI);
-  if(back&&yb-sh>.03){box(x+.02,(sh+yb)/2,z,.012,yb-sh,.012,'white',.95);box(x+.02,sh+.004,z,.13,.008,.13,'white',1.1);box(x+.02,yb-.008,z,.012,.012,w*.6,'white',.95)}}
+  if(lift>.02){box(x-.04,sh+lift/2,z,.012,lift,.012,'white',.95);box(x-.04,sh+.004,z,.12,.008,.12,'white',1.1);box(x-.04,yb-.006,z,.012,.012,w*.5,'white',.95)}}
 }
 // Left wall from the entrance, built as real pieces (no photo rectangles):
 // 1) BRAND PROMISE: wall lettering and the acrylic promise panel as cut-out graphics on the wall,
