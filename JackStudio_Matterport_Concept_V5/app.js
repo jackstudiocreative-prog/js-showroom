@@ -74,7 +74,7 @@ backWall();
 rack(-1,2.65,'essential','ESSENTIAL');rack(-1,-2.15,'heritage','CRAFT HERITAGE');rack(-1,-7.10,'fashion','EVERYDAY STYLE');
 urbanZone();profZone();travelZone();
 // Main freestanding display islands, with three-dimensional leather products.
-craftInnovative(0.3,1.2);craftHeritage(0,-2.25);
+craftInnovative(0.3,0.35);craftHeritage(0,-2.25);
 }
 // Back of store, rebuilt from the storefront photo: lit JACK STUDiO letters over a wide
 // solid white end wall, nothing else on the wall.
@@ -468,7 +468,7 @@ function project(m,x,y,z){const w=m[3]*x+m[7]*y+m[11]*z+m[15];if(w<=.01)return n
 const cam={x:0,y:1.65,z:3.75,yaw:0,pitch:-.10};let mvp=null,last=performance.now(),keys=new Set(),auto=null,tour=false,tourPause=0,tourIndex=0,mouseDown=null,dragged=false,toastTimer=0,activeID='entrance';
 const stops=[
  {id:'entrance',name:'Entrance',x:0,z:3.75,yaw:0,detail:'island',desc:'Welcome to the Jack Studio concept showroom.'},
- {id:'innovative',name:'Craft Innovative',x:-.9,z:2.55,yaw:.62,detail:'island',desc:'Walk around the central leather-goods display.'},
+ {id:'innovative',name:'Craft Innovative',x:-.9,z:1.7,yaw:.62,detail:'island',desc:'Walk around the central leather-goods display.'},
  {id:'urban',name:'Urban Carry',x:2.0,z:1.35,yaw:1.57,detail:'urban',desc:'Explore the everyday bag and backpack collection.'},
  {id:'professional',name:'Professional',x:2.2,z:-2.65,yaw:1.57,detail:'professional',desc:'Office-ready leather goods and work bags.'},
  {id:'travel',name:'Travel Movement',x:1.5,z:-7.0,yaw:1.57,detail:'travel',desc:'Travel bags, cabin luggage and accessories.'},
@@ -484,7 +484,7 @@ function wrap(a){return Math.atan2(Math.sin(a),Math.cos(a))}
 function updateArea(){const s=nearestStop();if(s.id!==activeID){activeID=s.id;$('areaTitle').textContent=s.name;$('areaDescription').textContent=s.desc}}
 function blocked(x,z,r=.32){if(Math.abs(x)>5.04-r||z< -9.52+r||z>FRONT-.25-r)return true;
 // central island & service counter; white glass door not obstructed
-for(const obj of [{x:.3,z:1.2,w:.75,h:.62},{x:.3-.78,z:1.16,w:.5,h:.42},{x:0,z:-2.25,w:1.08,h:3.1}])
+for(const obj of [{x:.3,z:.35,w:.75,h:.62},{x:.3-.78,z:.31,w:.5,h:.42},{x:0,z:-2.25,w:1.08,h:3.1}])
 if(Math.abs(x-obj.x)<obj.w/2+r&&Math.abs(z-obj.z)<obj.h/2+r)return true;
 return false}
 function gridPath(tx,tz){tx=clamp(tx,-4.6,4.6);tz=clamp(tz,-9.04,FRONT-.6);const step=.4,nx=25,nz=46,x0=-4.8,z0=-9.1;
