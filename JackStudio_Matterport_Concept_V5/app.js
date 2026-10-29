@@ -71,7 +71,7 @@ for(const x of [-2.5,2.5]){
 for(const z of [-7.3,-2.1,3.1])box(0,4.0,z,3.2,.06,.06,'metal',.8);
 backWall();
 // Main wall arrays with actual store photos integrated into the display backing.
-essentialZone();rack(-1,-2.15,'heritage','CRAFT HERITAGE');rack(-1,-7.10,'fashion','EVERYDAY STYLE');
+rack(-1,2.65,'essential','ESSENTIAL');rack(-1,-2.15,'heritage','CRAFT HERITAGE');essentialZone(-6.95);
 urbanZone();profZone();travelZone();
 // Main freestanding display islands, with three-dimensional leather products.
 craftInnovative(0.3,0.35);craftHeritage(0,-2.25);giftTable(0,-5.8);walletCounter(0,-7.45);
@@ -252,8 +252,8 @@ function walletCounter(cx,cz){
 // poster, pegboard with belts and wallets (wall photo, mannequin painted out), the bust mannequin
 // standing in front, and the tall black ladder shelf with its two rows of bags (photo cut-outs).
 // Photo units: 350 px = 1 u, scaled by G; viewer faces -x, so photo-right is -z.
-function essentialZone(){
- const G=1.12,X=-5.43,zL=4.15,Z=u=>zL-u*G,P=350;
+function essentialZone(zL){
+ const G=1.12,X=-5.43,Z=u=>zL-u*G,P=350;
  const w=SP.es_wall;if(w)photoQuad('es_wall',[[X+.006,w.v0*G,Z(w.u0)],[X+.006,w.v0*G,Z(w.u1)],[X+.006,w.v1*G,Z(w.u1)],[X+.006,w.v1*G,Z(w.u0)]],.86);
  const m=SP.es_mq;if(m){const h=m.ph/P*G;sprite(X+.45,Z(1.25),m.pw/P*G/2,0,h,'es_mq',1.0,true)}
  // tall ladder shelf: ladder sides at both ends, four birch shelves, LED strips under the top two
@@ -536,7 +536,7 @@ const stops=[
  {id:'professional',name:'Professional',x:2.2,z:-2.65,yaw:1.57,detail:'professional',desc:'Office-ready leather goods and work bags.'},
  {id:'travel',name:'Travel Movement',x:1.5,z:-7.0,yaw:1.57,detail:'travel',desc:'Travel bags, cabin luggage and accessories.'},
  {id:'counter',name:'Brand Wall',x:0,z:-8.7,yaw:0,detail:'counter',desc:'The JACK STUDiO brand wall.'},
- {id:'fashion',name:'Everyday Style',x:-2.85,z:-7.10,yaw:-1.57,detail:'fashion',desc:'Discover the apparel and everyday collection.'},
+ {id:'fashion',name:'Essential',x:-2.4,z:-8.1,yaw:-1.57,detail:'fashion',desc:'Discover the apparel and everyday collection.'},
  {id:'heritage',name:'Craft Heritage',x:-2.85,z:-2.25,yaw:-1.57,detail:'heritage',desc:'Take a closer look at handcrafted leather goods.'},
  {id:'essential',name:'Essential',x:-2.85,z:2.65,yaw:-1.57,detail:'essential',desc:'Explore accessories, wallets and daily essentials.'},
 ];
