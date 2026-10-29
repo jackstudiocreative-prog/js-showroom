@@ -57,10 +57,18 @@ box(0,4.14,RC,11,0.17,RL,'cream',1.04);
 box(5.52,2,RC,.18,4,RL,'wall',.99);
 {const zA=OS.zs-OS.m2,zB=OS.zs-OS.W;box(-5.52+OS.SW/2,2.03,(FRONT+zA)/2,.18+OS.SW,4.06,FRONT-zA,'wall',.95);box(-5.52,2,(zB-10.22)/2,.18,4,zB+10.22,'wall',.95);
  {const m0=OS.m2,m1=OS.W;quad([-5.43,OS.d(m0),OS.zs-m0],[-5.43,OS.d(m1),OS.zs-m1],[-5.43,4.06,OS.zs-m1],[-5.43,4.06,OS.zs-m0],'wall',.82)}}
-box(-4.4,2,FRONT,2.2,4,.16,'wall',1);box(4.4,2,FRONT,2.2,4,.16,'wall',1);
-box(-1.61,2,FRONT,.13,4,.15,'metal');box(1.61,2,FRONT,.13,4,.15,'metal');box(0,3.7,FRONT,3.2,.14,.12,'metal');
+// Front wall with a pair of glass doors (entrance): plain white wall either side and above,
+// two frameless-look glass leaves with slim silver frames, long pull handles and a floor threshold.
+{const DW=1.6,DH=2.7,T=.16;box(-(5.5+DW)/2,2.03,FRONT,5.5-DW,4.06,T,'wall',1);box((5.5+DW)/2,2.03,FRONT,5.5-DW,4.06,T,'wall',1);
+ box(0,(DH+4.06)/2,FRONT,2*DW,4.06-DH,T,'wall',1);
+ for(const sx of [-1,1]){const x0=sx>0?0:-DW,x1=sx>0?DW:0,xc=(x0+x1)/2,w=DW;
+  quad([x0+.03,.03,FRONT-.004],[x1-.03,.03,FRONT-.004],[x1-.03,DH-.03,FRONT-.004],[x0+.03,DH-.03,FRONT-.004],'glass',1.18);
+  for(const [cx,cy,ww,hh] of [[xc,DH-.015,w,.03],[xc,.015,w,.03],[x0+.015,DH/2,.03,DH],[x1-.015,DH/2,.03,DH]])box(cx,cy,FRONT-.004,ww,hh,.04,'white',.82);
+  const hx=sx>0?x0+.12:x1-.12;box(hx,1.1,FRONT-.06,.025,1.0,.025,'white',.95);for(const y of [.68,1.52])box(hx,y,FRONT-.035,.02,.02,.05,'white',.9)}
+ box(0,.006,FRONT-.02,2*DW,.012,.2,'white',.7)}
+
 // Glass entrance doors and side mullions (light gray, intentionally translucent-looking).
-xpanel(-1.58,FRONT-.05,FRONT-.02,.1,3.65,'glass',1,-1);box(0,1.8,FRONT-.02,.045,3.6,.065,'metal',.9);
+
 // Wall skirt/baseboard around all sides
 box(5.38,.13,RC,.12,.26,RL-.2,'wood',.82);{const zA=OS.zs-OS.m2,zB=OS.zs-OS.W;box(-5.38+OS.SW,.13,(FRONT-.1+zA)/2,.12,.26,FRONT-.1-zA,'wood',.82);box(-5.38,.13,(zB-10.12)/2,.12,.26,zB+10.12,'wood',.82)}
 for(const s of [-1,1])box(s*(5.3+2.17)/2,.11,-10.075,5.3-2.17,.22,.11,'wood',.85);
@@ -181,6 +189,7 @@ function craftInnovative(cx,cz){
  box(sx,ST/2,sz,.03,ST,.03,ch,.9);box(sx,ST-.12*S,sz,.045,.03,.045,ch,.75);
  for(const ay of [ST-.04*S,.88*S]){box(sx+AR/2,ay,sz,AR,.024,.024,ch,.92);box(sx+AR+.006,ay,sz,.03,.03,.03,'metal',1)}
  const pw=.22*S,ph=pw*SP.ci_poster.aspect,px=sx+.03+pw/2+.03*S,ptop=ST-.04*S-.05*S;
+ box(px,ptop-ph/2,sz+.002,pw,ph,.004,'white',.95);   // poster back (plain white)
  photoQuad('ci_poster',[[px-pw/2,ptop-ph,sz+.006],[px+pw/2,ptop-ph,sz+.006],[px+pw/2,ptop,sz+.006],[px-pw/2,ptop,sz+.006]],1.12);
  for(const dx of [-pw*.3,pw*.3]){box(px+dx,ptop+.025*S,sz+.006,.008,.05*S,.006,ch,.8);box(px+dx,ptop+.002,sz+.006,.025,.02,.012,ch,.95)}
 }
