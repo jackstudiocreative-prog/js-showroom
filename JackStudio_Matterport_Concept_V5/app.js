@@ -18,8 +18,11 @@ const SPR=[];
 function sprite(x,zc,hw,y0,y1,key,shade=1,turn=true){const m=SP[key];if(!m)return;const [u,v,w,h]=m.uv;
  let b=[x,y0,zc],t=[x,y1,zc],e=[x,y0,zc+hw];if(XF){b=XF(b);t=XF(t);e=XF(e)}
  SPR.push({x:b[0],z:b[2],y0:b[1],y1:t[1],hw:e[2]-b[2],turn,uv:[(u+.5)/SPS[0],(v+.5)/SPS[1],(u+w-.5)/SPS[0],(v+h-.5)/SPS[1]],shade})}
+// a photo panel fixed in space: q = bottom-left, bottom-right, top-right, top-left
+function photoQuad(key,q,shade=1){const m=SP[key];if(!m)return;const [u,v,w,h]=m.uv;
+ SPR.push({quad:q,uv:[(u+.5)/SPS[0],(v+.5)/SPS[1],(u+w-.5)/SPS[0],(v+h-.5)/SPS[1]],shade})}
 // cards stay parallel to the screen (face the view direction), so a row of them always lines up
-function spriteGeometry(yaw){const P=[];const a0=Math.atan2(Math.cos(yaw),-Math.sin(yaw));for(const s of SPR){let nx=-1,nz=0;
+function spriteGeometry(yaw){const P=[];const a0=Math.atan2(Math.cos(yaw),-Math.sin(yaw));for(const s of SPR){if(s.quad){for(const i of [0,1,2,0,2,3])P.push(...s.quad[i]);continue}let nx=-1,nz=0;
  if(s.turn){let a=a0,d=Math.atan2(Math.sin(a-Math.PI),Math.cos(a-Math.PI));d=Math.max(-.9,Math.min(.9,d));nx=-Math.cos(d);nz=-Math.sin(d)}
  const rx=nz*s.hw,rz=-nx*s.hw,q=[[s.x-rx,s.y0,s.z-rz],[s.x+rx,s.y0,s.z+rz],[s.x+rx,s.y1,s.z+rz],[s.x-rx,s.y1,s.z-rz]];
  for(const i of [0,1,2,0,2,3])P.push(...q[i])}return P}
@@ -71,7 +74,7 @@ backWall();
 rack(-1,2.65,'essential','ESSENTIAL');rack(-1,-2.15,'heritage','CRAFT HERITAGE');rack(-1,-7.10,'fashion','EVERYDAY STYLE');
 urbanZone();profZone();travelZone();
 // Main freestanding display islands, with three-dimensional leather products.
-island(0,1.0,'CRAFT INNOVATIVE',1);island(0,-2.25,'CRAFT HERITAGE',2);
+craftInnovative(0.3,2.0);island(0,-2.25,'CRAFT HERITAGE',2);
 }
 // Back of store, rebuilt from the storefront photo: lit JACK STUDiO letters over a wide
 // solid white end wall, nothing else on the wall.
@@ -151,6 +154,32 @@ for(let b=0;b<2;b++){const zc=sl+BW*(b+.5);for(const y of LV){box(xm,y-.015,zc,D
 for(const [b,y0,y1] of [[0,LV[1],LV[2]],[1,LV[2],LV[3]]]){const z0=sl+BW*b+.03,z1=sl+BW*(b+1)-.03;line3([xb-.01,y0+.03,z0],[xb-.01,y1-.03,z1],.014,'metal');line3([xb-.01,y1-.03,z0],[xb-.01,y0+.03,z1],.014,'metal')}
 for(const [k,m] of Object.entries(SP)){if(!k.startsWith('ub_'))continue;const zc=sl+(m.z-0.0)*G*(2*BW/(2*1.22*G));sprite(xf+D*.48,zc,m.w*G/2,m.y*G,(m.y+m.h)*G,k,1.05,true)}
 }
+// CRAFT INNOVATIVE: the MagWallet display near the entrance and the chrome sign stand beside it,
+// rebuilt from the store photos (white plinth, black tray with light strip, backboard with the
+// three wallets, CRAFT INNOVATIVE poster on a two-arm chrome stand). S = room scale.
+function craftInnovative(cx,cz){
+ const S=1.3,PW=.45*S,PD=.36*S,PH=.92*S,TW=.55*S,TD=.42*S,BW=.49*S,BH=BW*SP.ci_board.aspect,F=cz+PD/2;
+ // plinth (white), its front panel lettering is the photo
+ box(cx,PH/2,cz,PW,PH,PD,'white',.97);
+ photoQuad('ci_plinth',[[cx-PW/2,.004,F+.002],[cx+PW/2,.004,F+.002],[cx+PW/2,PH,F+.002],[cx-PW/2,PH,F+.002]],1.0);
+ // tray: thin black band, white light strip, black top slab
+ const tz=cz+.02*S,y1=PH+.014*S,y2=y1+.011*S,y3=y2+.028*S;
+ box(cx,PH+.007*S,tz,TW-.01*S,.014*S,TD-.01*S,'metal',1);box(cx,(y1+y2)/2,tz,TW-.004*S,.011*S,TD-.004*S,'white',1.35);box(cx,(y2+y3)/2,tz,TW,.028*S,TD,'metal',1.1);
+ const tf=tz+TD/2,tb=tz-TD/2+.03*S,ty=y3+.002;
+ photoQuad('ci_tray',[[cx-TW/2+.004,ty,tf-.004],[cx+TW/2-.004,ty,tf-.004],[cx+TW/2-.004,ty,tb+.10*S],[cx-TW/2+.004,ty,tb+.10*S]],1.15);
+ box(cx,ty-.001,(tb+tb+.10*S)/2,TW-.01,.002,.10*S,'metal',1);
+ // backboard with the wallets (photo), a thin black panel behind it
+ box(cx,ty+BH/2,tb-.006,BW,BH,.008,'metal',1);
+ photoQuad('ci_board',[[cx-BW/2,ty,tb],[cx+BW/2,ty,tb],[cx+BW/2,ty+BH,tb],[cx-BW/2,ty+BH,tb]],1.15);
+ // chrome sign stand on the left: rounded base plate, pole, two arms, poster clipped to the top arm
+ const sx=cx-.6*S,sz=cz-.03*S,ST=1.5*S,AR=.37*S,ch='white';
+ box(sx,.008,sz,.36*S,.016,.30*S,ch,.82);box(sx,.018,sz,.33*S,.006,.27*S,ch,1.05);
+ box(sx,ST/2,sz,.03,ST,.03,ch,.9);box(sx,ST-.12*S,sz,.045,.03,.045,ch,.75);
+ for(const ay of [ST-.04*S,.88*S]){box(sx+AR/2,ay,sz,AR,.024,.024,ch,.92);box(sx+AR+.006,ay,sz,.03,.03,.03,'metal',1)}
+ const pw=.22*S,ph=pw*SP.ci_poster.aspect,px=sx+.03+pw/2+.03*S,ptop=ST-.04*S-.05*S;
+ photoQuad('ci_poster',[[px-pw/2,ptop-ph,sz+.006],[px+pw/2,ptop-ph,sz+.006],[px+pw/2,ptop,sz+.006],[px-pw/2,ptop,sz+.006]],1.12);
+ for(const dx of [-pw*.3,pw*.3]){box(px+dx,ptop+.025*S,sz+.006,.008,.05*S,.006,ch,.8);box(px+dx,ptop+.002,sz+.006,.025,.02,.012,ch,.95)}
+}
 function travelZone(){
 const W=5.43,FR=W-.45;
 const K=4.055/2.78,ZA=-10.06;XF=p=>[W+(p[0]-W)*K,p[1]*K,ZA+(p[2]-ZA)*K];
@@ -195,7 +224,7 @@ for(const [k,m] of Object.entries(SP)){if(!m.shelf||k==='a_left2'||k==='a_left1'
  const hb=(x,y,z,k,turn)=>{const m=SP['hobo_'+k];if(m)sprite(x,z,m.w/2,y,y+m.h,'hobo_'+k,1.05,turn);return m};
  hb(cx+.045,SH.A+.07,zb+.405,'brown',true);hb(cx-.075,SH.A+.002,zb+.225,'dark',true);
  // black one hangs on the stand: strap from both rings up and over the top bar
- const zc=zb+.17,top=SH.A+.486,m=SP.hobo_black;if(m){const bx=cx-.01,y0=top-.06-m.h;hb(bx,y0,zc,'black',false);
+ const zc=zb+.17,top=SH.A+.486,m=SP.hobo_black;if(m){const bx=cx-.01,y0=top-.06-m.h;hb(bx,y0,zc,'metal',false);
   const rp=m.ring.map(([u,v])=>[bx+.004,y0+m.h*(1-v),zc-m.w/2+u*m.w]),TL=[cx+.04,top+.012,zc-.016],TR=[cx+.04,top+.012,zc+.016],K=[.12,.11,.10];
   const st=(a,b)=>{const d=b.map((v,i)=>v-a[i]);bar(id,a,b,crs(d,[1,0,0]),.03,.004,K,LEA)};st(rp[0],TL);st(TL,TR);st(TR,rp[1]);
   const mid=rp[1].map((v,i)=>v+(TR[i]-v)*.5),d=n3(TR.map((v,i)=>v-rp[1][i])),a=mid.map((v,i)=>v-d[i]*.014),b=mid.map((v,i)=>v+d[i]*.014);
@@ -418,7 +447,7 @@ function project(m,x,y,z){const w=m[3]*x+m[7]*y+m[11]*z+m[15];if(w<=.01)return n
 const cam={x:0,y:1.65,z:3.75,yaw:0,pitch:-.10};let mvp=null,last=performance.now(),keys=new Set(),auto=null,tour=false,tourPause=0,tourIndex=0,mouseDown=null,dragged=false,toastTimer=0,activeID='entrance';
 const stops=[
  {id:'entrance',name:'Entrance',x:0,z:3.75,yaw:0,detail:'island',desc:'Welcome to the Jack Studio concept showroom.'},
- {id:'innovative',name:'Craft Innovative',x:2.40,z:1.75,yaw:-1.45,detail:'island',desc:'Walk around the central leather-goods display.'},
+ {id:'innovative',name:'Craft Innovative',x:-.9,z:3.35,yaw:.62,detail:'island',desc:'Walk around the central leather-goods display.'},
  {id:'urban',name:'Urban Carry',x:2.0,z:1.35,yaw:1.57,detail:'urban',desc:'Explore the everyday bag and backpack collection.'},
  {id:'professional',name:'Professional',x:2.2,z:-2.65,yaw:1.57,detail:'professional',desc:'Office-ready leather goods and work bags.'},
  {id:'travel',name:'Travel Movement',x:1.5,z:-7.0,yaw:1.57,detail:'travel',desc:'Travel bags, cabin luggage and accessories.'},
@@ -434,7 +463,7 @@ function wrap(a){return Math.atan2(Math.sin(a),Math.cos(a))}
 function updateArea(){const s=nearestStop();if(s.id!==activeID){activeID=s.id;$('areaTitle').textContent=s.name;$('areaDescription').textContent=s.desc}}
 function blocked(x,z,r=.32){if(Math.abs(x)>5.04-r||z< -9.52+r||z>FRONT-.25-r)return true;
 // central island & service counter; white glass door not obstructed
-for(const obj of [{x:0,z:1.0,w:2.35,h:1.9},{x:0,z:-2.25,w:2.35,h:1.9}])
+for(const obj of [{x:.3,z:2.0,w:.75,h:.62},{x:.3-.78,z:1.96,w:.5,h:.42},{x:0,z:-2.25,w:2.35,h:1.9}])
 if(Math.abs(x-obj.x)<obj.w/2+r&&Math.abs(z-obj.z)<obj.h/2+r)return true;
 return false}
 function gridPath(tx,tz){tx=clamp(tx,-4.6,4.6);tz=clamp(tz,-9.04,FRONT-.6);const step=.4,nx=25,nz=46,x0=-4.8,z0=-9.1;
