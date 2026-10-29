@@ -274,14 +274,25 @@ function essentialZone(zL){
 const LWX=-5.43;
 function wallCard(k,zl,zr,yb,yt,sh=.86,off=.006){photoQuad(k,[[LWX+off,yb,zl],[LWX+off,yb,zr],[LWX+off,yt,zr],[LWX+off,yt,zl]],sh)}
 function brandWalls(){
- // ---- brand promise (photo frame: 300 px per metre, scaled by K)
- const K=1.15,z0=4.3,Z=x=>z0-x/300*K,Y=y=>1.45+(1.72-y/300)*K;
- const g=(k,sh=.86,off=.006)=>{const m=SP[k];if(m){const [x0,y0,x1,y1]=m.px;wallCard(k,Z(x0),Z(x1),Y(y1),Y(y0),sh,off)}};
- g('lw_brandtext',.9);g('lw_promise',.9,.02);g('lw_qr',1,.012);
- for(const [x0,x1,top] of [[48,228,678],[255,592,688],[560,762,576]]){const zc=(Z(x0)+Z(x1))/2,y=Y(top);
-  box(LWX+.13,y-.017,zc,.25,.034,Z(x0)-Z(x1),'wood',1.05)}
- for(const [k,shelf] of [['lw_s1',678],['lw_s2',688],['lw_s3',576]]){const m=SP[k];if(!m)continue;const [x0,y0,x1,y1]=m.px,h=(y1-y0)/300*K,w=(x1-x0)/300*K;
-  sprite(LWX+.12,(Z(x0)+Z(x1))/2,w/2,Y(shelf),Y(shelf)+h,k,1.05,Math.PI)}
+ // ---- brand promise, laid out like the straight-on store photo (531 px = 1 m; middle shelf top 0.95 m)
+ // raised black lettering (with a soft shadow), a 3D black OUR BRAND PROMISE plate, the clear acrylic
+ // promise panel on four chrome stand-offs, QR card, three wooden floating shelves with the products.
+ const P=450,z0=4.3,Z=x=>z0-(x-345)/P,Y=y=>.95+(1185-y)/P;
+ const card=(k,off,sh)=>{const m=SP[k];if(!m)return;const [x0,y0,x1,y1]=m.px;wallCard(k,Z(x0),Z(x1),Y(y1),Y(y0),sh,off)};
+ const shadow=(k)=>{const m=SP[k];if(!m)return;const [x0,y0,x1,y1]=m.px,d=.006;photoQuad(k,[[LWX+.004,Y(y1)-d,Z(x0)-d*.5],[LWX+.004,Y(y1)-d,Z(x1)-d*.5],[LWX+.004,Y(y0)-d,Z(x1)-d*.5],[LWX+.004,Y(y0)-d,Z(x0)-d*.5]],.62)};
+ shadow('bw_logo');card('bw_logo',.012,1.0);card('bw_tag',.008,1.0);
+ {const [x0,y0,x1,y1]=[760,328,1216,394];box(LWX+.012,(Y(y0)+Y(y1))/2,(Z(x0)+Z(x1))/2,.02,Y(y0)-Y(y1),Z(x0)-Z(x1),'metal',.55);
+  card('bw_platetext',.024,1.05);for(const x of [770,1206])for(const y of [338,384])box(LWX+.024,Y(y),Z(x),.006,.008,.008,'white',.8)}
+ {const [x0,y0,x1,y1]=[445,442,1560,852],zc=(Z(x0)+Z(x1))/2,yc=(Y(y0)+Y(y1))/2,w=Z(x0)-Z(x1),h=Y(y0)-Y(y1),PX=LWX+.045;
+  // acrylic: only its polished edges and the stand-offs show; the print sits on the sheet
+  for(const [dy,hh,dz,ww] of [[h/2,.006,0,w],[-h/2,.006,0,w],[0,h,w/2,.006],[0,h,-w/2,.006]])box(PX,yc+dy,zc+dz,.008,hh+.006,ww+.006,'glass',1.25);
+  for(const x of [462,1532])for(const y of [452,842]){box(LWX+.024,Y(y),Z(x),.045,.022,.022,'white',.95);box(PX+.006,Y(y),Z(x),.006,.03,.03,'white',1.1)}
+  card('bw_promise',.049,1.0)}
+ {const [x0,y0,x1,y1]=[745,900,843,1040];box(LWX+.008,(Y(y0)+Y(y1))/2,(Z(x0)+Z(x1))/2,.006,Y(y0)-Y(y1),Z(x0)-Z(x1),'white',1.05);card('bw_qr',.012,1.02)}
+ for(const [x0,x1,top] of [[345,612,1090],[657,1210,1188],[1230,1637,1010]]){const zc=(Z(x0)+Z(x1))/2,y=Y(top),w=Z(x0)-Z(x1);
+  box(LWX+.13,y-.018,zc,.25,.036,w,'wood',1.08);box(LWX+.255,y-.018,zc,.004,.036,w,'wood',.82)}
+ for(const [k,top] of [['bw_s1',1090],['bw_s2',1188],['bw_s3',1010]]){const m=SP[k];if(!m)continue;const [x0,y0,x1,y1]=m.px;
+  sprite(LWX+.12,(Z(x0)+Z(x1))/2,(x1-x0)/P/2,Y(Math.max(y1,top)),Y(Math.max(y1,top))+(y1-y0)/P,k,1.04,Math.PI)}
  // ---- our story (photo frame of the wall: 1932 px = section width; heights at the same scale)
  const zs=.3,W=3.1,s=W/1932,ze=zs-W,zz=x=>zs-x*s,yy=y=>(2440-y)*s,CEIL=4.05;
  const d=z=>Math.min(CEIL,1.98+(zs-z)/W*(3.92-1.98));          // underside of the stair along the wall
