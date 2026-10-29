@@ -414,9 +414,9 @@ function lookAt(eye,target){let z=[eye[0]-target[0],eye[1]-target[1],eye[2]-targ
 return new Float32Array([x[0],y[0],z[0],0,x[1],y[1],z[1],0,x[2],y[2],z[2],0,-(x[0]*eye[0]+x[1]*eye[1]+x[2]*eye[2]),-(y[0]*eye[0]+y[1]*eye[1]+y[2]*eye[2]),-(z[0]*eye[0]+z[1]*eye[1]+z[2]*eye[2]),1])}
 function mul(a,b){const o=new Float32Array(16);for(let col=0;col<4;col++)for(let row=0;row<4;row++){let v=0;for(let k=0;k<4;k++)v+=a[k*4+row]*b[col*4+k];o[col*4+row]=v}return o}
 function project(m,x,y,z){const w=m[3]*x+m[7]*y+m[11]*z+m[15];if(w<=.01)return null;return {x:(m[0]*x+m[4]*y+m[8]*z+m[12])/w,y:(m[1]*x+m[5]*y+m[9]*z+m[13])/w,w};}
-const cam={x:0,y:1.65,z:4.05,yaw:0,pitch:-.10};let mvp=null,last=performance.now(),keys=new Set(),auto=null,tour=false,tourPause=0,tourIndex=0,mouseDown=null,dragged=false,toastTimer=0,activeID='entrance';
+const cam={x:0,y:1.65,z:3.75,yaw:0,pitch:-.10};let mvp=null,last=performance.now(),keys=new Set(),auto=null,tour=false,tourPause=0,tourIndex=0,mouseDown=null,dragged=false,toastTimer=0,activeID='entrance';
 const stops=[
- {id:'entrance',name:'Entrance',x:0,z:3.95,yaw:0,detail:'island',desc:'Welcome to the Jack Studio concept showroom.'},
+ {id:'entrance',name:'Entrance',x:0,z:3.75,yaw:0,detail:'island',desc:'Welcome to the Jack Studio concept showroom.'},
  {id:'innovative',name:'Craft Innovative',x:2.40,z:1.75,yaw:-1.45,detail:'island',desc:'Walk around the central leather-goods display.'},
  {id:'urban',name:'Urban Carry',x:2.0,z:1.35,yaw:1.57,detail:'urban',desc:'Explore the everyday bag and backpack collection.'},
  {id:'professional',name:'Professional',x:2.2,z:-2.65,yaw:1.57,detail:'professional',desc:'Office-ready leather goods and work bags.'},
@@ -431,7 +431,7 @@ function findStop(id){return stops.find(s=>s.id===id)||stops[0]}
 function nearestStop(){let best=stops[0],d=Infinity;for(const s of stops){const d2=(cam.x-s.x)**2+(cam.z-s.z)**2;if(d2<d){d=d2;best=s}}return best}
 function wrap(a){return Math.atan2(Math.sin(a),Math.cos(a))}
 function updateArea(){const s=nearestStop();if(s.id!==activeID){activeID=s.id;$('areaTitle').textContent=s.name;$('areaDescription').textContent=s.desc}}
-function blocked(x,z,r=.32){if(Math.abs(x)>5.04-r||z< -9.52+r||z>FRONT-.38-r)return true;
+function blocked(x,z,r=.32){if(Math.abs(x)>5.04-r||z< -9.52+r||z>FRONT-.25-r)return true;
 // central island & service counter; white glass door not obstructed
 for(const obj of [{x:0,z:1.0,w:2.35,h:1.9},{x:0,z:-2.25,w:2.35,h:1.9}])
 if(Math.abs(x-obj.x)<obj.w/2+r&&Math.abs(z-obj.z)<obj.h/2+r)return true;
