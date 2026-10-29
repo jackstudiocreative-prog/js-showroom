@@ -46,7 +46,7 @@ const C=[[1,1],[-1,1],[-1,-1],[1,-1]],sh=[1.02,.9,.7,.86];
 for(let i=0;i<4;i++){const [s1,u1]=C[i],[s2,u2]=C[(i+1)%4];quad(P(a,s1,u1),P(a,s2,u2),P(b,s2,u2),P(b,s1,u1),tex,.83*sh[i])}}
 // Environment geometry: phototextured racks in a walkable world, not panorama cards.
 // Our Story recess under the staircase (left wall): runs from m=-.45 to 3.2 along the wall, 0.75 m deep
-const OS={zs:.3,W:3.2,m2:-.45,SW:.75,d:m=>.9+.85*m};
+const OS={zs:.3,W:3.2,m2:-.45,SW:.02,d:m=>.9+.85*m};
 const FRONT=4.55,RC=(-10.22+FRONT)/2,RL=FRONT+10.22; // room front (entrance) and centre/length along z
 function buildWorld(){
 // Floor: repeated genuine volumetric floor geometry, light-oak texture.
@@ -313,7 +313,7 @@ function brandWalls(){
  for(let k=0;k<24;k++){const a=m2+(W-m2)*k/24,b=m2+(W-m2)*(k+1)/24;quad([X,d(a),Z(a)],[X,d(b),Z(b)],[LWX,d(b),Z(b)],[LWX,d(a),Z(a)],'white',.8)}
  quad([X,.002,Z(m2)],[X,.002,Z(W)],[LWX,.002,Z(W)],[LWX,.002,Z(m2)],'floor',.88);
  quad([X,0,Z(W)],[LWX,0,Z(W)],[LWX,d(W),Z(W)],[X,d(W),Z(W)],'wall',.9);
- box(X+SW/2,d(m2)/2,Z(-.3),SW,d(m2),.3,'metal',.3);
+
  // OUR STORY: frosted acrylic, 0.64 x 0.66 m, 2 cm off the panel on four chrome stand-offs
  {const m0=1.12,m1=1.76,y0=1.15,y1=1.81,PX=X+.035;box(PX,(y0+y1)/2,Z((m0+m1)/2),.006,y1-y0,m1-m0,'white',.86);
   for(const m of [m0+.03,m1-.03])for(const y of [y0+.03,y1-.03]){box(X+.024,y,Z(m),.024,.018,.018,'white',1.0);box(PX+.005,y,Z(m),.006,.024,.024,'white',1.15)}
