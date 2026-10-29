@@ -68,7 +68,7 @@ for(const z of [-7.3,-2.1,3.1,7.15])box(0,4.0,z,3.2,.06,.06,'metal',.8);
 backWall();
 // Main wall arrays with actual store photos integrated into the display backing.
 rack(-1,3.0,'essential','ESSENTIAL');rack(-1,-2.15,'heritage','CRAFT HERITAGE');rack(-1,-7.10,'fashion','EVERYDAY STYLE');
-rack(1,3.0,'urban','URBAN CARRY');profZone();travelZone();
+urbanZone();profZone();travelZone();
 // Main freestanding display islands, with three-dimensional leather products.
 island(0,3.35,'CRAFT INNOVATIVE',1);island(0,-2.25,'CRAFT HERITAGE',2);
 // Entrance side pedestal and accessories.
@@ -123,6 +123,36 @@ for(const [k,lv] of [['pf_bag_r',2],['pf_hang',1],['pf_tags',1]]){const m=SP[k];
 // ---- mannequins (cut out of the photos; base on the floor, facing the room)
 for(const [k,u,d] of [['pf_mq_lanyard',-.9,.55],['pf_mq_suit',-.21,.62]]){const m=SP[k];if(m)sprite(W-d*G,Z(u),m.w*G/2,0,m.h*G,k,1.0,true)}
 }
+// URBAN CARRY zone (right wall, after Professional), rebuilt from the store photos (same units as
+// profZone). Left: the open ladder frame in front of the URBAN CARRY lettering and poster, with one
+// shelf and a hanging rail. Right: the big two-bay ladder shelf. Products are cut out of the photos.
+function ladderSide(xf,xb,z,top,angled,dir){const post=(x,h)=>box(x,h/2,z,.04,h,.04,'metal',1);
+ if(angled){post(xf,top-.28);post(xb,top);line3([xf,top-.28,z],[xf+.2,top,z],.04,'metal');line3([xf+.2,top,z],[xb,top,z],.04,'metal')}
+ else{post(xf,top);post(xb,top);box((xf+xb)/2,top,z,xb-xf,.04,.04,'metal',1)}
+ for(let y=.3;y<top-.32;y+=.3)box((xf+xb)/2,y,z,xb-xf,.035,.035,'metal',1)}
+function urbanZone(){
+const W=5.43,G=1.12,Z0=-1.5+1.22*G,Z=u=>Z0+u*G,D=.45*G,xf=W-D,xb=W-.03,xm=(xf+xb)/2;
+const card=(k,x,turn=true)=>{const m=SP[k];if(m)sprite(x,Z(m.z0!==undefined?0:m.z),m.w*G/2,m.y*G,(m.y+m.h)*G,k,1.05,turn)};
+// ---- wall: lettering + poster (photo, above the frame's shelf)
+{const m=SP.uw_wall;if(m)sprite(W-.006,Z((m.u0+m.u1)/2),(m.u1-m.u0)*G/2,m.v0*G,m.v1*G,'uw_wall',.76,false);}
+// ---- open ladder frame: two ladder sides, one shelf with LED strip, hanging rail
+// its right side is the big shelf's left ladder (shared, as in the store)
+const fl=Z(0.0),fr=Z(1.41),ftop=3.4*G,SV=1.62*G,RV=1.36*G;
+ladderSide(xf,xb,fl,ftop,true);
+box(xm,SV-.015,(fl+fr)/2,D-.02,.03,fr-fl-.03,'birch',1.1);box(xf+.06,SV-.034,(fl+fr)/2,.02,.008,fr-fl-.1,'white',1.6);
+box(xf+.12,RV,(fl+fr)/2,.035,.035,fr-fl,'metal',1);
+for(const k of ['uf_coffee','uf_duffel','uf_card','uf_bags'])card(k,xm-.02);
+for(const k of ['uf_hangL','uf_hangR']){const m=SP[k];if(!m)continue;const zc=Z(m.z);sprite(xf+.12,zc,m.w*G/2,m.y*G,(m.y+m.h)*G,k,1.05,false);
+ box(xf+.12,RV-.02,zc,.03,.05,.025,'metal',1);
+ if(k==='uf_hangR'){const ty=(m.y+m.h)*G-.02;for(const dz of [-.12,.12])line3([xf+.12,ty,zc+dz*G],[xf+.12,RV-.03,zc],.012,'darkleather')}}
+// ---- big two-bay ladder shelf (image 2): 2 x 1.22 u bays, 5 levels, X bracing, LED strips
+const sl=Z(1.41),BW=1.22*G,sr=sl+2*BW,top=3.36*G,LV=[.11,.58,1.28,1.94,2.62].map(v=>v*G);
+ladderSide(xf,xb,sl,top,true);ladderSide(xf,xb,sr,top,true);
+box(xf,top/2,sl+BW,.04,top,.04,'metal',1);box(xb,top/2,sl+BW,.04,top,.04,'metal',1);box(xm,top,sl+BW,D,.04,.04,'metal',1);
+for(let b=0;b<2;b++){const zc=sl+BW*(b+.5);for(const y of LV){box(xm,y-.015,zc,D-.02,.03,BW-.03,'birch',1.1);if(y>.5)box(xf+.06,y-.034,zc,.02,.008,BW-.1,'white',1.6)}}
+for(const [b,y0,y1] of [[0,LV[1],LV[2]],[1,LV[2],LV[3]]]){const z0=sl+BW*b+.03,z1=sl+BW*(b+1)-.03;line3([xb-.01,y0+.03,z0],[xb-.01,y1-.03,z1],.014,'metal');line3([xb-.01,y1-.03,z0],[xb-.01,y0+.03,z1],.014,'metal')}
+for(const [k,m] of Object.entries(SP)){if(!k.startsWith('ub_'))continue;const zc=sl+(m.z-0.0)*G*(2*BW/(2*1.22*G));sprite(xf+D*.48,zc,m.w*G/2,m.y*G,(m.y+m.h)*G,k,1.05,true)}
+}
 function travelZone(){
 const W=5.43,FR=W-.45;
 const K=4.055/2.78,ZA=-10.06;XF=p=>[W+(p[0]-W)*K,p[1]*K,ZA+(p[2]-ZA)*K];
@@ -142,7 +172,7 @@ const cz=t=>frames[0]+t*BW*2,dy=DECK+.02;
 [['white',.135],['lav',.365],['grey',.635],['orange',.865]].forEach(([c,f])=>suitcase(cx-.17,dy,cz(f),c));
 // products: straight-on photo cut-outs, placed at their measured positions (metres from the
 // left ladder frame). Items standing on a shelf are seated on it; raised/hanging ones keep their height.
-for(const [k,m] of Object.entries(SP)){if(!m.shelf||k==='a_left2'||k==='a_left1')continue;
+for(const [k,m] of Object.entries(SP)){if(!m.shelf||k==='a_left2'||k==='a_left1'||k.startsWith('u'))continue;
  const zc=frames[0]+(m.z[0]+m.z[1])/2,hw=(m.z[1]-m.z[0])/2,h=m.y[1]-m.y[0],gap=m.y[0]-SH[m.shelf];
  const y0=Math.abs(gap)<.06?SH[m.shelf]:m.y[0],crate=k==='b_crate'||k==='b_olivecrate';
  sprite(crate?cx-.05:cx-.02-m.order*.002,zc,hw,y0,y0+h,k,1.05,!crate);
@@ -390,7 +420,7 @@ const cam={x:0,y:1.65,z:8.15,yaw:0,pitch:-.10};let mvp=null,last=performance.now
 const stops=[
  {id:'entrance',name:'Entrance',x:0,z:8.05,yaw:0,detail:'island',desc:'Welcome to the Jack Studio concept showroom.'},
  {id:'innovative',name:'Craft Innovative',x:2.40,z:4.15,yaw:-1.45,detail:'island',desc:'Walk around the central leather-goods display.'},
- {id:'urban',name:'Urban Carry',x:2.85,z:2.45,yaw:1.57,detail:'urban',desc:'Explore the everyday bag and backpack collection.'},
+ {id:'urban',name:'Urban Carry',x:2.0,z:1.7,yaw:1.57,detail:'urban',desc:'Explore the everyday bag and backpack collection.'},
  {id:'professional',name:'Professional',x:2.2,z:-2.3,yaw:1.57,detail:'professional',desc:'Office-ready leather goods and work bags.'},
  {id:'travel',name:'Travel Movement',x:1.5,z:-7.0,yaw:1.57,detail:'travel',desc:'Travel bags, cabin luggage and accessories.'},
  {id:'counter',name:'Brand Wall',x:0,z:-5.40,yaw:0,detail:'counter',desc:'The JACK STUDiO brand wall.'},
