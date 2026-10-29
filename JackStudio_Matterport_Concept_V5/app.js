@@ -254,9 +254,10 @@ function walletCounter(cx,cz){
 // Photo units: 350 px = 1 u, scaled by G; viewer faces -x, so photo-right is -z.
 function essentialZone(zL){
  const G=1.27,X=-5.43,Z=u=>zL-u*G,P=350;
- // the wall graphics are spread further along the wall so the section fills its whole bay
- const SH=-1.25,w=SP.es_wall;if(w)photoQuad('es_wall',[[X+.006,w.v0*G,Z(w.u0+SH)],[X+.006,w.v0*G,Z(w.u1+SH)],[X+.006,w.v1*G,Z(w.u1+SH)],[X+.006,w.v1*G,Z(w.u0+SH)]],.86);
- const m=SP.es_mq;if(m){const h=m.ph/P*G;sprite(X+.6,Z(.7),m.pw/P*G/2,0,h,'es_mq',1.0,true)}
+ // wall graphics (ESSENTIAL lettering, poster, pegboard with belts) as separate cut-outs, spread along the bay
+ const SH=-2.3,EU=x=>Z(x/P+SH),EV=y=>(3.0428-y/P)*G;
+ for(const [k,sh] of [['lw_esstext',.9],['lw_poster',1],['lw_peg',1]]){const q=SP[k];if(!q)continue;const [x0,y0,x1,y1]=q.px;photoQuad(k,[[X+.012,EV(y1),EU(x0)],[X+.012,EV(y1),EU(x1)],[X+.012,EV(y0),EU(x1)],[X+.012,EV(y0),EU(x0)]],sh)}
+ const m=SP.es_mq;if(m){const h=m.ph/P*G;sprite(X+.6,Z(-.43),m.pw/P*G/2,0,h,'es_mq',1.0,true)}
  // tall ladder shelf: ladder sides at both ends, four birch shelves, LED strips under the top two
  const xf=X+.5*G,xb=X+.03,xm=(xf+xb)/2,zl=Z(1.6),zr=Z(2.64),top=3.16*G,LV=[.13,.97,1.84,2.54].map(v=>v*G);
  for(const z of [zl,zr]){box(xf,top/2,z,.04,top,.04,'metal',1);box(xb,top/2,z,.04,top,.04,'metal',1);box(xm,top,z,xb-xf,.04,.04,'metal',1);
@@ -265,15 +266,47 @@ function essentialZone(zL){
  box(xm,LV[1]+.45,(zl+zr)/2,.03,.03,zl-zr,'metal',1);line3([xb-.01,LV[0]+.03,zl-.03],[xb-.01,LV[1]-.03,zr+.03],.014,'metal');line3([xb-.01,LV[1]-.03,zl-.03],[xb-.01,LV[0]+.03,zr+.03],.014,'metal');
  for(const [k,lv] of [['es_top',2],['es_mid',1]]){const q=SP[k];if(!q)continue;const ww=q.pw/P*G*1.35,hh=q.ph/P*G*1.35;sprite(xf+.16,(zl+zr)/2,ww/2,LV[lv],LV[lv]+hh,k,1.05,true)}
 }
-// Left wall from the entrance: the JACK STUDiO / OUR BRAND PROMISE wall (perspective-corrected
-// photo, shelves and products included), then the OUR STORY wood wall under the stairs with its
-// drawer units (photo, mannequins removed).
+// Left wall from the entrance, built as real pieces (no photo rectangles):
+// 1) BRAND PROMISE: wall lettering and the acrylic promise panel as cut-out graphics on the wall,
+//    three wooden shelves in 3D with their products (photo cut-outs) standing on them, QR sign.
+// 2) OUR STORY: wood-panelled wall under the staircase (3D stair mass), OUR STORY plaque, felt
+//    panel, 185,249+ CUSTOMERS lettering, and three drawer units in 3D (no mannequins).
+const LWX=-5.43;
+function wallCard(k,zl,zr,yb,yt,sh=.86,off=.006){photoQuad(k,[[LWX+off,yb,zl],[LWX+off,yb,zr],[LWX+off,yt,zr],[LWX+off,yt,zl]],sh)}
 function brandWalls(){
- const X=-5.43+.006,b=SP.bp_brand,s=SP.bp_story;
- if(b){const K=1.15,Y=1.45,z0=4.35,z=u=>z0-(u-b.u0)*K,y=v=>Y+v*K;
-  photoQuad('bp_brand',[[X,y(b.v0),z(b.u0)],[X,y(b.v0),z(b.u1)],[X,y(b.v1),z(b.u1)],[X,y(b.v1),z(b.u0)]],.8)}
- if(s){const w=3.1,h=w*s.aspect,z0=1.0;
-  photoQuad('bp_story',[[X,0,z0],[X,0,z0-w],[X,h,z0-w],[X,h,z0]],.9)}
+ // ---- brand promise (photo frame: 300 px per metre, scaled by K)
+ const K=1.15,z0=4.3,Z=x=>z0-x/300*K,Y=y=>1.45+(1.72-y/300)*K;
+ const g=(k,sh=.86,off=.006)=>{const m=SP[k];if(m){const [x0,y0,x1,y1]=m.px;wallCard(k,Z(x0),Z(x1),Y(y1),Y(y0),sh,off)}};
+ g('lw_brandtext',.9);g('lw_promise',.9,.02);g('lw_qr',1,.012);
+ for(const [x0,x1,top] of [[48,228,678],[255,592,688],[560,762,576]]){const zc=(Z(x0)+Z(x1))/2,y=Y(top);
+  box(LWX+.13,y-.017,zc,.25,.034,Z(x0)-Z(x1),'wood',1.05)}
+ for(const [k,shelf] of [['lw_s1',678],['lw_s2',688],['lw_s3',576]]){const m=SP[k];if(!m)continue;const [x0,y0,x1,y1]=m.px,h=(y1-y0)/300*K,w=(x1-x0)/300*K;
+  sprite(LWX+.12,(Z(x0)+Z(x1))/2,w/2,Y(shelf),Y(shelf)+h,k,1.05,Math.PI)}
+ // ---- our story (photo frame of the wall: 1932 px = section width; heights at the same scale)
+ const zs=.3,W=3.1,s=W/1932,ze=zs-W,zz=x=>zs-x*s,yy=y=>(2440-y)*s,CEIL=4.05;
+ const d=z=>Math.min(CEIL,1.98+(zs-z)/W*(3.92-1.98));          // underside of the stair along the wall
+ const T=SP.lw_wood,TW=.45,TH=.58;
+ if(T)for(let z=zs;z>ze+1e-3;z-=TW){const z2=Math.max(ze,z-TW);
+  for(let y=0;y<d(z2)-1e-3;y+=TH){const y2=Math.min(y+TH,d(z),d(z2)),yA=Math.min(y+TH,d(z)),yB=Math.min(y+TH,d(z2));
+   if(y>=d(z)&&y>=d(z2))continue;photoQuad('lw_wood',[[LWX+.012,y,z],[LWX+.012,y,z2],[LWX+.012,yB,z2],[LWX+.012,yA,z]],.86)}}
+ const SW=1.05;                                                  // staircase mass above the panel
+ quad([LWX,d(zs),zs],[LWX,d(ze),ze],[LWX+SW,d(ze),ze],[LWX+SW,d(zs),zs],'white',.86);
+ quad([LWX+SW,d(zs),zs],[LWX+SW,d(ze),ze],[LWX+SW,CEIL,ze],[LWX+SW,CEIL,zs],'wall',1.0);
+ quad([LWX,d(zs),zs],[LWX+SW,d(zs),zs],[LWX+SW,CEIL,zs],[LWX,CEIL,zs],'wall',.94);
+ wallCard('lw_plaque',zz(775),zz(1188),yy(1494),yy(1056),.95,.025);
+ wallCard('lw_felt',zz(1270),zz(1913),yy(1494),yy(889),.92,.03);
+ {const m=SP.lw_customers;if(m){const [x0,y0,x1,y1]=m.px;wallCard('lw_customers',zz(x0),zz(x1),yy(y1),yy(y0),1,.02)}}
+ // drawer units (3D): birch fronts with drawer lines, black frame and mesh sides, castors
+ const unit=(z1,w,open)=>{const D=.5,H=.95,x=LWX+.03+D/2,zc=z1-w/2,FX=LWX+.03+D;
+  if(open){box(x,(H+.42)/2,zc,D,H-.42,w,'birch',1.08);
+   for(const dz of [-w/2+.02,w/2-.02])for(const dx of [-D/2+.02,D/2-.02])box(x+dx,.24,zc+dz,.03,.42,.03,'metal',1);
+   box(x,.43,zc,D,.025,w,'metal',1);box(x-.02,.25,zc,D-.06,.36,.01,'metal',.55);for(const dz of [-w/2+.01,w/2-.01])box(x,.25,zc+dz,D-.04,.36,.008,'metal',.6)}
+  else box(x,(H+.08)/2,zc,D,H-.08,w,'birch',1.08);
+  box(x,H+.01,zc,D+.01,.02,w+.01,'birch',1.15);
+  for(const yh of open?[.72,.8]:[.72,.8,.5])box(FX+.002,yh,zc,.004,.008,w-.04,'metal',.7);
+  if(!open)box(FX+.002,.28,zc,.004,.42,.006,'metal',.7);
+  for(const dz of [-w/2+.05,w/2-.05])for(const dx of [-D/2+.06,D/2-.06]){box(x+dx,.04,zc+dz,.04,.08,.02,'metal',.6)}};
+ unit(zs-.1,.62,false);unit(zs-.75,.88,true);unit(zs-1.66,1.02,true);
 }
 function travelZone(){
 const W=5.43,FR=W-.45;
@@ -548,7 +581,7 @@ const stops=[
  {id:'travel',name:'Travel Movement',x:1.5,z:-7.0,yaw:1.57,detail:'travel',desc:'Travel bags, cabin luggage and accessories.'},
  {id:'counter',name:'Brand Wall',x:0,z:-8.7,yaw:0,detail:'counter',desc:'The JACK STUDiO brand wall.'},
  {id:'fashion',name:'Essential',x:-2.4,z:-8.1,yaw:-1.57,detail:'fashion',desc:'Discover the apparel and everyday collection.'},
- {id:'heritage',name:'Our Story',x:-2.4,z:-.55,yaw:-1.57,detail:'heritage',desc:'How Jack Studio began, and the customers who are part of it.'},
+ {id:'heritage',name:'Our Story',x:-2.3,z:-1.25,yaw:-1.57,detail:'heritage',desc:'How Jack Studio began, and the customers who are part of it.'},
  {id:'essential',name:'Brand Promise',x:-2.6,z:2.9,yaw:-1.57,detail:'essential',desc:'Our brand promise: more trust, more relevant, more personal.'},
 ];
 const tourOrder=['entrance','innovative','urban','professional','travel','counter','fashion','heritage','essential','entrance'];
