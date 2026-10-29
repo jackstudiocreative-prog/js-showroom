@@ -46,7 +46,7 @@ const C=[[1,1],[-1,1],[-1,-1],[1,-1]],sh=[1.02,.9,.7,.86];
 for(let i=0;i<4;i++){const [s1,u1]=C[i],[s2,u2]=C[(i+1)%4];quad(P(a,s1,u1),P(a,s2,u2),P(b,s2,u2),P(b,s1,u1),tex,.83*sh[i])}}
 // Environment geometry: phototextured racks in a walkable world, not panorama cards.
 // Our Story recess under the staircase (left wall): runs from m=-.45 to 3.2 along the wall, 0.75 m deep
-const OS={zs:.32,W:3.2,m2:0,SW:.3,d:m=>Math.min(4.055,.9+.9855*m)};
+const OS={zs:-.6,W:3.2,m2:0,SW:.3,d:m=>Math.min(4.055,.9+.9855*m)};
 const FRONT=4.55,RC=(-10.22+FRONT)/2,RL=FRONT+10.22; // room front (entrance) and centre/length along z
 function buildWorld(){
 // Floor: repeated genuine volumetric floor geometry, light-oak texture.
@@ -262,9 +262,9 @@ function walletCounter(cx,cz){
 // ladder shelf (four birch shelves, LED strips, crossbar with the red JACK STUDIO sign, X bracing)
 // with its three rows of bags standing on the shelves. Viewer faces -x, photo-right = -z.
 function essentialZone(){
- // shelf at 1.15x real size in the corner; the wall graphics at 1.5x, centred in the free wall between
- // the Our Story panel and the shelf, so the section fills that whole stretch of wall
- const X=-5.43,P=500/1.15,PW=450/1.5,zR=-10.08,Z=x=>zR+(1585-x)/P,zL=Z(985)-.15,zS=OS.zs-OS.W,zc=(zL+zS)/2,
+ // shelf at 1.15x real size in the corner, wall graphics at 1.2x; the three left-wall sections (Brand
+ // Promise, Our Story, Essential) are spaced evenly along the wall
+ const X=-5.43,P=500/1.15,PW=450/1.2,zR=-10.08,Z=x=>zR+(1585-x)/P,zL=Z(985)-.15,zS=OS.zs-OS.W,zc=zL-(zL-zS)*.32,
   ZW=x=>zc+(718-x)/PW,Y=y=>(1490-y)/P,YW=y=>(1335-y)/PW;
  const on=(k,x,d,sh)=>{const m=SP[k];if(!m)return;const [x0,y0,x1,y1]=m.px;photoQuad(k,[[X+d,YW(y1),ZW(x0)],[X+d,YW(y1),ZW(x1)],[X+d,YW(y0),ZW(x1)],[X+d,YW(y0),ZW(x0)]],sh)};
  on('e2_text',0,.012,1.0);
@@ -306,7 +306,7 @@ function brandWalls(){
  // ---- brand promise, laid out like the straight-on store photo (531 px = 1 m; middle shelf top 0.95 m)
  // raised black lettering (with a soft shadow), a 3D black OUR BRAND PROMISE plate, the clear acrylic
  // promise panel on four chrome stand-offs, QR card, three wooden floating shelves with the products.
- const P=450,z0=4.3,Z=x=>z0-(x-345)/P,Y=y=>.95+(1185-y)/P;
+ const P=450,z0=4.05,Z=x=>z0-(x-345)/P,Y=y=>.95+(1185-y)/P;
  const card=(k,off,sh)=>{const m=SP[k];if(!m)return;const [x0,y0,x1,y1]=m.px;wallCard(k,Z(x0),Z(x1),Y(y1),Y(y0),sh,off)};
  const shadow=(k)=>{const m=SP[k];if(!m)return;const [x0,y0,x1,y1]=m.px,d=.006;photoQuad(k,[[LWX+.004,Y(y1)-d,Z(x0)-d*.5],[LWX+.004,Y(y1)-d,Z(x1)-d*.5],[LWX+.004,Y(y0)-d,Z(x1)-d*.5],[LWX+.004,Y(y0)-d,Z(x0)-d*.5]],.62)};
  shadow('bw_logo');card('bw_logo',.012,1.0);card('bw_tag',.008,1.0);
@@ -647,7 +647,7 @@ const stops=[
  {id:'travel',name:'Travel Movement',x:1.5,z:-7.0,yaw:1.57,detail:'travel',desc:'Travel bags, cabin luggage and accessories.'},
  {id:'counter',name:'Brand Wall',x:0,z:-8.7,yaw:0,detail:'counter',desc:'The JACK STUDiO brand wall.'},
  {id:'fashion',name:'Essential',x:-2.4,z:-8.1,yaw:-1.57,detail:'fashion',desc:'Discover the apparel and everyday collection.'},
- {id:'heritage',name:'Our Story',x:-2.3,z:-1.25,yaw:-1.57,detail:'heritage',desc:'How Jack Studio began, and the customers who are part of it.'},
+ {id:'heritage',name:'Our Story',x:-2.3,z:-2.2,yaw:-1.57,detail:'heritage',desc:'How Jack Studio began, and the customers who are part of it.'},
  {id:'essential',name:'Brand Promise',x:-2.6,z:2.9,yaw:-1.57,detail:'essential',desc:'Our brand promise: more trust, more relevant, more personal.'},
 ];
 const tourOrder=['entrance','innovative','urban','professional','travel','counter','fashion','heritage','essential','entrance'];
