@@ -74,7 +74,7 @@ backWall();
 rack(-1,2.65,'essential','ESSENTIAL');rack(-1,-2.15,'heritage','CRAFT HERITAGE');rack(-1,-7.10,'fashion','EVERYDAY STYLE');
 urbanZone();profZone();travelZone();
 // Main freestanding display islands, with three-dimensional leather products.
-craftInnovative(0.3,0.35);craftHeritage(0,-2.25);giftTable(-2.0,-5.6);
+craftInnovative(0.3,0.35);craftHeritage(0,-2.25);giftTable(0,-5.3);
 }
 // Back of store, rebuilt from the storefront photo: lit JACK STUDiO letters over a wide
 // solid white end wall, nothing else on the wall.
@@ -497,7 +497,7 @@ function wrap(a){return Math.atan2(Math.sin(a),Math.cos(a))}
 function updateArea(){const s=nearestStop();if(s.id!==activeID){activeID=s.id;$('areaTitle').textContent=s.name;$('areaDescription').textContent=s.desc}}
 function blocked(x,z,r=.32){if(Math.abs(x)>5.04-r||z< -9.52+r||z>FRONT-.25-r)return true;
 // central island & service counter; white glass door not obstructed
-for(const obj of [{x:.3,z:.35,w:.75,h:.62},{x:.3-.78,z:.31,w:.5,h:.42},{x:0,z:-2.25,w:1.08,h:3.1},{x:-2.0,z:-5.6,w:1.6,h:.75}])
+for(const obj of [{x:.3,z:.35,w:.75,h:.62},{x:.3-.78,z:.31,w:.5,h:.42},{x:0,z:-2.25,w:1.08,h:3.1},{x:0,z:-5.3,w:1.6,h:.75}])
 if(Math.abs(x-obj.x)<obj.w/2+r&&Math.abs(z-obj.z)<obj.h/2+r)return true;
 return false}
 function gridPath(tx,tz){tx=clamp(tx,-4.6,4.6);tz=clamp(tz,-9.04,FRONT-.6);const step=.4,nx=25,nz=46,x0=-4.8,z0=-9.1;
