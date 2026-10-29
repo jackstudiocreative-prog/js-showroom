@@ -274,50 +274,61 @@ function loft(cx,cz,rings,col,N=22){ // rings: [y, half-width (z), half-depth (x
    for(const id of [0,1,2,0,2,3])mpush(q[id][0],q[id][1],col,[0,0],[-1,-1])}}
  const [yt,at,bt]=rings[rings.length-1];for(let i=0;i<N;i++){const t0=i/N*Math.PI*2,t1=(i+1)/N*Math.PI*2;
   for(const p of [[cx,yt,cz],[cx+Math.cos(t0)*bt,yt,cz+Math.sin(t0)*at],[cx+Math.cos(t1)*bt,yt,cz+Math.sin(t1)*at]])mpush(p,[0,1,0],col,[0,0],[-1,-1])}}
-function dressForm(cx,cz,S){const RED=[.36,.08,.06],WOOD=[.25,.11,.07],CREAM=[.88,.85,.78],BLK=[.075,.075,.085],CH=[.78,.79,.8],HAND=[.2,.12,.08],id=(p,n)=>[p,n];
- // stepped base + turned wooden foot + chrome pole
- rbox(id,[cx,.025*S,cz],[.2*S,.025*S,.2*S],.012,RED,null,[1,1,1]);rbox(id,[cx,.065*S,cz],[.14*S,.018*S,.14*S],.01,RED.map(v=>v*1.12),null,[1,1,1]);
- tube([cx,.08*S,cz],[cx,.16*S,cz],.035*S,.022*S,WOOD);tube([cx,.16*S,cz],[cx,.3*S,cz],.022*S,.03*S,WOOD);tube([cx,.3*S,cz],[cx,.36*S,cz],.03*S,.016*S,WOOD);
- tube([cx,.36*S,cz],[cx,.66*S,cz],.011*S,.011*S,CH);
- // torso wearing the sweatshirt (ribbed hem, chest, rounded shoulders)
- const y0=.62*S;loft(cx,cz,[[y0,.165*S,.095*S],[y0+.04*S,.16*S,.095*S],[y0+.16*S,.155*S,.1*S],[y0+.3*S,.17*S,.115*S],[y0+.4*S,.185*S,.11*S],[y0+.46*S,.18*S,.1*S],[y0+.5*S,.14*S,.085*S],[y0+.53*S,.07*S,.055*S]],BLK);
- tube([cx,y0+.52*S,cz],[cx,y0+.63*S,cz],.042*S,.04*S,CREAM);tube([cx,y0+.63*S,cz],[cx,y0+.66*S,cz],.048*S,.03*S,RED);
- // arms: one hanging, one bent forward like the store mannequin; wooden hands
- const shL=[cx,y0+.44*S,cz+.18*S],elL=[cx+.02*S,y0+.2*S,cz+.21*S],wrL=[cx+.05*S,y0+.0*S,cz+.17*S];
- tube(shL,elL,.05*S,.045*S,BLK);tube(elL,wrL,.045*S,.038*S,BLK);tube(wrL,[wrL[0]+.01*S,wrL[1]-.08*S,wrL[2]],.022*S,.02*S,HAND);
- const shR=[cx,y0+.44*S,cz-.18*S],elR=[cx+.08*S,y0+.24*S,cz-.22*S],wrR=[cx+.3*S,y0+.26*S,cz-.2*S];
- tube(shR,elR,.05*S,.045*S,BLK);tube(elR,wrR,.045*S,.038*S,BLK);tube(wrR,[wrR[0]+.08*S,wrR[1]+.01*S,wrR[2]+.01*S],.022*S,.02*S,HAND);
- // crossbody strap with a small black bag at the shoulder, and the print on the chest
- tube([cx+.1*S,y0+.47*S,cz-.12*S],[cx+.12*S,y0+.12*S,cz+.15*S],.007*S,.007*S,[.16,.14,.13],[0,-1],6);
- rbox(id,[cx+.12*S,y0+.42*S,cz-.08*S],[.025*S,.04*S,.035*S],.008,[.1,.1,.11],null,[1,1,1]);
- const q=SP.e3_print;if(q){const w=.15*S,h=w*q.aspect,yc=y0+.3*S,X=cx+.118*S;photoQuad('e3_print',[[X,yc-h/2,cz+w/2],[X,yc-h/2,cz-w/2],[X,yc+h/2,cz-w/2],[X,yc+h/2,cz+w/2]],1)}}
+function dressForm(cx,cz,S,yaw=0){const c=Math.cos(yaw),sn=Math.sin(yaw);
+ const RED=[.33,.07,.05],WOOD=[.3,.09,.06],CREAM=[.9,.87,.8],BLK=[.065,.065,.075],CH=[.8,.81,.82],HAND=[.17,.12,.1],id=(p,n)=>[p,n];
+ XF=p=>{const dx=p[0]-cx,dz=p[2]-cz;return [cx+dx*c-dz*sn,p[1],cz+dx*sn+dz*c]};XFN=n=>[n[0]*c-n[2]*sn,n[1],n[0]*sn+n[2]*c];
+ // square stepped base, turned wooden column, chrome pole
+ rbox(id,[cx,.022*S,cz],[.2*S,.022*S,.2*S],.008,RED,null,[1,1,1]);rbox(id,[cx,.058*S,cz],[.15*S,.016*S,.15*S],.008,RED.map(v=>v*1.12),null,[1,1,1]);
+ tube([cx,.074*S,cz],[cx,.11*S,cz],.05*S,.035*S,WOOD);tube([cx,.11*S,cz],[cx,.2*S,cz],.025*S,.04*S,WOOD);tube([cx,.2*S,cz],[cx,.26*S,cz],.04*S,.02*S,WOOD);tube([cx,.26*S,cz],[cx,.34*S,cz],.02*S,.028*S,WOOD);
+ tube([cx,.34*S,cz],[cx,.63*S,cz],.011*S,.011*S,CH);
+ // the form in the black sweatshirt: ribbed hem, waist, chest, broad rounded shoulders
+ const y0=.6*S;loft(cx,cz,[[y0,.16*S,.1*S],[y0+.035*S,.162*S,.1*S],[y0+.04*S,.157*S,.097*S],[y0+.16*S,.155*S,.1*S],[y0+.3*S,.17*S,.115*S],[y0+.4*S,.185*S,.112*S],[y0+.46*S,.18*S,.1*S],[y0+.5*S,.14*S,.085*S],[y0+.535*S,.07*S,.055*S]],BLK,26);
+ tube([cx,y0+.53*S,cz],[cx,y0+.64*S,cz],.043*S,.045*S,CREAM);tube([cx,y0+.64*S,cz],[cx,y0+.665*S,cz],.05*S,.04*S,WOOD);
+ // left arm hangs to the hip; right arm bends forward at chest height (as in the store); dark hands
+ const shL=[cx,y0+.44*S,cz+.175*S],elL=[cx+.01*S,y0+.2*S,cz+.205*S],wrL=[cx+.04*S,y0+.02*S,cz+.18*S];
+ tube(shL,elL,.055*S,.05*S,BLK,[0,0],14);tube(elL,wrL,.05*S,.042*S,BLK,[0,0],14);tube(wrL,[wrL[0]+.02*S,wrL[1]-.09*S,wrL[2]-.01*S],.024*S,.02*S,HAND);
+ const shR=[cx,y0+.44*S,cz-.175*S],elR=[cx+.05*S,y0+.22*S,cz-.215*S],wrR=[cx+.28*S,y0+.27*S,cz-.17*S];
+ tube(shR,elR,.055*S,.05*S,BLK,[0,0],14);tube(elR,wrR,.05*S,.042*S,BLK,[0,0],14);tube(wrR,[wrR[0]+.09*S,wrR[1]+.005*S,wrR[2]+.02*S],.024*S,.021*S,HAND);
+ // leather strap over the shoulder with its silver buckle, and the price tag
+ tube([cx+.06*S,y0+.5*S,cz-.13*S],[cx+.12*S,y0+.2*S,cz+.1*S],.012*S,.012*S,[.11,.09,.08],[0,-1],6);
+ rbox(id,[cx+.1*S,y0+.43*S,cz-.08*S],[.004*S,.012*S,.018*S],.003,[.62,.62,.64],null,[1,1,1]);
+ rbox(id,[cx+.113*S,y0+.37*S,cz-.1*S],[.002*S,.02*S,.013*S],.002,[.72,.55,.4],null,[1,1,1]);
+ XF=null;XFN=null;
+ const q=SP.e3_print;if(q){const w=.2*S,h=w*q.aspect,yc=y0+.3*S,X0=.118*S;const R=(dx,dz)=>[cx+dx*c-dz*sn,0,cz+dx*sn+dz*c];
+  const pA=R(X0,w/2),pB=R(X0,-w/2);photoQuad('e3_print',[[pA[0],yc-h/2,pA[2]],[pB[0],yc-h/2,pB[2]],[pB[0],yc+h/2,pB[2]],[pA[0],yc+h/2,pA[2]]],1)}}
 function essentialZone(){
  // laid out exactly like the store photo at 1.15x (shelf, poster, pegboard and mannequin keep their
  // photo spacing); the whole group sits in the open stretch of wall after Our Story, clear of the corner
  // the shelf is drawn 30% wider than in the photo so it reads fuller; wall pieces keep their size and sit
  // beside it as in the photo
- const X=-5.43,P=500/1.15,PW=P,zR=-8.45,WF=1.3,Z=x=>zR+(1585-x)/P*WF,ZW=x=>Z(985)+(985-x)/P,Y=y=>(1490-y)/P,YW=y=>(1490-y)/P;
- const on=(k,x,d,sh)=>{const m=SP[k];if(!m)return;const [x0,y0,x1,y1]=m.px;photoQuad(k,[[X+d,YW(y1),ZW(x0)],[X+d,YW(y1),ZW(x1)],[X+d,YW(y0),ZW(x1)],[X+d,YW(y0),ZW(x0)]],sh)};
- on('e2_text',0,.012,1.0);
- // poster in a slim black frame
- {const [x0,y0,x1,y1]=[607,343,850,692],zc=(ZW(x0)+ZW(x1))/2,yc=(YW(y0)+YW(y1))/2,w=ZW(x0)-ZW(x1),h=YW(y0)-YW(y1);
-  box(X+.012,yc,zc,.024,h,w,'metal',.55);on('e2_poster',0,.026,1.02)}
- // pegboard: birch board 18 mm off the wall with a grid of holes, three ledges with wallets, a waist
- // bag on a peg and three belts hanging from pegs (all modelled)
- {const [x0,y0,x1,y1]=[488,728,949,887],zc=(ZW(x0)+ZW(x1))/2,yc=(YW(y0)+YW(y1))/2,w=ZW(x0)-ZW(x1),h=YW(y0)-YW(y1),F=X+.03;
-  box(X+.02,yc,zc,.02,h,w,'birch',1.05);
-  for(let i=1;i*.06<w-.02;i++)for(let j=1;j*.06<h-.02;j++){const z=ZW(x0)-i*.06,y=YW(y1)+j*.06;quad([F+.001,y-.006,z+.006],[F+.001,y-.006,z-.006],[F+.001,y+.006,z-.006],[F+.001,y+.006,z+.006],'metal',.35)}
-  const ledge=(a,b,y)=>{const z=(ZW(a)+ZW(b))/2,ww=ZW(a)-ZW(b);box(X+.075,YW(y),z,.09,.016,ww,'birch',1.12);box(X+.05,YW(y)-.03,ZW(a)-.02,.04,.05,.012,'birch',.9);box(X+.05,YW(y)-.03,ZW(b)+.02,.04,.05,.012,'birch',.9);return [z,YW(y)+.008]};
-  const wal=(z,y,tex)=>{box(X+.08,y+.055,z,.03,.11,.12,tex,1);box(X+.096,y+.07,z,.002,.06,.1,tex,.8)};
-  {const [z,y]=ledge(790,912,741);wal(z+.07,y,'darkleather');wal(z-.07,y,'brownleather')}
-  {const [z,y]=ledge(762,880,838);wal(z,y,'darkleather')}
-  {const [z,y]=ledge(658,775,808);box(X+.085,y+.06,z,.07,.11,.27,'metal',1.2);box(X+.12,y+.08,z,.004,.008,.24,'white',.9);box(X+.06,y+.09,z,.02,.03,.04,'metal',1)}
-  for(const bx of [505,555,612]){const z=ZW(bx),yt=YW(778),yb=YW(1290);
-   box(X+.045,yt+.02,z,.04,.012,.012,'metal',1);box(X+.05,yt-.015,z,.012,.05,.05,'white',1.1);
-   box(X+.042,(yt-.045+yb)/2,z,.006,yt-.045-yb,.038,'metal',1.15);box(X+.048,(yt-.06+yb+.06)/2,z-.012,.006,yt-yb-.12,.038,'metal',.95)}}
- // bust mannequin (modelled): red-brown stepped base, turned wood + chrome pole, cream form wearing the
- // black sweatshirt with its white print, jointed wooden hands, crossbody strap
- dressForm(X+.75,ZW(800),1.12);
+ // wall pieces (lettering, poster, pegboard, mannequin) at 1.2x the shelf scale, shifted 0.4 m away from
+ // the shelf so the group fills its wall
+ const X=-5.43,P=500/1.15,PW=P,zR=-8.45,WF=1.3,KW=1.2,Z=x=>zR+(1585-x)/P*WF,ZW=x=>Z(985)+.4+(985-x)/P*KW,Y=y=>(1490-y)/P,YW=y=>(1490-y)/P*KW;
+ const on=(k,d,sh)=>{const m=SP[k];if(!m)return;const [x0,y0,x1,y1]=m.px;photoQuad(k,[[X+d,YW(y1),ZW(x0)],[X+d,YW(y1),ZW(x1)],[X+d,YW(y0),ZW(x1)],[X+d,YW(y0),ZW(x0)]],sh)};
+ on('e2_text',.012,1.0);
+ // poster: black aluminium frame (four bars standing 25 mm off the wall), poster set inside it
+ {const m=SP.e2_poster,[x0,y0,x1,y1]=m.px,zA=ZW(x0),zB=ZW(x1),yA=YW(y1),yB=YW(y0),b=.016,D=.025,zc=(zA+zB)/2,yc=(yA+yB)/2;
+  box(X+.004,yc,zc,.008,yB-yA,zA-zB,'metal',.5);
+  photoQuad('e2_poster',[[X+.012,yA,zA],[X+.012,yA,zB],[X+.012,yB,zB],[X+.012,yB,zA]],1.02);
+  box(X+D/2,yB+b/2,zc,D,b,zA-zB+2*b,'metal',.9);box(X+D/2,yA-b/2,zc,D,b,zA-zB+2*b,'metal',.75);
+  box(X+D/2,yc,zA+b/2,D,yB-yA,b,'metal',.85);box(X+D/2,yc,zB-b/2,D,yB-yA,b,'metal',.8)}
+ // pegboard (birch ply, 18 mm, standing 25 mm off the wall on spacers) with round holes, pegs, two
+ // shelf ledges, the product card, wallets, waist bag and three belts - each product a solid piece
+ {const [x0,y0,x1,y1]=[488,728,949,887],zA=ZW(x0),zB=ZW(x1),yA=YW(y1),yB=YW(y0),zc=(zA+zB)/2,yc=(yA+yB)/2,F=X+.043,id=(p,n)=>[p,n];
+  box(X+.034,yc,zc,.018,yB-yA,zA-zB,'birch',1.06);box(X+.0435,yc,zc,.001,yB-yA,zA-zB,'birch',1.15);
+  for(const z of [zA-.04,zB+.04])for(const y of [yA+.04,yB-.04])box(X+.015,y,z,.025,.03,.03,'birch',.8);
+  const HS=.0705;for(let z=zA-HS/2;z>zB+.01;z-=HS)for(let y=yA+HS/2;y<yB-.01;y+=HS)disc((p,n)=>[[p[2],p[1],p[0]],[n[2],n[1],n[0]]],[z,y,F+.0003],.009,.001,[.16,.12,.08],[0,0]);
+  const prod=(k,X0,front,sh=1)=>{const m=SP[k];if(!m)return null;const [a,b,c,d]=m.px,w=(c-a)/P*KW,h=(d-b)/P*KW,z=(ZW(a)+ZW(c))/2,y0=YW(d);
+   if(m.col&&front>.02)rbox(id,[X0+front/2,y0+h/2,z],[front/2-.002,h/2*.8,w/2*.85],Math.min(.012,front/3),m.col,null,[1,1,1]);
+   photoQuad(k,[[X0+front,y0,z+w/2],[X0+front,y0,z-w/2],[X0+front,y0+h,z-w/2],[X0+front,y0+h,z+w/2]],sh);return [z,w,y0,h]};
+  const ledge=(a,b,y)=>{const z=(ZW(a)+ZW(b))/2,ww=ZW(a)-ZW(b),yy=YW(y);box(X+.085,yy-.007,z,.085,.014,ww,'white',1.05);
+   for(const zz of [ZW(a)-.03,ZW(b)+.03])tube([F,yy-.03,zz],[F+.07,yy-.012,zz],.006,.006,[.85,.82,.75]);return yy};
+  const yL1=ledge(785,912,741),yL2=ledge(762,850,838),yL3=ledge(650,775,812);
+  prod('pg_w1',X+.06,.025);prod('pg_w2',X+.06,.025);prod('pg_w3',X+.06,.025);prod('pg_waist',X+.05,.07);
+  prod('pg_card',F+.001,.001,1.02);
+  for(const k of ['pg_b1','pg_b2','pg_b3']){const r=prod(k,F,.012,1.0);if(r){const [z,w,y0,h]=r;tube([F,y0+h-.01,z],[F+.05,y0+h-.005,z],.005,.005,[.8,.8,.8])}}}
+ // bust mannequin (modelled, like the store's): faces the room at an angle
+ dressForm(X+.85,ZW(800),1.2,.5);
  // tall ladder shelf in the corner
  const xf=X+.6,xb=X+.1,xm=(xf+xb)/2,zl=Z(985),zr=Z(1585),TOP=3.95,LV=[1395,1030,590,245].map(y=>Y(y));
  for(const z of [zl,zr]){for(const x of [xf,xb])box(x,TOP/2,z,.035,TOP,.035,'metal',1);box(xm,TOP,z,xb-xf,.035,.035,'metal',1);
@@ -337,7 +348,7 @@ function essentialZone(){
   C1:[.17,'b',.36],C2:[.17,'f',0],C3:[.5,'f',0],C4:[.82,'f',0]};
  for(const [n,[f,dp,lift]] of Object.entries(LAY)){const k='e3_'+n,m=SP[k];if(!m)continue;const [x0,y0,x1,y1]=m.px,w=(x1-x0)/P*1.15,h=(y1-y0)/P*1.15,z=zl-(zl-zr)*f;
   const sh=LV[m.lv],back=dp==='b',x=back?xm+.06:xm-.08,yb=sh+.004+lift;
-  if(m.col&&n!=='B1'){const d=Math.min(.12,w*.45);rbox((p,nn)=>[p,nn],[x-d/2-.004,yb+h*.45,z],[d/2,h*.42,w*.4],Math.min(.02,d/3),m.col,null,[1,1,1])}
+  if(m.col&&n!=='B1'){const d=Math.min(.1,w*.4);rbox((p,nn)=>[p,nn],[x-d/2-.004,yb+h*.4,z],[d/2,h*.3,w*.28],Math.min(.02,d/3),m.col,null,[1,1,1])}
   sprite(x,z,w/2,yb,yb+h,k,1.04,Math.PI);
   if(lift>.02){box(x-.04,sh+lift/2,z,.012,lift,.012,'white',.95);box(x-.04,sh+.004,z,.12,.008,.12,'white',1.1);box(x-.04,yb-.006,z,.012,.012,w*.5,'white',.95)}}
 }
@@ -488,7 +499,7 @@ XF=null;
 // ---------------------------------------------------------------------------------------------
 const MV=[];   // lit mesh: pos3 normal3 colour3 rib2(v, strength) uv2  -> 13 floats per vertex
 const LUGCOL={white:[.86,.85,.83],lav:[.74,.74,.80],grey:[.40,.42,.43],orange:[.80,.50,.37]};
-function mpush(p,n,c,rib,uv){if(XF)p=XF(p);MV.push(p[0],p[1],p[2],n[0],n[1],n[2],c[0],c[1],c[2],rib[0],rib[1],uv[0],uv[1])}
+let XFN=null;function mpush(p,n,c,rib,uv){if(XF)p=XF(p);if(XFN)n=XFN(n);MV.push(p[0],p[1],p[2],n[0],n[1],n[2],c[0],c[1],c[2],rib[0],rib[1],uv[0],uv[1])}
 function arcAxis(h,r,mid,m=5){const a=[];for(let k=m;k>0;k--)a.push(-(h-r)-r*Math.tan(k/m*Math.PI/4));
  for(let k=0;k<=mid;k++)a.push(-(h-r)+2*(h-r)*k/mid);for(let k=1;k<=m;k++)a.push((h-r)+r*Math.tan(k/m*Math.PI/4));return a}
 // rounded box in case-local coords (u across, v up, w toward the viewer); toW maps local -> world
