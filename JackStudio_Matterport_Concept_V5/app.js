@@ -294,7 +294,9 @@ function dressForm(cx,cz,S){const RED=[.36,.08,.06],WOOD=[.25,.11,.07],CREAM=[.8
 function essentialZone(){
  // laid out exactly like the store photo at 1.15x (shelf, poster, pegboard and mannequin keep their
  // photo spacing); the whole group sits in the open stretch of wall after Our Story, clear of the corner
- const X=-5.43,P=500/1.15,PW=P,zR=-8.95,Z=x=>zR+(1585-x)/P,ZW=Z,Y=y=>(1490-y)/P,YW=y=>(1490-y)/P;
+ // the shelf is drawn 30% wider than in the photo so it reads fuller; wall pieces keep their size and sit
+ // beside it as in the photo
+ const X=-5.43,P=500/1.15,PW=P,zR=-9.05,WF=1.3,Z=x=>zR+(1585-x)/P*WF,ZW=x=>Z(985)+(985-x)/P,Y=y=>(1490-y)/P,YW=y=>(1490-y)/P;
  const on=(k,x,d,sh)=>{const m=SP[k];if(!m)return;const [x0,y0,x1,y1]=m.px;photoQuad(k,[[X+d,YW(y1),ZW(x0)],[X+d,YW(y1),ZW(x1)],[X+d,YW(y0),ZW(x1)],[X+d,YW(y0),ZW(x0)]],sh)};
  on('e2_text',0,.012,1.0);
  // poster in a slim black frame
@@ -333,7 +335,7 @@ function essentialZone(){
  const LAY={A1:[.18,'b',.17],A4:[.27,'f',0],A2:[.5,'b',.17],A5:[.59,'f',0],A3:[.82,'b',.17],A6:[.9,'f',0],
   B1:[.1,'f',0],B2:[.27,'b',.06],B3:[.27,'f',0],B4:[.4,'f',0],B5:[.47,'b',.08],B6:[.63,'b',.08],B7:[.76,'f',0],B8:[.9,'b',0],
   C1:[.17,'b',.36],C2:[.17,'f',0],C3:[.5,'f',0],C4:[.82,'f',0]};
- for(const [n,[f,dp,lift]] of Object.entries(LAY)){const k='e3_'+n,m=SP[k];if(!m)continue;const [x0,y0,x1,y1]=m.px,w=(x1-x0)/P,h=(y1-y0)/P,z=zl-(zl-zr)*f;
+ for(const [n,[f,dp,lift]] of Object.entries(LAY)){const k='e3_'+n,m=SP[k];if(!m)continue;const [x0,y0,x1,y1]=m.px,w=(x1-x0)/P*1.15,h=(y1-y0)/P*1.15,z=zl-(zl-zr)*f;
   const sh=LV[m.lv],back=dp==='b',x=back?xm+.06:xm-.08,yb=sh+.004+lift;
   if(m.col&&n!=='B1'){const d=Math.min(.12,w*.45);rbox((p,nn)=>[p,nn],[x-d/2-.004,yb+h*.45,z],[d/2,h*.42,w*.4],Math.min(.02,d/3),m.col,null,[1,1,1])}
   sprite(x,z,w/2,yb,yb+h,k,1.04,Math.PI);
