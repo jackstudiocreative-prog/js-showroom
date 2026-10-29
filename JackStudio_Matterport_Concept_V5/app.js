@@ -45,6 +45,8 @@ const P=(p,sr,su)=>[p[0]+r[0]*sr+u[0]*su,p[1]+r[1]*sr+u[1]*su,p[2]+r[2]*sr+u[2]*
 const C=[[1,1],[-1,1],[-1,-1],[1,-1]],sh=[1.02,.9,.7,.86];
 for(let i=0;i<4;i++){const [s1,u1]=C[i],[s2,u2]=C[(i+1)%4];quad(P(a,s1,u1),P(a,s2,u2),P(b,s2,u2),P(b,s1,u1),tex,.83*sh[i])}}
 // Environment geometry: phototextured racks in a walkable world, not panorama cards.
+// Our Story recess under the staircase (left wall): runs from m=-.45 to 3.2 along the wall, 0.75 m deep
+const OS={zs:.3,W:3.2,m2:-.45,SW:.75,d:m=>.9+.85*m};
 const FRONT=4.55,RC=(-10.22+FRONT)/2,RL=FRONT+10.22; // room front (entrance) and centre/length along z
 function buildWorld(){
 // Floor: repeated genuine volumetric floor geometry, light-oak texture.
@@ -52,13 +54,15 @@ for(let x=-5.4;x<5.4;x+=1.35)for(let z=-10.1;z<FRONT-.05;z+=1.6)
 quad([x,0,z+1.6],[x+1.35,0,z+1.6],[x+1.35,0,z],[x,0,z],'floor',.95+((Math.round(z*5+x*2)%3)*.018));
 box(0,4.14,RC,11,0.17,RL,'cream',1.04);
 // White plaster walls, room boundary and entrance side returns.
-box(-5.52,2,RC,.18,4,RL,'wall',.95);box(5.52,2,RC,.18,4,RL,'wall',.99);
+box(5.52,2,RC,.18,4,RL,'wall',.99);
+{const zA=OS.zs-OS.m2,zB=OS.zs-OS.W;box(-5.52,2,(FRONT+zA)/2,.18,4,FRONT-zA,'wall',.95);box(-5.52,2,(zB-10.22)/2,.18,4,zB+10.22,'wall',.95);
+ {const m0=OS.m2,m1=OS.W;quad([-5.43,OS.d(m0),OS.zs-m0],[-5.43,OS.d(m1),OS.zs-m1],[-5.43,4.06,OS.zs-m1],[-5.43,4.06,OS.zs-m0],'wall',.82)}}
 box(-4.4,2,FRONT,2.2,4,.16,'wall',1);box(4.4,2,FRONT,2.2,4,.16,'wall',1);
 box(-1.61,2,FRONT,.13,4,.15,'metal');box(1.61,2,FRONT,.13,4,.15,'metal');box(0,3.7,FRONT,3.2,.14,.12,'metal');
 // Glass entrance doors and side mullions (light gray, intentionally translucent-looking).
 xpanel(-1.58,FRONT-.05,FRONT-.02,.1,3.65,'glass',1,-1);box(0,1.8,FRONT-.02,.045,3.6,.065,'metal',.9);
 // Wall skirt/baseboard around all sides
-for(const x of [-5.38,5.38])box(x,.13,RC,.12,.26,RL-.2,'wood',.82);
+box(5.38,.13,RC,.12,.26,RL-.2,'wood',.82);{const zA=OS.zs-OS.m2,zB=OS.zs-OS.W;box(-5.38,.13,(FRONT-.1+zA)/2,.12,.26,FRONT-.1-zA,'wood',.82);box(-5.38,.13,(zB-10.12)/2,.12,.26,zB+10.12,'wood',.82)}
 for(const s of [-1,1])box(s*(5.3+2.17)/2,.11,-10.075,5.3-2.17,.22,.11,'wood',.85);
 // Ceiling tracks and multiple recessed lights
 for(const x of [-2.5,2.5]){
@@ -293,31 +297,54 @@ function brandWalls(){
   box(LWX+.13,y-.018,zc,.25,.036,w,'wood',1.08);box(LWX+.255,y-.018,zc,.004,.036,w,'wood',.82)}
  for(const [k,top] of [['bw_s1',1090],['bw_s2',1188],['bw_s3',1010]]){const m=SP[k];if(!m)continue;const [x0,y0,x1,y1]=m.px;
   sprite(LWX+.12,(Z(x0)+Z(x1))/2,(x1-x0)/P/2,Y(Math.max(y1,top)),Y(Math.max(y1,top))+(y1-y0)/P,k,1.04,Math.PI)}
- // ---- our story (photo frame of the wall: 1932 px = section width; heights at the same scale)
- const zs=.3,W=3.1,s=W/1932,ze=zs-W,zz=x=>zs-x*s,yy=y=>(2440-y)*s,CEIL=4.05;
- const d=z=>Math.min(CEIL,1.98+(zs-z)/W*(3.92-1.98));          // underside of the stair along the wall
- const T=SP.lw_wood,TW=.45,TH=.58;
- if(T)for(let z=zs;z>ze+1e-3;z-=TW){const z2=Math.max(ze,z-TW);
-  for(let y=0;y<d(z2)-1e-3;y+=TH){const y2=Math.min(y+TH,d(z),d(z2)),yA=Math.min(y+TH,d(z)),yB=Math.min(y+TH,d(z2));
-   if(y>=d(z)&&y>=d(z2))continue;photoQuad('lw_wood',[[LWX+.012,y,z],[LWX+.012,y,z2],[LWX+.012,yB,z2],[LWX+.012,yA,z]],.86)}}
- const SW=1.05;                                                  // staircase mass above the panel
- quad([LWX,d(zs),zs],[LWX,d(ze),ze],[LWX+SW,d(ze),ze],[LWX+SW,d(zs),zs],'white',.86);
- quad([LWX+SW,d(zs),zs],[LWX+SW,d(ze),ze],[LWX+SW,CEIL,ze],[LWX+SW,CEIL,zs],'wall',1.0);
- quad([LWX,d(zs),zs],[LWX+SW,d(zs),zs],[LWX+SW,CEIL,zs],[LWX,CEIL,zs],'wall',.94);
- wallCard('lw_plaque',zz(775),zz(1188),yy(1494),yy(1056),.95,.025);
- wallCard('lw_felt',zz(1270),zz(1913),yy(1494),yy(889),.92,.03);
- {const m=SP.lw_customers;if(m){const [x0,y0,x1,y1]=m.px;wallCard('lw_customers',zz(x0),zz(x1),yy(y1),yy(y0),1,.02)}}
- // drawer units (3D): birch fronts with drawer lines, black frame and mesh sides, castors
- const unit=(z1,w,open)=>{const D=.5,H=.95,x=LWX+.03+D/2,zc=z1-w/2,FX=LWX+.03+D;
-  if(open){box(x,(H+.42)/2,zc,D,H-.42,w,'birch',1.08);
-   for(const dz of [-w/2+.02,w/2-.02])for(const dx of [-D/2+.02,D/2-.02])box(x+dx,.24,zc+dz,.03,.42,.03,'metal',1);
-   box(x,.43,zc,D,.025,w,'metal',1);box(x-.02,.25,zc,D-.06,.36,.01,'metal',.55);for(const dz of [-w/2+.01,w/2-.01])box(x,.25,zc+dz,D-.04,.36,.008,'metal',.6)}
-  else box(x,(H+.08)/2,zc,D,H-.08,w,'birch',1.08);
-  box(x,H+.01,zc,D+.01,.02,w+.01,'birch',1.15);
-  for(const yh of open?[.72,.8]:[.72,.8,.5])box(FX+.002,yh,zc,.004,.008,w-.04,'metal',.7);
-  if(!open)box(FX+.002,.28,zc,.004,.42,.006,'metal',.7);
-  for(const dz of [-w/2+.05,w/2-.05])for(const dx of [-D/2+.06,D/2-.06]){box(x+dx,.04,zc+dz,.04,.08,.02,'metal',.6)}};
- unit(zs-.1,.62,false);unit(zs-.75,.88,true);unit(zs-1.66,1.02,true);
+ { // ---- OUR STORY, built from the store photos (real-size metres; m = distance along the wall from
+ // the wood panel's entrance-side edge). Under-stair wall with vertical wood planks, the white
+ // staircase sloping over it, frosted acrylic OUR STORY plaque on stand-offs, 185,249+ CUSTOMERS
+ // lettering, a 4x3 acoustic felt panel with alternating grooves, and the three drawer units.
+ const {zs,W,m2,SW,d}=OS,ze=zs-W,Z=m=>zs-m,X=LWX-SW;
+ // wood planks: 0.32 m wide, vertical grain, varied by flipping, thin dark joints
+ const PW=W/10,PH=.62;
+ for(let i=0;i<10;i++){const m0=i*PW,m1=m0+PW,top0=d(m0),top1=d(m1),fl=i%2,vf=(i*7)%3;
+  for(let y=0,j=0;y<top1-1e-3;y+=PH,j++){const yA=Math.min(y+PH,top0),yB=Math.min(y+PH,top1);if(y>=top0&&y>=top1)continue;
+   const BL=[X+.012,y,Z(fl?m1:m0)],BR=[X+.012,y,Z(fl?m0:m1)],TR=[X+.012,fl?yA:yB,Z(fl?m0:m1)],TL=[X+.012,fl?yB:yA,Z(fl?m1:m0)];
+   photoQuad('os_plank',(j+vf)%2?[TL,TR,BR,BL].map((p,k)=>[p[0],[BL,BR,TR,TL][k][1],p[2]]):[BL,BR,TR,TL],.92)}
+  if(i>0)box(X+.013,d(m0)/2,Z(m0),.002,d(m0),.005,'wood',.42)}
+ // the recess: sloped white stair underside across its depth, floor, end walls, dark storage at the low end
+ for(let k=0;k<24;k++){const a=m2+(W-m2)*k/24,b=m2+(W-m2)*(k+1)/24;quad([X,d(a),Z(a)],[X,d(b),Z(b)],[LWX,d(b),Z(b)],[LWX,d(a),Z(a)],'white',.8)}
+ quad([X,.002,Z(m2)],[X,.002,Z(W)],[LWX,.002,Z(W)],[LWX,.002,Z(m2)],'floor',.88);
+ quad([X,0,Z(W)],[LWX,0,Z(W)],[LWX,d(W),Z(W)],[X,d(W),Z(W)],'wall',.9);
+ box(X+SW/2,d(m2)/2,Z(-.3),SW,d(m2),.3,'metal',.3);
+ // OUR STORY: frosted acrylic, 0.64 x 0.66 m, 2 cm off the panel on four chrome stand-offs
+ {const m0=1.12,m1=1.76,y0=1.15,y1=1.81,PX=X+.035;box(PX,(y0+y1)/2,Z((m0+m1)/2),.006,y1-y0,m1-m0,'white',.86);
+  for(const m of [m0+.03,m1-.03])for(const y of [y0+.03,y1-.03]){box(X+.024,y,Z(m),.024,.018,.018,'white',1.0);box(PX+.005,y,Z(m),.006,.024,.024,'white',1.15)}
+  photoQuad('os_plaque',[[PX+.004,y0,Z(m0)],[PX+.004,y0,Z(m1)],[PX+.004,y1,Z(m1)],[PX+.004,y1,Z(m0)]],1.0)}
+ // WE'VE SERVED 185,249+ CUSTOMERS lettering
+ {const q=SP.os_cust;if(q){const w=.62,h=w*q.aspect,mc=2.5,y0=2.06;photoQuad('os_cust',[[X+.016,y0,Z(mc-w/2)],[X+.016,y0,Z(mc+w/2)],[X+.016,y0+h,Z(mc+w/2)],[X+.016,y0+h,Z(mc-w/2)]],1.0)}}
+ // acoustic felt panel: 4 x 3 tiles of 0.30 m, grooves alternate horizontal / vertical
+ {const m0=1.9,y0=1.15,T=.3,F=X+.03;
+  for(let r=0;r<3;r++)for(let c=0;c<4;c++){const mc=m0+c*T+T/2,yc=y0+(2-r)*T+T/2,horiz=(r+c)%2===0,zc=Z(mc);
+   box(X+.02,yc,zc,.016,T-.004,T-.004,'white',.78);
+   for(let k=0;k<9;k++){const o=-T/2+.012+k*(T-.024)/8;
+    if(horiz)box(F,yc+o,zc,.01,.021,T-.008,'white',.9);else box(F,yc,zc-o,.01,T-.008,.021,'white',.86)}}}
+ // drawer units: handle-less birch fronts with shadow gaps, black steel frames, mesh side, castors
+ const D=.5,XF=X+.03+D,H=.9;
+ const front=(m0,m1,y0,y1)=>{box(XF-.008,(y0+y1)/2,Z((m0+m1)/2),.016,y1-y0-.012,m1-m0-.012,'birch',1.08);box(XF-.017,y1-.004,Z((m0+m1)/2),.002,.008,m1-m0-.01,'metal',.55)};
+ const castor=(m,xx)=>{box(xx,.045,Z(m),.035,.05,.018,'metal',.7);box(xx,.022,Z(m),.045,.045,.02,'metal',.45)};
+ const top=(m0,m1)=>box(X+.03+D/2,H-.012,Z((m0+m1)/2),D+.01,.024,m1-m0,'birch',1.16);
+ // 1) cabinet: two drawers over a pair of doors, solid to the floor
+ {const m0=0,m1=.8;box(X+.03+D/2,(H+.08)/2,Z((m0+m1)/2),D-.02,H-.08,m1-m0,'birch',.98);top(m0,m1);
+  front(m0,m1,.70,.86);front(m0,m1,.48,.70);front(m0,(m0+m1)/2,.08,.48);front((m0+m1)/2,m1,.08,.48);
+  for(const m of [m0+.06,m1-.06])for(const xx of [X+.1,XF-.06])castor(m,xx)}
+ // 2) & 3) desk units on black steel frames, open underneath
+ for(const [m0,m1,fr] of [[.8,1.75,[[.66,.86],[.40,.66]]],[1.79,2.89,[[.70,.86],[.42,.68]]]]){const zc=Z((m0+m1)/2);
+  box(X+.03+D/2,.63,zc,D-.04,.46,m1-m0-.04,'birch',.95);top(m0,m1);for(const [a,b] of fr)front(m0,m1,a,b);
+  for(const m of [m0+.015,m1-.015])for(const xx of [X+.05,XF-.02]){box(xx,.45,Z(m),.03,.9,.03,'metal',1);castor(m,xx)}
+  for(const m of [m0+.015,m1-.015])box(X+.03+D/2,.09,Z(m),D-.03,.025,.025,'metal',1);
+  box(X+.05,.25,zc,.012,.3,m1-m0-.03,'metal',.5)}
+ // mesh side panel on the right-hand unit
+ box(X+.03+D/2,.48,Z(2.89-.012),D-.06,.78,.006,'metal',.45);
+
+ }
 }
 function travelZone(){
 const W=5.43,FR=W-.45;
