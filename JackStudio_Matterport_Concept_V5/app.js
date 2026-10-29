@@ -262,7 +262,10 @@ function walletCounter(cx,cz){
 // ladder shelf (four birch shelves, LED strips, crossbar with the red JACK STUDIO sign, X bracing)
 // with its three rows of bags standing on the shelves. Viewer faces -x, photo-right = -z.
 function essentialZone(){
- const X=-5.43,P=500,PW=450,zR=-10.08,Z=x=>zR+(1585-x)/P,ZW=x=>zR+(1585-x)/P,Y=y=>(1490-y)/P,YW=y=>(1335-y)/PW;
+ // shelf at 1.15x real size in the corner; the wall graphics at 1.5x, centred in the free wall between
+ // the Our Story panel and the shelf, so the section fills that whole stretch of wall
+ const X=-5.43,P=500/1.15,PW=450/1.5,zR=-10.08,Z=x=>zR+(1585-x)/P,zL=Z(985)-.15,zS=OS.zs-OS.W,zc=(zL+zS)/2,
+  ZW=x=>zc+(718-x)/PW,Y=y=>(1490-y)/P,YW=y=>(1335-y)/PW;
  const on=(k,x,d,sh)=>{const m=SP[k];if(!m)return;const [x0,y0,x1,y1]=m.px;photoQuad(k,[[X+d,YW(y1),ZW(x0)],[X+d,YW(y1),ZW(x1)],[X+d,YW(y0),ZW(x1)],[X+d,YW(y0),ZW(x0)]],sh)};
  on('e2_text',0,.012,1.0);
  // poster in a slim black frame
@@ -271,12 +274,12 @@ function essentialZone(){
  // pegboard (birch board 18 mm off the wall) with its print, ledges with the wallets
  {const [x0,y0,x1,y1]=[488,728,949,887],zc=(ZW(x0)+ZW(x1))/2,yc=(YW(y0)+YW(y1))/2;
   box(X+.02,yc,zc,.02,YW(y0)-YW(y1),ZW(x0)-ZW(x1),'birch',1.0);on('e2_peg',0,.031,1.0);
-  for(const [a,b,y] of [[790,912,741],[658,775,808],[762,880,838]])box(X+.06,YW(y),(ZW(a)+ZW(b))/2,.06,.012,ZW(a)-ZW(b),'birch',1.1);
+  for(const [a,b,y] of [[790,912,741],[658,775,808],[762,880,838]])box(X+.07,YW(y),(ZW(a)+ZW(b))/2,.08,.016,ZW(a)-ZW(b),'birch',1.1);
   on('e2_belts',0,.034,1.0)}
  // bust mannequin on its red base, standing in front of the wall
- {const m=SP.e2_mq;if(m){const [x0,y0,x1,y1]=m.px;sprite(X+.55,Z((x0+x1)/2),(x1-x0)/P/2,0,(y1-y0)/P,'e2_mq',1.02,true)}}
+ {const m=SP.e2_mq;if(m){const [x0,y0,x1,y1]=m.px;sprite(X+.7,ZW((x0+x1)/2)-.15,(x1-x0)/P*1.1/2,0,(y1-y0)/P*1.1,'e2_mq',1.02,true)}}
  // tall ladder shelf in the corner
- const xf=X+.45,xb=X+.03,xm=(xf+xb)/2,zl=Z(985),zr=Z(1585),TOP=3.5,LV=[1395,1030,590,245].map(y=>Y(y));
+ const xf=X+.52,xb=X+.03,xm=(xf+xb)/2,zl=Z(985),zr=Z(1585),TOP=3.95,LV=[1395,1030,590,245].map(y=>Y(y));
  for(const z of [zl,zr]){for(const x of [xf,xb])box(x,TOP/2,z,.035,TOP,.035,'metal',1);box(xm,TOP,z,xb-xf,.035,.035,'metal',1);
   for(let y=.25;y<TOP-.1;y+=.27)box(xm,y,z,xb-xf,.03,.03,'metal',1)}
  box(xf,TOP,(zl+zr)/2,.035,.035,zl-zr,'metal',1);box(xb,TOP,(zl+zr)/2,.035,.035,zl-zr,'metal',1);
