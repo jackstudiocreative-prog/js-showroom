@@ -46,7 +46,7 @@ const C=[[1,1],[-1,1],[-1,-1],[1,-1]],sh=[1.02,.9,.7,.86];
 for(let i=0;i<4;i++){const [s1,u1]=C[i],[s2,u2]=C[(i+1)%4];quad(P(a,s1,u1),P(a,s2,u2),P(b,s2,u2),P(b,s1,u1),tex,.83*sh[i])}}
 // Environment geometry: phototextured racks in a walkable world, not panorama cards.
 // Our Story recess under the staircase (left wall): runs from m=-.45 to 3.2 along the wall, 0.75 m deep
-const OS={zs:.3,W:3.2,m2:-.45,SW:.02,d:m=>.9+.85*m};
+const OS={zs:.3,W:3.2,m2:-.45,SW:.3,d:m=>.9+.85*m};
 const FRONT=4.55,RC=(-10.22+FRONT)/2,RL=FRONT+10.22; // room front (entrance) and centre/length along z
 function buildWorld(){
 // Floor: repeated genuine volumetric floor geometry, light-oak texture.
@@ -55,14 +55,14 @@ quad([x,0,z+1.6],[x+1.35,0,z+1.6],[x+1.35,0,z],[x,0,z],'floor',.95+((Math.round(
 box(0,4.14,RC,11,0.17,RL,'cream',1.04);
 // White plaster walls, room boundary and entrance side returns.
 box(5.52,2,RC,.18,4,RL,'wall',.99);
-{const zA=OS.zs-OS.m2,zB=OS.zs-OS.W;box(-5.52,2,(FRONT+zA)/2,.18,4,FRONT-zA,'wall',.95);box(-5.52,2,(zB-10.22)/2,.18,4,zB+10.22,'wall',.95);
+{const zA=OS.zs-OS.m2,zB=OS.zs-OS.W;box(-5.52+OS.SW/2,2,(FRONT+zA)/2,.18+OS.SW,4,FRONT-zA,'wall',.95);box(-5.52,2,(zB-10.22)/2,.18,4,zB+10.22,'wall',.95);
  {const m0=OS.m2,m1=OS.W;quad([-5.43,OS.d(m0),OS.zs-m0],[-5.43,OS.d(m1),OS.zs-m1],[-5.43,4.06,OS.zs-m1],[-5.43,4.06,OS.zs-m0],'wall',.82)}}
 box(-4.4,2,FRONT,2.2,4,.16,'wall',1);box(4.4,2,FRONT,2.2,4,.16,'wall',1);
 box(-1.61,2,FRONT,.13,4,.15,'metal');box(1.61,2,FRONT,.13,4,.15,'metal');box(0,3.7,FRONT,3.2,.14,.12,'metal');
 // Glass entrance doors and side mullions (light gray, intentionally translucent-looking).
 xpanel(-1.58,FRONT-.05,FRONT-.02,.1,3.65,'glass',1,-1);box(0,1.8,FRONT-.02,.045,3.6,.065,'metal',.9);
 // Wall skirt/baseboard around all sides
-box(5.38,.13,RC,.12,.26,RL-.2,'wood',.82);{const zA=OS.zs-OS.m2,zB=OS.zs-OS.W;box(-5.38,.13,(FRONT-.1+zA)/2,.12,.26,FRONT-.1-zA,'wood',.82);box(-5.38,.13,(zB-10.12)/2,.12,.26,zB+10.12,'wood',.82)}
+box(5.38,.13,RC,.12,.26,RL-.2,'wood',.82);{const zA=OS.zs-OS.m2,zB=OS.zs-OS.W;box(-5.38+OS.SW,.13,(FRONT-.1+zA)/2,.12,.26,FRONT-.1-zA,'wood',.82);box(-5.38,.13,(zB-10.12)/2,.12,.26,zB+10.12,'wood',.82)}
 for(const s of [-1,1])box(s*(5.3+2.17)/2,.11,-10.075,5.3-2.17,.22,.11,'wood',.85);
 // Ceiling tracks and multiple recessed lights
 for(const x of [-2.5,2.5]){
@@ -275,9 +275,10 @@ function essentialZone(zL){
 //    three wooden shelves in 3D with their products (photo cut-outs) standing on them, QR sign.
 // 2) OUR STORY: wood-panelled wall under the staircase (3D stair mass), OUR STORY plaque, felt
 //    panel, 185,249+ CUSTOMERS lettering, and three drawer units in 3D (no mannequins).
-const LWX=-5.43;
+let LWX=-5.43;
 function wallCard(k,zl,zr,yb,yt,sh=.86,off=.006){photoQuad(k,[[LWX+off,yb,zl],[LWX+off,yb,zr],[LWX+off,yt,zr],[LWX+off,yt,zl]],sh)}
 function brandWalls(){
+ LWX=-5.43+OS.SW;
  // ---- brand promise, laid out like the straight-on store photo (531 px = 1 m; middle shelf top 0.95 m)
  // raised black lettering (with a soft shadow), a 3D black OUR BRAND PROMISE plate, the clear acrylic
  // promise panel on four chrome stand-offs, QR card, three wooden floating shelves with the products.
@@ -297,11 +298,12 @@ function brandWalls(){
   box(LWX+.13,y-.018,zc,.25,.036,w,'wood',1.08);box(LWX+.255,y-.018,zc,.004,.036,w,'wood',.82)}
  for(const [k,top] of [['bw_s1',1090],['bw_s2',1188],['bw_s3',1010]]){const m=SP[k];if(!m)continue;const [x0,y0,x1,y1]=m.px;
   sprite(LWX+.12,(Z(x0)+Z(x1))/2,(x1-x0)/P/2,Y(Math.max(y1,top)),Y(Math.max(y1,top))+(y1-y0)/P,k,1.04,Math.PI)}
+ LWX=-5.43;
  { // ---- OUR STORY, built from the store photos (real-size metres; m = distance along the wall from
  // the wood panel's entrance-side edge). Under-stair wall with vertical wood planks, the white
  // staircase sloping over it, frosted acrylic OUR STORY plaque on stand-offs, 185,249+ CUSTOMERS
  // lettering, a 4x3 acoustic felt panel with alternating grooves, and the three drawer units.
- const {zs,W,m2,SW,d}=OS,ze=zs-W,Z=m=>zs-m,X=LWX-SW;
+ const {zs,W,m2,SW,d}=OS,ze=zs-W,Z=m=>zs-m,X=LWX;
  // wood planks: 0.32 m wide, vertical grain, varied by flipping, thin dark joints
  const PW=W/10,PH=.62;
  for(let i=0;i<10;i++){const m0=i*PW,m1=m0+PW,top0=d(m0),top1=d(m1),fl=i%2,vf=(i*7)%3;
@@ -310,9 +312,11 @@ function brandWalls(){
    photoQuad('os_plank',(j+vf)%2?[TL,TR,BR,BL].map((p,k)=>[p[0],[BL,BR,TR,TL][k][1],p[2]]):[BL,BR,TR,TL],.92)}
   if(i>0)box(X+.013,d(m0)/2,Z(m0),.002,d(m0),.005,'wood',.42)}
  // the recess: sloped white stair underside across its depth, floor, end walls, dark storage at the low end
- for(let k=0;k<24;k++){const a=m2+(W-m2)*k/24,b=m2+(W-m2)*(k+1)/24;quad([X,d(a),Z(a)],[X,d(b),Z(b)],[LWX,d(b),Z(b)],[LWX,d(a),Z(a)],'white',.8)}
- quad([X,.002,Z(m2)],[X,.002,Z(W)],[LWX,.002,Z(W)],[LWX,.002,Z(m2)],'floor',.88);
- quad([X,0,Z(W)],[LWX,0,Z(W)],[LWX,d(W),Z(W)],[X,d(W),Z(W)],'wall',.9);
+ // the stair: a white mass standing out SW from the wood, flush with the Brand Promise wall; its sloped
+ // underside shows along the top of the wood; above the slope its face runs up to the ceiling
+ for(let k=0;k<24;k++){const a=m2+(W-m2)*k/24,b=m2+(W-m2)*(k+1)/24;quad([X,d(a),Z(a)],[X,d(b),Z(b)],[X+SW,d(b),Z(b)],[X+SW,d(a),Z(a)],'white',.8)}
+ quad([X+SW,d(m2),Z(m2)],[X+SW,d(W),Z(W)],[X+SW,4.06,Z(W)],[X+SW,4.06,Z(m2)],'wall',.86);
+ quad([X,d(W),Z(W)],[X+SW,d(W),Z(W)],[X+SW,4.06,Z(W)],[X,4.06,Z(W)],'wall',.78);
 
  // OUR STORY: frosted acrylic, 0.64 x 0.66 m, 2 cm off the panel on four chrome stand-offs
  {const m0=1.12,m1=1.76,y0=1.15,y1=1.81,PX=X+.035;box(PX,(y0+y1)/2,Z((m0+m1)/2),.006,y1-y0,m1-m0,'white',.86);
