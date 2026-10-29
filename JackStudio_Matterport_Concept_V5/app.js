@@ -285,9 +285,9 @@ function dressForm(cx,cz,S,yaw=0){const c=Math.cos(yaw),sn=Math.sin(yaw);
  const y0=.6*S;loft(cx,cz,[[y0,.16*S,.1*S],[y0+.035*S,.162*S,.1*S],[y0+.04*S,.157*S,.097*S],[y0+.16*S,.155*S,.1*S],[y0+.3*S,.17*S,.115*S],[y0+.4*S,.185*S,.112*S],[y0+.46*S,.18*S,.1*S],[y0+.5*S,.14*S,.085*S],[y0+.535*S,.07*S,.055*S]],BLK,26);
  tube([cx,y0+.53*S,cz],[cx,y0+.64*S,cz],.043*S,.045*S,CREAM);tube([cx,y0+.64*S,cz],[cx,y0+.665*S,cz],.05*S,.04*S,WOOD);
  // left arm hangs to the hip; right arm bends forward at chest height (as in the store); dark hands
- const shL=[cx,y0+.44*S,cz+.175*S],elL=[cx+.01*S,y0+.2*S,cz+.205*S],wrL=[cx+.04*S,y0+.02*S,cz+.18*S];
+ const shL=[cx,y0+.44*S,cz-.175*S],elL=[cx+.01*S,y0+.2*S,cz-.205*S],wrL=[cx+.04*S,y0+.02*S,cz-.18*S];
  tube(shL,elL,.055*S,.05*S,BLK,[0,0],14);tube(elL,wrL,.05*S,.042*S,BLK,[0,0],14);tube(wrL,[wrL[0]+.02*S,wrL[1]-.09*S,wrL[2]-.01*S],.024*S,.02*S,HAND);
- const shR=[cx,y0+.44*S,cz-.175*S],elR=[cx+.05*S,y0+.22*S,cz-.215*S],wrR=[cx+.28*S,y0+.27*S,cz-.17*S];
+ const shR=[cx,y0+.44*S,cz+.175*S],elR=[cx+.05*S,y0+.22*S,cz+.215*S],wrR=[cx+.28*S,y0+.27*S,cz+.17*S];
  tube(shR,elR,.055*S,.05*S,BLK,[0,0],14);tube(elR,wrR,.05*S,.042*S,BLK,[0,0],14);tube(wrR,[wrR[0]+.09*S,wrR[1]+.005*S,wrR[2]+.02*S],.024*S,.021*S,HAND);
  // leather strap over the shoulder with its silver buckle, and the price tag
  tube([cx+.06*S,y0+.5*S,cz-.13*S],[cx+.12*S,y0+.2*S,cz+.1*S],.012*S,.012*S,[.11,.09,.08],[0,-1],6);
@@ -296,61 +296,54 @@ function dressForm(cx,cz,S,yaw=0){const c=Math.cos(yaw),sn=Math.sin(yaw);
  XF=null;XFN=null;
  const q=SP.e3_print;if(q){const w=.2*S,h=w*q.aspect,yc=y0+.3*S,X0=.118*S;const R=(dx,dz)=>[cx+dx*c-dz*sn,0,cz+dx*sn+dz*c];
   const pA=R(X0,w/2),pB=R(X0,-w/2);photoQuad('e3_print',[[pA[0],yc-h/2,pA[2]],[pB[0],yc-h/2,pB[2]],[pB[0],yc+h/2,pB[2]],[pA[0],yc+h/2,pA[2]]],1)}}
+// ESSENTIAL (left wall), built to the reference layout: ESSENTIAL lettering, framed poster and the
+// birch pegboard right beside a tall black shelf (posts on both sides, ladder on the right, open top
+// tier, four birch shelves with LED strips, crossbar with the red JACK STUDIO sign, X bracing), the
+// bust mannequin in front. Reference image px -> metres: 228 px = 1 m, floor at y=935.
 function essentialZone(){
- // laid out exactly like the store photo at 1.15x (shelf, poster, pegboard and mannequin keep their
- // photo spacing); the whole group sits in the open stretch of wall after Our Story, clear of the corner
- // the shelf is drawn 30% wider than in the photo so it reads fuller; wall pieces keep their size and sit
- // beside it as in the photo
- // wall pieces (lettering, poster, pegboard, mannequin) at 1.2x the shelf scale, shifted 0.4 m away from
- // the shelf so the group fills its wall
- const X=-5.43,P=500/1.15,PW=P,zR=-8.45,WF=1.3,KW=1.2,Z=x=>zR+(1585-x)/P*WF,ZW=x=>Z(985)+.4+(985-x)/P*KW,Y=y=>(1490-y)/P,YW=y=>(1490-y)/P*KW;
- const on=(k,d,sh)=>{const m=SP[k];if(!m)return;const [x0,y0,x1,y1]=m.px;photoQuad(k,[[X+d,YW(y1),ZW(x0)],[X+d,YW(y1),ZW(x1)],[X+d,YW(y0),ZW(x1)],[X+d,YW(y0),ZW(x0)]],sh)};
- on('e2_text',.012,1.0);
- // poster: black aluminium frame (four bars standing 25 mm off the wall), poster set inside it
- {const m=SP.e2_poster,[x0,y0,x1,y1]=m.px,zA=ZW(x0),zB=ZW(x1),yA=YW(y1),yB=YW(y0),b=.016,D=.025,zc=(zA+zB)/2,yc=(yA+yB)/2;
-  box(X+.004,yc,zc,.008,yB-yA,zA-zB,'metal',.5);
-  photoQuad('e2_poster',[[X+.012,yA,zA],[X+.012,yA,zB],[X+.012,yB,zB],[X+.012,yB,zA]],1.02);
-  box(X+D/2,yB+b/2,zc,D,b,zA-zB+2*b,'metal',.9);box(X+D/2,yA-b/2,zc,D,b,zA-zB+2*b,'metal',.75);
-  box(X+D/2,yc,zA+b/2,D,yB-yA,b,'metal',.85);box(X+D/2,yc,zB-b/2,D,yB-yA,b,'metal',.8)}
- // pegboard (birch ply, 18 mm, standing 25 mm off the wall on spacers) with round holes, pegs, two
- // shelf ledges, the product card, wallets, waist bag and three belts - each product a solid piece
- {const [x0,y0,x1,y1]=[488,728,949,887],zA=ZW(x0),zB=ZW(x1),yA=YW(y1),yB=YW(y0),zc=(zA+zB)/2,yc=(yA+yB)/2,F=X+.043,id=(p,n)=>[p,n];
-  box(X+.034,yc,zc,.018,yB-yA,zA-zB,'birch',1.06);box(X+.0435,yc,zc,.001,yB-yA,zA-zB,'birch',1.15);
+ const X=-5.43,K=228,zR=-8.8,Z=x=>zR+(1145-x)/K,Y=y=>(935-y)/K,id=(p,n)=>[p,n];
+ const flat=(k,d,sh)=>{const m=SP[k];if(!m)return;const [x0,y0,x1,y1]=m.px;photoQuad(k,[[X+d,Y(y1),Z(x0)],[X+d,Y(y1),Z(x1)],[X+d,Y(y0),Z(x1)],[X+d,Y(y0),Z(x0)]],sh)};
+ flat('tg_TEXT',.012,1.0);
+ // poster in a black frame standing 25 mm off the wall
+ {const zA=Z(430),zB=Z(612),yA=Y(476),yB=Y(233),b=.022,D=.025,zc=(zA+zB)/2,yc=(yA+yB)/2;
+  box(X+.004,yc,zc,.008,yB-yA,zA-zB,'metal',.5);flat('tg_POSTER',.014,1.02);
+  box(X+D/2,yB-b/2,zc,D,b,zA-zB,'metal',.9);box(X+D/2,yA+b/2,zc,D,b,zA-zB,'metal',.75);
+  box(X+D/2,yc,zA-b/2,D,yB-yA,b,'metal',.85);box(X+D/2,yc,zB+b/2,D,yB-yA,b,'metal',.8)}
+ // pegboard: birch ply on spacers, round holes, white ledges, card, wallets, waist bag, three belts
+ {const zA=Z(338),zB=Z(692),yA=Y(607),yB=Y(490),zc=(zA+zB)/2,yc=(yA+yB)/2,F=X+.043;
+  box(X+.034,yc,zc,.018,yB-yA,zA-zB,'birch',1.06);
   for(const z of [zA-.04,zB+.04])for(const y of [yA+.04,yB-.04])box(X+.015,y,z,.025,.03,.03,'birch',.8);
-  const HS=.0705;for(let z=zA-HS/2;z>zB+.01;z-=HS)for(let y=yA+HS/2;y<yB-.01;y+=HS)disc((p,n)=>[[p[2],p[1],p[0]],[n[2],n[1],n[0]]],[z,y,F+.0003],.009,.001,[.16,.12,.08],[0,0]);
-  const prod=(k,X0,front,sh=1)=>{const m=SP[k];if(!m)return null;const [a,b,c,d]=m.px,w=(c-a)/P*KW,h=(d-b)/P*KW,z=(ZW(a)+ZW(c))/2,y0=YW(d);
-   if(m.col&&front>.02)rbox(id,[X0+front/2,y0+h/2,z],[front/2-.002,h/2*.8,w/2*.85],Math.min(.012,front/3),m.col,null,[1,1,1]);
-   photoQuad(k,[[X0+front,y0,z+w/2],[X0+front,y0,z-w/2],[X0+front,y0+h,z-w/2],[X0+front,y0+h,z+w/2]],sh);return [z,w,y0,h]};
-  const ledge=(a,b,y)=>{const z=(ZW(a)+ZW(b))/2,ww=ZW(a)-ZW(b),yy=YW(y);box(X+.085,yy-.007,z,.085,.014,ww,'white',1.05);
-   for(const zz of [ZW(a)-.03,ZW(b)+.03])tube([F,yy-.03,zz],[F+.07,yy-.012,zz],.006,.006,[.85,.82,.75]);return yy};
-  const yL1=ledge(785,912,741),yL2=ledge(762,850,838),yL3=ledge(650,775,812);
-  prod('pg_w1',X+.06,.025);prod('pg_w2',X+.06,.025);prod('pg_w3',X+.06,.025);prod('pg_waist',X+.05,.07);
-  prod('pg_card',F+.001,.001,1.02);
-  for(const k of ['pg_b1','pg_b2','pg_b3']){const r=prod(k,F,.012,1.0);if(r){const [z,w,y0,h]=r;tube([F,y0+h-.01,z],[F+.05,y0+h-.005,z],.005,.005,[.8,.8,.8])}}}
- // bust mannequin (modelled, like the store's): faces the room at an angle
- dressForm(X+.85,ZW(800),1.2,.5);
- // tall ladder shelf in the corner
- const xf=X+.6,xb=X+.1,xm=(xf+xb)/2,zl=Z(985),zr=Z(1585),TOP=3.95,LV=[1395,1030,590,245].map(y=>Y(y));
- for(const z of [zl,zr]){for(const x of [xf,xb])box(x,TOP/2,z,.035,TOP,.035,'metal',1);box(xm,TOP,z,xb-xf,.035,.035,'metal',1);
-  for(let y=.25;y<TOP-.1;y+=.27)box(xm,y,z,xb-xf,.03,.03,'metal',1)}
- box(xf,TOP,(zl+zr)/2,.035,.035,zl-zr,'metal',1);box(xb,TOP,(zl+zr)/2,.035,.035,zl-zr,'metal',1);
- for(const y of LV){box(xm,y-.014,(zl+zr)/2,xb-xf-.02,.028,zl-zr-.03,'birch',1.1)}
- for(const y of [LV[2],LV[3]])box(xf+.05,y-.033,(zl+zr)/2,.02,.008,zl-zr-.1,'white',1.6);
- const bar=Y(705);box(xf,bar,(zl+zr)/2,.035,.035,zl-zr,'metal',1);
- for(const [y0,y1] of [[bar,LV[1]],[LV[1],LV[0]]]){line3([xb+.01,y0-.03,zl-.03],[xb+.01,y1+.03,zr+.03],.014,'metal');line3([xb+.01,y1+.03,zl-.03],[xb+.01,y0-.03,zr+.03],.014,'metal')}
- // red JACK STUDIO sign hanging on the crossbar
- {const m=SP.e2_sign;if(m){const [x0,y0,x1,y1]=m.px,zc=(Z(x0)+Z(x1))/2,w=(x1-x0)/P,h=(y1-y0)/P,yc=Y((y0+y1)/2);
-  box(xf+.006,yc,zc,.008,h,w,'metal',.6);photoQuad('e2_sign',[[xf+.012,yc-h/2,zc+w/2],[xf+.012,yc-h/2,zc-w/2],[xf+.012,yc+h/2,zc-w/2],[xf+.012,yc+h/2,zc+w/2]],1.05)}}
- // the products, set out neatly: evenly spaced in straight rows, the larger bags raised on chrome
- // stands at the back, small pieces in front. Each has a solid body behind its photo face.
- const LAY={A1:[.18,'b',.17],A4:[.27,'f',0],A2:[.5,'b',.17],A5:[.59,'f',0],A3:[.82,'b',.17],A6:[.9,'f',0],
-  B1:[.1,'f',0],B2:[.27,'b',.06],B3:[.27,'f',0],B4:[.4,'f',0],B5:[.47,'b',.08],B6:[.63,'b',.08],B7:[.76,'f',0],B8:[.9,'b',0],
-  C1:[.17,'b',.36],C2:[.17,'f',0],C3:[.5,'f',0],C4:[.82,'f',0]};
- for(const [n,[f,dp,lift]] of Object.entries(LAY)){const k='e3_'+n,m=SP[k];if(!m)continue;const [x0,y0,x1,y1]=m.px,w=(x1-x0)/P*1.15,h=(y1-y0)/P*1.15,z=zl-(zl-zr)*f;
-  const sh=LV[m.lv],back=dp==='b',x=back?xm+.06:xm-.08,yb=sh+.004+lift;
-  if(m.col&&n!=='B1'){const d=Math.min(.1,w*.4);rbox((p,nn)=>[p,nn],[x-d/2-.004,yb+h*.4,z],[d/2,h*.3,w*.28],Math.min(.02,d/3),m.col,null,[1,1,1])}
+  const HS=(zA-zB)/22;for(let i=1;i<22;i++)for(let j=1;j*HS<yB-yA-.01;j++)disc((p,n)=>[[p[2],p[1],p[0]],[n[2],n[1],n[0]]],[zA-i*HS,yA+j*HS,F+.0003],.008,.001,[.16,.12,.08],[0,0]);
+  const ledge=(a,b,y)=>{const z=(Z(a)+Z(b))/2,w=Z(a)-Z(b),yy=Y(y);box(X+.085,yy-.007,z,.085,.014,w,'white',1.05);
+   for(const zz of [Z(a)-.02,Z(b)+.02])tube([F,yy-.03,zz],[F+.07,yy-.012,zz],.005,.005,[.85,.82,.75])};
+  ledge(566,664,510);ledge(548,614,580);ledge(458,560,557);
+  const prod=(k,x0,dep)=>{const m=SP[k];if(!m)return;const [a,b,c,d]=m.px,w=(c-a)/K,h=(d-b)/K,z=(Z(a)+Z(c))/2,y0=Y(d);
+   if(dep>.02)rbox(id,[x0+dep/2,y0+h/2,z],[dep/2-.002,h/2*.8,w/2*.85],Math.min(.012,dep/3),m.col,null,[1,1,1]);
+   photoQuad(k,[[x0+dep,y0,z+w/2],[x0+dep,y0,z-w/2],[x0+dep,y0+h,z-w/2],[x0+dep,y0+h,z+w/2]],1.0)};
+  prod('tg_P1',F,.002);prod('tg_P2',X+.05,.07);prod('tg_P3',X+.06,.025);prod('tg_P4',X+.06,.025);prod('tg_P5',X+.06,.025);
+  for(const k of ['tg_BL1','tg_BL2','tg_BL3']){const m=SP[k];if(!m)continue;const [a,b,c,d]=m.px;prod(k,F,.01);tube([F,Y(b)-.02,(Z(a)+Z(c))/2],[F+.05,Y(b)-.015,(Z(a)+Z(c))/2],.005,.005,[.8,.8,.8])}}
+ // mannequin, facing the room
+ dressForm(X+.85,Z(570),1.16,.12);
+ // tall shelf, 10 cm off the wall
+ const D=.45,xb=X+.1,xf=xb+D,xm=(xf+xb)/2,zl=Z(722),zr=Z(1145),TOP=Y(45),BD=[235,425,680,905].map(Y);
+ for(const z of [zl,zr])for(const x of [xf,xb])box(x,TOP/2,z,.04,TOP,.04,'metal',1);
+ for(const x of [xf,xb])for(const y of [TOP-.02,Y(95)])box(x,y,(zl+zr)/2,.04,.04,zl-zr,'metal',1);
+ for(const z of [zl,zr])for(const y of [TOP-.02,.08])box(xm,y,z,D,.035,.035,'metal',1);
+ for(let y=.3;y<TOP-.2;y+=.3)box(xm,y,zr,D,.03,.03,'metal',1);            // ladder rungs on the right side
+ for(const y of BD){box(xm,y-.018,(zl+zr)/2,D-.02,.036,zl-zr-.04,'birch',1.1)}
+ for(const y of [BD[0],BD[1]])box(xf-.06,y-.04,(zl+zr)/2,.02,.008,zl-zr-.12,'white',1.7);
+ const cb=Y(487);box(xf,cb,(zl+zr)/2,.035,.035,zl-zr,'metal',1);box(xb,cb,(zl+zr)/2,.035,.035,zl-zr,'metal',1);
+ for(const [y0,y1] of [[cb,BD[2]],[BD[2],BD[3]]]){line3([xb+.01,y0-.02,zl-.03],[xb+.01,y1+.02,zr+.03],.014,'metal');line3([xb+.01,y1+.02,zl-.03],[xb+.01,y0-.02,zr+.03],.014,'metal')}
+ {const m=SP.tg_SIGN;if(m){const [a,b,c,d]=m.px,zc=(Z(a)+Z(c))/2,w=(c-a)/K,h=(d-b)/K,yc=Y((b+d)/2);
+  box(xf+.006,yc,zc,.006,h,w,'metal',.6);photoQuad('tg_SIGN',[[xf+.01,yc-h/2,zc+w/2],[xf+.01,yc-h/2,zc-w/2],[xf+.01,yc+h/2,zc-w/2],[xf+.01,yc+h/2,zc+w/2]],1.05)}}
+ // products: each in its place from the reference; raised ones stand on chrome stands at the back
+ for(const [k,m] of Object.entries(SP)){if(!k.startsWith('tg_')||!'ABC'.includes(m.lv))continue;if(k==='tg_SIGN')continue;
+  const [a,b,c,d]=m.px,w=(c-a)/K,h=(d-b)/K,z=(Z(a)+Z(c))/2,board=BD['ABC'.indexOf(m.lv)+1],lift=Y(d)-board,raised=lift>.05,
+   yb=raised?Y(d):board+.003,x=raised?xm+.05:xm-.09;
+  if(k!=='tg_B1'){const dp=Math.min(.12,w*.4);rbox(id,[x-dp/2-.004,yb+h*.42,z],[dp/2,h*.32,w*.3],Math.min(.02,dp/3),m.col,null,[1,1,1])}
   sprite(x,z,w/2,yb,yb+h,k,1.04,Math.PI);
-  if(lift>.02){box(x-.04,sh+lift/2,z,.012,lift,.012,'white',.95);box(x-.04,sh+.004,z,.12,.008,.12,'white',1.1);box(x-.04,yb-.006,z,.012,.012,w*.5,'white',.95)}}
+  if(raised){box(x+.03,(board+yb)/2,z,.012,yb-board,.012,'white',.95);box(x+.03,board+.004,z,.12,.008,.12,'white',1.1);box(x+.03,yb-.006,z,.012,.012,w*.5,'white',.95)}
+  if(!raised&&k!=='tg_B1')box(xf-.012,board-.005,z,.004,.03,.07,'white',1.25);}
 }
 // Left wall from the entrance, built as real pieces (no photo rectangles):
 // 1) BRAND PROMISE: wall lettering and the acrylic promise panel as cut-out graphics on the wall,
@@ -704,7 +697,7 @@ const stops=[
  {id:'professional',name:'Professional',x:2.2,z:-2.65,yaw:1.57,detail:'professional',desc:'Office-ready leather goods and work bags.'},
  {id:'travel',name:'Travel Movement',x:1.5,z:-7.0,yaw:1.57,detail:'travel',desc:'Travel bags, cabin luggage and accessories.'},
  {id:'counter',name:'Brand Wall',x:0,z:-8.7,yaw:0,detail:'counter',desc:'The JACK STUDiO brand wall.'},
- {id:'fashion',name:'Essential',x:-2.2,z:-7.0,yaw:-1.57,detail:'fashion',desc:'Discover the apparel and everyday collection.'},
+ {id:'fashion',name:'Essential',x:-1.9,z:-7.0,yaw:-1.57,detail:'fashion',desc:'Discover the apparel and everyday collection.'},
  {id:'heritage',name:'Our Story',x:-2.3,z:-2.2,yaw:-1.57,detail:'heritage',desc:'How Jack Studio began, and the customers who are part of it.'},
  {id:'essential',name:'Brand Promise',x:-2.6,z:2.9,yaw:-1.57,detail:'essential',desc:'Our brand promise: more trust, more relevant, more personal.'},
 ];
