@@ -42,38 +42,36 @@ const P=(p,sr,su)=>[p[0]+r[0]*sr+u[0]*su,p[1]+r[1]*sr+u[1]*su,p[2]+r[2]*sr+u[2]*
 const C=[[1,1],[-1,1],[-1,-1],[1,-1]],sh=[1.02,.9,.7,.86];
 for(let i=0;i<4;i++){const [s1,u1]=C[i],[s2,u2]=C[(i+1)%4];quad(P(a,s1,u1),P(a,s2,u2),P(b,s2,u2),P(b,s1,u1),tex,.83*sh[i])}}
 // Environment geometry: phototextured racks in a walkable world, not panorama cards.
+const FRONT=4.55,RC=(-10.22+FRONT)/2,RL=FRONT+10.22; // room front (entrance) and centre/length along z
 function buildWorld(){
 // Floor: repeated genuine volumetric floor geometry, light-oak texture.
-for(let x=-5.4;x<5.4;x+=1.35)for(let z=-10.1;z<9.3;z+=1.6)
+for(let x=-5.4;x<5.4;x+=1.35)for(let z=-10.1;z<FRONT-.05;z+=1.6)
 quad([x,0,z+1.6],[x+1.35,0,z+1.6],[x+1.35,0,z],[x,0,z],'floor',.95+((Math.round(z*5+x*2)%3)*.018));
-box(0,4.14,-.4,11,0.17,19.7,'cream',1.04);
+box(0,4.14,RC,11,0.17,RL,'cream',1.04);
 // White plaster walls, room boundary and entrance side returns.
-box(-5.52,2,-.4,.18,4,19.7,'wall',.95);box(5.52,2,-.4,.18,4,19.7,'wall',.99);
-box(-4.4,2,9.42,2.2,4,.16,'wall',1);box(4.4,2,9.42,2.2,4,.16,'wall',1);
-box(-1.61,2,9.42,.13,4,.15,'metal');box(1.61,2,9.42,.13,4,.15,'metal');box(0,3.7,9.42,3.2,.14,.12,'metal');
+box(-5.52,2,RC,.18,4,RL,'wall',.95);box(5.52,2,RC,.18,4,RL,'wall',.99);
+box(-4.4,2,FRONT,2.2,4,.16,'wall',1);box(4.4,2,FRONT,2.2,4,.16,'wall',1);
+box(-1.61,2,FRONT,.13,4,.15,'metal');box(1.61,2,FRONT,.13,4,.15,'metal');box(0,3.7,FRONT,3.2,.14,.12,'metal');
 // Glass entrance doors and side mullions (light gray, intentionally translucent-looking).
-xpanel(-1.58,9.37,9.40,.1,3.65,'glass',1,-1);box(0,1.8,9.4,.045,3.6,.065,'metal',.9);
+xpanel(-1.58,FRONT-.05,FRONT-.02,.1,3.65,'glass',1,-1);box(0,1.8,FRONT-.02,.045,3.6,.065,'metal',.9);
 // Wall skirt/baseboard around all sides
-for(const x of [-5.38,5.38])box(x,.13,-.4,.12,.26,19.5,'wood',.82);
+for(const x of [-5.38,5.38])box(x,.13,RC,.12,.26,RL-.2,'wood',.82);
 for(const s of [-1,1])box(s*(5.3+2.17)/2,.11,-10.075,5.3-2.17,.22,.11,'wood',.85);
 // Ceiling tracks and multiple recessed lights
 for(const x of [-2.5,2.5]){
- box(x,4,-.4,.07,.06,16.6,'metal',1);
- for(const z of [-7.4,-4.8,-2.0,1.0,3.6,6.3]){
+ box(x,4,RC,.07,.06,RL-2,'metal',1);
+ for(const z of [-7.4,-4.8,-2.0,1.0,3.4]){
   box(x,3.955,z,.44,.05,.22,'white',1.14);
   box(x,3.915,z,.34,.035,.14,'cream',1.25);
  }
 }
-for(const z of [-7.3,-2.1,3.1,7.15])box(0,4.0,z,3.2,.06,.06,'metal',.8);
+for(const z of [-7.3,-2.1,3.1])box(0,4.0,z,3.2,.06,.06,'metal',.8);
 backWall();
 // Main wall arrays with actual store photos integrated into the display backing.
-rack(-1,3.0,'essential','ESSENTIAL');rack(-1,-2.15,'heritage','CRAFT HERITAGE');rack(-1,-7.10,'fashion','EVERYDAY STYLE');
+rack(-1,2.65,'essential','ESSENTIAL');rack(-1,-2.15,'heritage','CRAFT HERITAGE');rack(-1,-7.10,'fashion','EVERYDAY STYLE');
 urbanZone();profZone();travelZone();
 // Main freestanding display islands, with three-dimensional leather products.
-island(0,3.35,'CRAFT INNOVATIVE',1);island(0,-2.25,'CRAFT HERITAGE',2);
-// Entrance side pedestal and accessories.
-box(4.55,.68,7.6,.6,1.35,.75,'cream');box(4.55,1.39,7.6,.72,.11,.85,'wood');bag(4.55,1.64,7.6,.45,.45,.23,'darkleather',true);
-box(-4.55,.53,7.7,.74,1.04,.68,'wood');box(-4.55,1.11,7.7,.82,.12,.75,'cream');bag(-4.55,1.38,7.7,.37,.41,.21,'brownleather',true);
+island(0,1.0,'CRAFT INNOVATIVE',1);island(0,-2.25,'CRAFT HERITAGE',2);
 }
 // Back of store, rebuilt from the storefront photo: lit JACK STUDiO letters over a wide
 // solid white end wall, nothing else on the wall.
@@ -102,7 +100,7 @@ box(0,OH-.004,F+.002,OW*2,.008,.004,'metal',.6);
 // Right: the PROFESSIONAL wall (perspective-corrected photo: lettering, two pegboards, belts) and
 // the two mannequins standing in front of it.
 function profZone(){
-const W=5.43,G=1.12,ZP=-1.5,Z=u=>ZP+u*G,id=(p,n)=>[p,n];
+const W=5.43,G=1.12,ZP=-1.85,Z=u=>ZP+u*G,id=(p,n)=>[p,n];
 // ---- wall photo
 {const m=SP.pf_wall;if(m)sprite(W-.006,Z((m.u0+m.u1)/2),(m.u1-m.u0)*G/2,(m.v0+.13)*G,(m.v1+.13)*G,'pf_wall',.76,false);}
 // ---- tall ladder shelf: 1.23 u wide, 0.45 u deep, left side is a ladder with an angled top
@@ -131,7 +129,7 @@ function ladderSide(xf,xb,z,top,angled,dir){const post=(x,h)=>box(x,h/2,z,.04,h,
  else{post(xf,top);post(xb,top);box((xf+xb)/2,top,z,xb-xf,.04,.04,'metal',1)}
  for(let y=.3;y<top-.32;y+=.3)box((xf+xb)/2,y,z,xb-xf,.035,.035,'metal',1)}
 function urbanZone(){
-const W=5.43,G=1.12,Z0=-1.5+1.22*G,Z=u=>Z0+u*G,D=.45*G,xf=W-D,xb=W-.03,xm=(xf+xb)/2;
+const W=5.43,G=1.12,Z0=-1.85+1.22*G,Z=u=>Z0+u*G,D=.45*G,xf=W-D,xb=W-.03,xm=(xf+xb)/2;
 const card=(k,x,turn=true)=>{const m=SP[k];if(m)sprite(x,Z(m.z0!==undefined?0:m.z),m.w*G/2,m.y*G,(m.y+m.h)*G,k,1.05,turn)};
 // ---- wall: lettering + poster (photo, above the frame's shelf)
 {const m=SP.uw_wall;if(m)sprite(W-.006,Z((m.u0+m.u1)/2),(m.u1-m.u0)*G/2,m.v0*G,m.v1*G,'uw_wall',.76,false);}
@@ -416,29 +414,29 @@ function lookAt(eye,target){let z=[eye[0]-target[0],eye[1]-target[1],eye[2]-targ
 return new Float32Array([x[0],y[0],z[0],0,x[1],y[1],z[1],0,x[2],y[2],z[2],0,-(x[0]*eye[0]+x[1]*eye[1]+x[2]*eye[2]),-(y[0]*eye[0]+y[1]*eye[1]+y[2]*eye[2]),-(z[0]*eye[0]+z[1]*eye[1]+z[2]*eye[2]),1])}
 function mul(a,b){const o=new Float32Array(16);for(let col=0;col<4;col++)for(let row=0;row<4;row++){let v=0;for(let k=0;k<4;k++)v+=a[k*4+row]*b[col*4+k];o[col*4+row]=v}return o}
 function project(m,x,y,z){const w=m[3]*x+m[7]*y+m[11]*z+m[15];if(w<=.01)return null;return {x:(m[0]*x+m[4]*y+m[8]*z+m[12])/w,y:(m[1]*x+m[5]*y+m[9]*z+m[13])/w,w};}
-const cam={x:0,y:1.65,z:8.15,yaw:0,pitch:-.10};let mvp=null,last=performance.now(),keys=new Set(),auto=null,tour=false,tourPause=0,tourIndex=0,mouseDown=null,dragged=false,toastTimer=0,activeID='entrance';
+const cam={x:0,y:1.65,z:4.05,yaw:0,pitch:-.10};let mvp=null,last=performance.now(),keys=new Set(),auto=null,tour=false,tourPause=0,tourIndex=0,mouseDown=null,dragged=false,toastTimer=0,activeID='entrance';
 const stops=[
- {id:'entrance',name:'Entrance',x:0,z:8.05,yaw:0,detail:'island',desc:'Welcome to the Jack Studio concept showroom.'},
- {id:'innovative',name:'Craft Innovative',x:2.40,z:4.15,yaw:-1.45,detail:'island',desc:'Walk around the central leather-goods display.'},
- {id:'urban',name:'Urban Carry',x:2.0,z:1.7,yaw:1.57,detail:'urban',desc:'Explore the everyday bag and backpack collection.'},
- {id:'professional',name:'Professional',x:2.2,z:-2.3,yaw:1.57,detail:'professional',desc:'Office-ready leather goods and work bags.'},
+ {id:'entrance',name:'Entrance',x:0,z:3.95,yaw:0,detail:'island',desc:'Welcome to the Jack Studio concept showroom.'},
+ {id:'innovative',name:'Craft Innovative',x:2.40,z:1.75,yaw:-1.45,detail:'island',desc:'Walk around the central leather-goods display.'},
+ {id:'urban',name:'Urban Carry',x:2.0,z:1.35,yaw:1.57,detail:'urban',desc:'Explore the everyday bag and backpack collection.'},
+ {id:'professional',name:'Professional',x:2.2,z:-2.65,yaw:1.57,detail:'professional',desc:'Office-ready leather goods and work bags.'},
  {id:'travel',name:'Travel Movement',x:1.5,z:-7.0,yaw:1.57,detail:'travel',desc:'Travel bags, cabin luggage and accessories.'},
  {id:'counter',name:'Brand Wall',x:0,z:-5.40,yaw:0,detail:'counter',desc:'The JACK STUDiO brand wall.'},
  {id:'fashion',name:'Everyday Style',x:-2.85,z:-7.10,yaw:-1.57,detail:'fashion',desc:'Discover the apparel and everyday collection.'},
  {id:'heritage',name:'Craft Heritage',x:-2.85,z:-2.25,yaw:-1.57,detail:'heritage',desc:'Take a closer look at handcrafted leather goods.'},
- {id:'essential',name:'Essential',x:-2.85,z:3.05,yaw:-1.57,detail:'essential',desc:'Explore accessories, wallets and daily essentials.'},
+ {id:'essential',name:'Essential',x:-2.85,z:2.65,yaw:-1.57,detail:'essential',desc:'Explore accessories, wallets and daily essentials.'},
 ];
 const tourOrder=['entrance','innovative','urban','professional','travel','counter','fashion','heritage','essential','entrance'];
 function findStop(id){return stops.find(s=>s.id===id)||stops[0]}
 function nearestStop(){let best=stops[0],d=Infinity;for(const s of stops){const d2=(cam.x-s.x)**2+(cam.z-s.z)**2;if(d2<d){d=d2;best=s}}return best}
 function wrap(a){return Math.atan2(Math.sin(a),Math.cos(a))}
 function updateArea(){const s=nearestStop();if(s.id!==activeID){activeID=s.id;$('areaTitle').textContent=s.name;$('areaDescription').textContent=s.desc}}
-function blocked(x,z,r=.32){if(Math.abs(x)>5.04-r||z< -9.52+r||z>9.04-r)return true;
+function blocked(x,z,r=.32){if(Math.abs(x)>5.04-r||z< -9.52+r||z>FRONT-.38-r)return true;
 // central island & service counter; white glass door not obstructed
-for(const obj of [{x:0,z:3.35,w:2.35,h:1.9},{x:0,z:-2.25,w:2.35,h:1.9},{x:-4.55,z:7.7,w:.74,h:.68},{x:4.55,z:7.6,w:.6,h:.75}])
+for(const obj of [{x:0,z:1.0,w:2.35,h:1.9},{x:0,z:-2.25,w:2.35,h:1.9}])
 if(Math.abs(x-obj.x)<obj.w/2+r&&Math.abs(z-obj.z)<obj.h/2+r)return true;
 return false}
-function gridPath(tx,tz){tx=clamp(tx,-4.6,4.6);tz=clamp(tz,-9.04,8.84);const step=.4,nx=25,nz=46,x0=-4.8,z0=-9.1;
+function gridPath(tx,tz){tx=clamp(tx,-4.6,4.6);tz=clamp(tz,-9.04,FRONT-.6);const step=.4,nx=25,nz=46,x0=-4.8,z0=-9.1;
 const ix=x=>Math.round(clamp((x-x0)/step,0,nx-1)),iz=z=>Math.round(clamp((z-z0)/step,0,nz-1));const cx=i=>x0+(i%nx)*step,cz=i=>z0+Math.floor(i/nx)*step;const nearestClear=(x,z)=>{let best=null,d=1e10;for(let j=0;j<nz;j++)for(let i=0;i<nx;i++){const px=x0+i*step,pz=z0+j*step;if(blocked(px,pz))continue;const v=(px-x)**2+(pz-z)**2;if(v<d){best=j*nx+i;d=v}}return best};
 const start=nearestClear(cam.x,cam.z),goal=nearestClear(tx,tz);if(start===null||goal===null)return[];
 const open=[start],came=new Int32Array(nx*nz).fill(-1),cost=new Float64Array(nx*nz).fill(Infinity),closed=new Set();cost[start]=0;
@@ -477,7 +475,7 @@ $('autoTour').onclick=beginTour;$('stopTour').onclick=stopAuto;$('restart').oncl
 let mapVisible=true;$('mapToggle').onclick=()=>{mapVisible=!mapVisible;$('floorMap').hidden=!mapVisible;$('mapContainer').querySelector('.mapFooter').hidden=!mapVisible;$('mapToggle').textContent=mapVisible?'⌄':'⌃'};
 function normalizedPoint(e){const r=canvas.getBoundingClientRect();return {x:((e.clientX-r.left)/r.width)*2-1,y:1-((e.clientY-r.top)/r.height)*2}}
 function floorClick(e){const n=normalizedPoint(e),aspect=canvas.clientWidth/canvas.clientHeight,tf=Math.tan(Math.PI/3.1/2);const forward=[Math.sin(cam.yaw)*Math.cos(cam.pitch),Math.sin(cam.pitch),-Math.cos(cam.yaw)*Math.cos(cam.pitch)],right=[Math.cos(cam.yaw),0,Math.sin(cam.yaw)],up=[-Math.sin(cam.yaw)*Math.sin(cam.pitch),Math.cos(cam.pitch),Math.cos(cam.yaw)*Math.sin(cam.pitch)];
-const dir=forward.map((v,i)=>v+n.x*tf*aspect*right[i]+n.y*tf*up[i]);if(dir[1]>-.055){toast('Click a point on the floor to walk');return}const t=-cam.y/dir[1];if(t>80){toast('Choose a closer spot on the floor');return}const x=cam.x+dir[0]*t,z=cam.z+dir[2]*t;if(x < -5.2||x>5.2||z< -9.7||z>9.2)return;
+const dir=forward.map((v,i)=>v+n.x*tf*aspect*right[i]+n.y*tf*up[i]);if(dir[1]>-.055){toast('Click a point on the floor to walk');return}const t=-cam.y/dir[1];if(t>80){toast('Choose a closer spot on the floor');return}const x=cam.x+dir[0]*t,z=cam.z+dir[2]*t;if(x < -5.2||x>5.2||z< -9.7||z>FRONT-.2)return;
 stopAuto();goTo({x,z});}
 canvas.addEventListener('pointerdown',e=>{canvas.setPointerCapture(e.pointerId);mouseDown={x:e.clientX,y:e.clientY,lastX:e.clientX,lastY:e.clientY};dragged=false;canvas.classList.add('dragging')});
 canvas.addEventListener('pointermove',e=>{if(!mouseDown)return;const dx=e.clientX-mouseDown.lastX,dy=e.clientY-mouseDown.lastY;if(Math.hypot(e.clientX-mouseDown.x,e.clientY-mouseDown.y)>6)dragged=true;if(dragged){cam.yaw+=dx*.0042;cam.pitch=clamp(cam.pitch-dy*.0034,-1.05,1.05);if(tour)stopAuto()}mouseDown.lastX=e.clientX;mouseDown.lastY=e.clientY});
