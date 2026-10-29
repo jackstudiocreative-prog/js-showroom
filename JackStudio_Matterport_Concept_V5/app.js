@@ -296,7 +296,7 @@ function essentialZone(){
  // photo spacing); the whole group sits in the open stretch of wall after Our Story, clear of the corner
  // the shelf is drawn 30% wider than in the photo so it reads fuller; wall pieces keep their size and sit
  // beside it as in the photo
- const X=-5.43,P=500/1.15,PW=P,zR=-9.05,WF=1.3,Z=x=>zR+(1585-x)/P*WF,ZW=x=>Z(985)+(985-x)/P,Y=y=>(1490-y)/P,YW=y=>(1490-y)/P;
+ const X=-5.43,P=500/1.15,PW=P,zR=-8.45,WF=1.3,Z=x=>zR+(1585-x)/P*WF,ZW=x=>Z(985)+(985-x)/P,Y=y=>(1490-y)/P,YW=y=>(1490-y)/P;
  const on=(k,x,d,sh)=>{const m=SP[k];if(!m)return;const [x0,y0,x1,y1]=m.px;photoQuad(k,[[X+d,YW(y1),ZW(x0)],[X+d,YW(y1),ZW(x1)],[X+d,YW(y0),ZW(x1)],[X+d,YW(y0),ZW(x0)]],sh)};
  on('e2_text',0,.012,1.0);
  // poster in a slim black frame
@@ -693,7 +693,7 @@ const stops=[
  {id:'professional',name:'Professional',x:2.2,z:-2.65,yaw:1.57,detail:'professional',desc:'Office-ready leather goods and work bags.'},
  {id:'travel',name:'Travel Movement',x:1.5,z:-7.0,yaw:1.57,detail:'travel',desc:'Travel bags, cabin luggage and accessories.'},
  {id:'counter',name:'Brand Wall',x:0,z:-8.7,yaw:0,detail:'counter',desc:'The JACK STUDiO brand wall.'},
- {id:'fashion',name:'Essential',x:-2.4,z:-8.1,yaw:-1.57,detail:'fashion',desc:'Discover the apparel and everyday collection.'},
+ {id:'fashion',name:'Essential',x:-2.2,z:-7.0,yaw:-1.57,detail:'fashion',desc:'Discover the apparel and everyday collection.'},
  {id:'heritage',name:'Our Story',x:-2.3,z:-2.2,yaw:-1.57,detail:'heritage',desc:'How Jack Studio began, and the customers who are part of it.'},
  {id:'essential',name:'Brand Promise',x:-2.6,z:2.9,yaw:-1.57,detail:'essential',desc:'Our brand promise: more trust, more relevant, more personal.'},
 ];
