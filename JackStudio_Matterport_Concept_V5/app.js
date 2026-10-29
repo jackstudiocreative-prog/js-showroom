@@ -219,20 +219,21 @@ XF=null;
 const MV=[];   // lit mesh: pos3 normal3 colour3 rib2(v, strength) uv2  -> 13 floats per vertex
 const LUGCOL={white:[.86,.85,.83],lav:[.74,.74,.80],grey:[.40,.42,.43],orange:[.80,.50,.37]};
 function mpush(p,n,c,rib,uv){if(XF)p=XF(p);MV.push(p[0],p[1],p[2],n[0],n[1],n[2],c[0],c[1],c[2],rib[0],rib[1],uv[0],uv[1])}
-function arcAxis(h,r,mid){const a=[],m=5;for(let k=m;k>0;k--)a.push(-(h-r)-r*Math.tan(k/m*Math.PI/4));
+function arcAxis(h,r,mid,m=5){const a=[];for(let k=m;k>0;k--)a.push(-(h-r)-r*Math.tan(k/m*Math.PI/4));
  for(let k=0;k<=mid;k++)a.push(-(h-r)+2*(h-r)*k/mid);for(let k=1;k<=m;k++)a.push((h-r)+r*Math.tan(k/m*Math.PI/4));return a}
 // rounded box in case-local coords (u across, v up, w toward the viewer); toW maps local -> world
 function rbox(toW,c,h,r0,col,ribF,mids=[6,14,4]){
  // per-axis corner radius (an edge can't be rounder than the slab is thick)
  const r=h.map(v=>Math.min(r0,v*.98));
- const ax=[arcAxis(h[0],r[0],mids[0]),arcAxis(h[1],r[1],mids[1]),arcAxis(h[2],r[2],mids[2])];
+ // flat faces need no subdivision (rib shading is per pixel); corner segments scale with the radius
+ const seg=v=>v>=.02?4:v>=.008?2:1,ax=[0,1,2].map(i=>arcAxis(h[i],r[i],1,seg(r[i])));
  const map=q=>{const inner=q.map((v,i)=>Math.max(-(h[i]-r[i]),Math.min(h[i]-r[i],v))),e=q.map((v,i)=>(v-inner[i])/r[i]),l=Math.hypot(...e)||1,u=e.map(v=>v/l);
   const nn=u.map((v,i)=>v/r[i]),nl=Math.hypot(...nn)||1;return [inner.map((v,i)=>c[i]+v+u[i]*r[i]),nn.map(v=>v/nl)]};
  for(let i=0;i<3;i++)for(const sg of [-1,1]){const j=(i+1)%3,k=(i+2)%3,A=ax[j],B=ax[k],G=[];
   for(const a of A){const row=[];for(const b of B){const q=[0,0,0];q[i]=sg*h[i];q[j]=a;q[k]=b;row.push(map(q))}G.push(row)}
   for(let x=0;x<A.length-1;x++)for(let y=0;y<B.length-1;y++){const t=[G[x][y],G[x+1][y],G[x+1][y+1],G[x][y+1]];
    for(const idx of [0,1,2,0,2,3]){const [pp,nn]=t[idx];const W=toW(pp,nn);mpush(W[0],W[1],col,ribF?ribF(pp,nn):[0,0],[-1,-1])}}}}
-function cylU(toW,c,rad,len,col,seg=18){ // cylinder with its axle across the case (local u)
+function cylU(toW,c,rad,len,col,seg=10){ // cylinder with its axle across the case (local u)
  for(let i=0;i<seg;i++){const a0=i/seg*Math.PI*2,a1=(i+1)/seg*Math.PI*2,P=(a,du)=>[c[0]+du,c[1]+Math.sin(a)*rad,c[2]+Math.cos(a)*rad],N=a=>[0,Math.sin(a),Math.cos(a)];
   const q=[[P(a0,-len/2),N(a0)],[P(a1,-len/2),N(a1)],[P(a1,len/2),N(a1)],[P(a0,len/2),N(a0)]];
   for(const idx of [0,1,2,0,2,3]){const W=toW(q[idx][0],q[idx][1]);mpush(W[0],W[1],col,[0,0],[-1,-1])}
