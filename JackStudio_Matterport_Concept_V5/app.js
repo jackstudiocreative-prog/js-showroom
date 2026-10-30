@@ -216,8 +216,91 @@ function giftTable(cx,cz){
  for(const sx of [-1,1]){const lx=cx+sx*(L/2-.22);
   for(const z of [front-.06,cz-DP/2+.06])box(lx,(y-T)/2,z,.05,y-T,.05,'metal',1);
   box(lx,.025,cz,.05,.05,DP-.08,'metal',1);box(lx,y-T-.025,cz,.05,.05,DP-.08,'metal',.9)}
- const m=SP.gt_items;if(m){const w=1.58,h=w*m.aspect,zc=cz-.12;
-  photoQuad('gt_items',[[cx-w/2+.02,y,zc],[cx+w/2+.02,y,zc],[cx+w/2+.02,y+h,zc],[cx-w/2+.02,y+h,zc]],1.08)}
+ if(window.JS_GIFT)giftItems(cx,cz,y);
+ else{const m=SP.gt_items;if(m){const w=1.58,h=w*m.aspect,zc=cz-.12;
+  photoQuad('gt_items',[[cx-w/2+.02,y,zc],[cx+w/2+.02,y,zc],[cx+w/2+.02,y+h,zc],[cx-w/2+.02,y+h,zc]],1.08)}}
+}
+// Everything on the MAKE IT PERSONAL table as real objects (own texture atlas assets/gift-data.js):
+// three leaning gift boxes, sage and copper card stacks, Just for You cards in wooden holders, the
+// sticker pack on an easel, the two A4 signs in acrylic stands, the paper bag with rope handles and
+// round ENGRAVING tag, the open gift box, the log slice, the keychain board with four keychains and
+// the linen tray with grey paper rolls and the pine sprig. Sizes and positions from the photos.
+var GV=[],GU=[],GS=[],giftMesh=null,giftTex=null;
+function giftItems(cx,cz,yT){const R=window.JS_GIFT;
+ const uvq=k=>{const r=R[k]||R.c_white;return [[r[0],r[3]],[r[2],r[3]],[r[2],r[1]],[r[0],r[1]]]};
+ const tri=(P,T,sh)=>{for(const i of [0,1,2,0,2,3]){GV.push(...P[i]);GU.push(...T[i]);GS.push(sh)}};
+ const q=(a,b,c,d,k,sh=1)=>tri([a,b,c,d],uvq(k),sh);
+ // frame: origin (table-local x,z), yaw about y, tilt = lean back about x (top goes to -z)
+ const F=(x,z,yaw=0,tilt=0,y0=0)=>{const cy=Math.cos(yaw),sy=Math.sin(yaw),ct=Math.cos(tilt),st=Math.sin(tilt);
+  return p=>{const y1=p[1]*ct+p[2]*st,z1=-p[1]*st+p[2]*ct,x1=p[0];return [cx+x+x1*cy+z1*sy,yT+y0+y1,cz+z-x1*sy+z1*cy]}};
+ // box with its bottom centre at o (frame coords); faces f,b,l,r,t,d -> texture keys
+ const box=(T,o,w,h,d,fc)=>{const X=[o[0]-w/2,o[0]+w/2],Y=[o[1],o[1]+h],Z=[o[2]-d/2,o[2]+d/2],P=(i,j,k)=>T([X[i],Y[j],Z[k]]),g=k=>fc[k]||fc.s||'c_white';
+  q(P(0,0,1),P(1,0,1),P(1,1,1),P(0,1,1),g('f'),.97);q(P(1,0,0),P(0,0,0),P(0,1,0),P(1,1,0),g('b'),.74);
+  q(P(0,0,0),P(0,0,1),P(0,1,1),P(0,1,0),g('l'),.82);q(P(1,0,1),P(1,0,0),P(1,1,0),P(1,1,1),g('r'),.82);
+  q(P(0,1,1),P(1,1,1),P(1,1,0),P(0,1,0),g('t'),1.04);q(P(0,0,0),P(1,0,0),P(1,0,1),P(0,0,1),g('d'),.6)};
+ // cylinder between two frame points, side texture + caps
+ const cyl=(T,a,b,r,side,cap,N=14,capK=null)=>{const d=b.map((v,i)=>v-a[i]),L=Math.hypot(...d),n=d.map(v=>v/L),u=Math.abs(n[1])<.9?[0,1,0]:[1,0,0];
+  let e1=[n[1]*u[2]-n[2]*u[1],n[2]*u[0]-n[0]*u[2],n[0]*u[1]-n[1]*u[0]];const l1=Math.hypot(...e1);e1=e1.map(v=>v/l1);const e2=[n[1]*e1[2]-n[2]*e1[1],n[2]*e1[0]-n[0]*e1[2],n[0]*e1[1]-n[1]*e1[0]];
+  const ring=(c,t)=>c.map((v,i)=>v+r*(Math.cos(t)*e1[i]+Math.sin(t)*e2[i]));
+  for(let i=0;i<N;i++){const t0=i/N*Math.PI*2,t1=(i+1)/N*Math.PI*2,sh=.72+.3*Math.max(0,Math.sin((t0+t1)/2)*.8+.2);
+   q(T(ring(a,t0)),T(ring(a,t1)),T(ring(b,t1)),T(ring(b,t0)),side,sh);
+   if(cap){const rc=R[capK||cap]||R.c_white,cu=(rc[0]+rc[2])/2,cv=(rc[1]+rc[3])/2,hu=(rc[2]-rc[0])/2,hv=(rc[3]-rc[1])/2;
+    const P=[T(b),T(ring(b,t0)),T(ring(b,t1))],U=[[cu,cv],[cu+Math.cos(t0)*hu,cv-Math.sin(t0)*hv],[cu+Math.cos(t1)*hu,cv-Math.sin(t1)*hv]];
+    for(let j=0;j<3;j++){GV.push(...P[j]);GU.push(...U[j]);GS.push(1.04)}}}};
+ // flat disc with a round print: centre c (world), axes ex/ey (world unit vectors), texture key
+ const disc=(c,r,ex,ey,k,sh=1.04,N=28)=>{const rc=R[k],cu=(rc[0]+rc[2])/2,cv=(rc[1]+rc[3])/2,hu=(rc[2]-rc[0])/2,hv=(rc[3]-rc[1])/2;
+  for(let i=0;i<N;i++){const t0=i/N*Math.PI*2,t1=(i+1)/N*Math.PI*2,pt=t=>c.map((v,j)=>v+r*(Math.cos(t)*ex[j]+Math.sin(t)*ey[j]));
+   for(const [P,U] of [[c,[cu,cv]],[pt(t0),[cu+Math.cos(t0)*hu,cv-Math.sin(t0)*hv]],[pt(t1),[cu+Math.cos(t1)*hu,cv-Math.sin(t1)*hv]]]){GV.push(...P);GU.push(...U);GS.push(sh)}}};
+ const I=F(0,0);
+ // --- gift boxes, leaning back ---
+ box(F(-.42,-.27,0,.22),[0,0,0],.30,.21,.045,{f:'box_cream',s:'c_dcream',t:'c_cream'});
+ box(F(-.46,-.19,0,.22),[0,0,0],.30,.21,.045,{f:'box_pink',s:'c_pink'});
+ box(F(-.51,-.11,0,.22),[0,0,0],.30,.21,.045,{f:'box_diag',s:'c_dcream',t:'c_cream'});
+ // --- sage and copper card stacks ---
+ for(let i=0;i<12;i++){const z=-.05+i*.009;
+  box(F(-.545,z,0,.32),[0,0,0],.15,.10,.003,{f:'c_sagecard',s:'c_paper',t:'c_paper',b:'c_sagecard'});
+  box(F(-.38,z,0,.32),[0,0,0],.15,.10,.003,{f:'c_cucard',s:'c_paper',t:'c_paper',b:'c_cucard'})}
+ // --- Just for You: big holder with stacked cards, small holder in front ---
+ box(I,[-.47,0,.15],.42,.03,.05,{s:'c_holder',t:'c_holder'});
+ for(let i=3;i>=0;i--)box(F(-.58,.152-i*.007,0,.12,.012),[0,0,0],.155,.105,.003,{f:i?'c_cucard':'jfy_cu',s:'c_paper',t:'c_paper',b:'c_cucard'});
+ box(F(-.43,.162,0,.12,.012),[0,0,0],.155,.105,.003,{f:'jfy_sg',s:'c_paper',t:'c_paper',b:'c_sagecard'});
+ box(I,[-.37,0,.27],.27,.022,.045,{s:'c_holder',t:'c_holder'});
+ box(F(-.44,.268,0,.1,.01),[0,0,0],.09,.055,.002,{f:'jfy_sg_s',s:'c_paper',b:'c_sagecard'});
+ box(F(-.30,.268,0,.1,.01),[0,0,0],.09,.055,.002,{f:'jfy_cu_s',s:'c_paper',b:'c_cucard'});
+ box(I,[-.37,0,.289],.27,.03,.007,{s:'c_holder',t:'c_holder'});
+ // --- sticker pack on a small wooden easel ---
+ {const E=F(-.19,0,0,.25,.035);box(E,[0,0,0],.21,.148,.003,{f:'st_pack',s:'c_white'});
+  box(I,[-.19,.035,.012],.12,.01,.02,{s:'c_easel'});
+  for(const dx of [-.04,.04])box(F(-.19+dx,-.012,0,.25),[0,0,0],.008,.17,.006,{s:'c_easel'});
+  box(F(-.19,-.04,0,-.35),[0,0,0],.008,.15,.006,{s:'c_easel'})}
+ // --- the two A4 signs in acrylic stands ---
+ for(const [x,z,yaw,tilt,k] of [[-.09,-.13,0,.12,'mp_sign'],[.19,-.07,-.08,.2,'eg_sign']]){
+  box(F(x,z,yaw),[0,0,0],.225,.008,.08,{s:'c_acrylic'});
+  box(F(x,z,yaw,tilt,.008),[0,0,0],.21,.297,.003,{f:k,s:'c_white'});
+  box(F(x,z,yaw,tilt,.008),[0,0,-.004],.215,.30,.003,{s:'c_acrylic',f:'c_acrylic'})}
+ // --- paper bag, rope handles and round tag ---
+ {const bx=.36,bz=-.26,W=.46,H=.58,D=.15,fz=bz+D/2;box(I,[bx,0,bz],W,H,D,{f:'bag',s:'c_bagside',t:'c_bagin'});
+  const bp=(u,v,dz=.006)=>[cx+bx-W/2+u/615*W,yT+H-v/715*H,cz+fz+dz];
+  const rope=[[172,27],[200,70],[235,130],[262,175],[285,205],[292,235],[280,265],[262,278],[240,265],[238,235],[250,205],[272,180],[300,145],[345,95],[390,55],[425,30]];
+  const W0=p=>p;for(let i=0;i+1<rope.length;i++)cyl(W0,bp(...rope[i]),bp(...rope[i+1]),.0035,'c_leather',null,6);
+  const tc=bp(270,447,.07);cyl(W0,bp(262,278),[tc[0],tc[1]+.04,tc[2]],.0008,'c_paper',null,4);
+  cyl(W0,[tc[0],tc[1],tc[2]-.002],[tc[0],tc[1],tc[2]],.04,'c_white',null,24);disc([tc[0],tc[1],tc[2]+.0005],.04,[1,0,0],[0,1,0],'tag')}
+ // --- open gift box and the log slice ---
+ box(I,[.21,0,.035],.19,.02,.125,{s:'c_darkbox'});box(I,[.21,.02,.035],.175,.03,.11,{s:'c_darkbox',t:'box_in'});
+ cyl(I,[.385,0,.005],[.385,.045,.005],.09,'c_bark',null,28);disc([cx+.385,yT+.0455,cz+.005],.09,[1,0,0],[0,0,-1],'slice',1.0);
+ // --- keychain board with four keychains ---
+ {const K=F(.57,-.05,0,.1);box(K,[0,0,0],.17,.25,.018,{f:'kc_board',s:'c_birch'});
+  for(const dx of [-.06,-.02,.02,.06]){cyl(K,[dx,.19,.009],[dx,.19,.03],.003,'c_birch',null,6);
+   cyl(K,[dx,.178,.02],[dx,.178,.025],.013,'c_silver',null,12);cyl(K,[dx,.178,.021],[dx,.178,.026],.008,'c_leather',null,10);
+   box(K,[dx,.16,.022],.012,.012,.006,{s:'c_silver'});box(K,[dx,.075,.02],.022,.085,.006,{f:'strap',s:'c_leather'})}}
+ // --- linen tray, grey paper rolls, pine sprig ---
+ {const tx=.175,tz=.22,TW=.79,TD=.24,TH=.035,th=.012;box(I,[tx,0,tz],TW,.008,TD,{s:'c_linen'});
+  box(I,[tx,0,tz+TD/2-th/2],TW,TH,th,{s:'c_linen'});box(I,[tx,0,tz-TD/2+th/2],TW,TH,th,{s:'c_linen'});
+  for(const sx of [-1,1])box(I,[tx+sx*(TW/2-th/2),0,tz],th,TH,TD-2*th,{s:'c_linen'});
+  for(const [x,z,r,l,k] of [[.15,.14,.024,.64,'c_grey2'],[.17,.19,.027,.70,'c_grey'],[.2,.245,.024,.70,'c_grey'],[.08,.30,.022,.56,'c_grey2']])
+   cyl(I,[x-l/2,.008+r,z],[x+l/2,.008+r,z],r,k,k,14);
+  for(const dy of [0,.012]){const y0=yT+.062+dy;q([cx-.27,y0,cz+.31],[cx+.21,y0,cz+.31],[cx+.21,y0+.02,cz+.06],[cx-.27,y0+.02,cz+.06],'branch',1.05)}
+  cyl(I,[.14,.07,.2],[.55,.072,.17],.002,'c_twig',null,5)}
 }
 // Wallet counter behind the gifting table: light-wood top on a black frame with the black
 // JACK STUDIO cloth hanging in front (photo), dressed like the wallet display photo - two linen
@@ -824,7 +907,7 @@ let lastOverlay=0;
 function render(now){const dt=Math.min(.055,(now-last)/1000||.016);last=now;animate(dt);const dpr=Math.min(window.devicePixelRatio||1,1.6);const w=Math.round(canvas.clientWidth*dpr),h=Math.round(canvas.clientHeight*dpr);if(canvas.width!==w||canvas.height!==h){canvas.width=w;canvas.height=h;gl.viewport(0,0,w,h)}
 gl.clearColor(.81,.79,.73,1);gl.clear(gl.COLOR_BUFFER_BIT|gl.DEPTH_BUFFER_BIT);
 const fw=[Math.sin(cam.yaw)*Math.cos(cam.pitch),Math.sin(cam.pitch),-Math.cos(cam.yaw)*Math.cos(cam.pitch)];const proj=perspective(Math.PI/3.1,w/h,.09,75),view=lookAt([cam.x,cam.y,cam.z],[cam.x+fw[0],cam.y+fw[1],cam.z+fw[2]]);mvp=mul(proj,view);
-gl.uniformMatrix4fv(loc.mvp,false,mvp);gl.uniform3f(loc.camera,cam.x,cam.y,cam.z);bindMesh(worldMesh);gl.bindTexture(gl.TEXTURE_2D,atlasTex);gl.uniform1f(loc.cut,-1.);gl.drawArrays(gl.TRIANGLES,0,worldMesh.n);if(lbMesh){bindMesh(lbMesh);gl.bindTexture(gl.TEXTURE_2D,lbTex);gl.drawArrays(gl.TRIANGLES,0,6)}if(manParts){gl.bindTexture(gl.TEXTURE_2D,manTex);gl.uniform1f(loc.cut,.5);for(const m of manParts){bindMesh(m);gl.bindBuffer(gl.ELEMENT_ARRAY_BUFFER,m.i);gl.drawElements(gl.TRIANGLES,m.n,gl.UNSIGNED_SHORT,0)}gl.uniform1f(loc.cut,-1.)}if(decTex)drawLit();if(spriteTex&&spriteMesh.n){updateSprites();bindMesh(spriteMesh);gl.bindTexture(gl.TEXTURE_2D,spriteTex);gl.uniform1f(loc.cut,.5);gl.drawArrays(gl.TRIANGLES,0,spriteMesh.n)}if(now-lastOverlay>45){updateOverlay();lastOverlay=now}requestAnimationFrame(render)}
+gl.uniformMatrix4fv(loc.mvp,false,mvp);gl.uniform3f(loc.camera,cam.x,cam.y,cam.z);bindMesh(worldMesh);gl.bindTexture(gl.TEXTURE_2D,atlasTex);gl.uniform1f(loc.cut,-1.);gl.drawArrays(gl.TRIANGLES,0,worldMesh.n);if(lbMesh){bindMesh(lbMesh);gl.bindTexture(gl.TEXTURE_2D,lbTex);gl.drawArrays(gl.TRIANGLES,0,6)}if(giftMesh){bindMesh(giftMesh);gl.bindTexture(gl.TEXTURE_2D,giftTex);gl.uniform1f(loc.cut,.5);gl.drawArrays(gl.TRIANGLES,0,giftMesh.n);gl.uniform1f(loc.cut,-1.)}if(manParts){gl.bindTexture(gl.TEXTURE_2D,manTex);gl.uniform1f(loc.cut,.5);for(const m of manParts){bindMesh(m);gl.bindBuffer(gl.ELEMENT_ARRAY_BUFFER,m.i);gl.drawElements(gl.TRIANGLES,m.n,gl.UNSIGNED_SHORT,0)}gl.uniform1f(loc.cut,-1.)}if(decTex)drawLit();if(spriteTex&&spriteMesh.n){updateSprites();bindMesh(spriteMesh);gl.bindTexture(gl.TEXTURE_2D,spriteTex);gl.uniform1f(loc.cut,.5);gl.drawArrays(gl.TRIANGLES,0,spriteMesh.n)}if(now-lastOverlay>45){updateOverlay();lastOverlay=now}requestAnimationFrame(render)}
 function buildMan(){const J=window.JS_MAN,Q=MANQ;if(!J||!Q)return null;const dec=(b,T)=>{const r=atob(b),u=new Uint8Array(r.length);for(let i=0;i<r.length;i++)u[i]=r.charCodeAt(i);return new T(u.buffer)};
  const sc=Q.h/(J.meta.ytop-J.meta.ybot),c=Math.cos(Q.yaw),sn=Math.sin(Q.yaw);
  return J.parts.map(P=>{const ip=dec(P.p,Int16Array),iu=dec(P.u,Uint16Array),is=dec(P.s,Uint8Array),n=P.n,V=new Float32Array(n*3),U=new Float32Array(n*2),S=new Float32Array(n);
@@ -835,6 +918,6 @@ function buildMan(){const J=window.JS_MAN,Q=MANQ;if(!J||!Q)return null;const dec
   m.i=gl.createBuffer();gl.bindBuffer(gl.ELEMENT_ARRAY_BUFFER,m.i);gl.bufferData(gl.ELEMENT_ARRAY_BUFFER,dec(P.i,Uint16Array),gl.STATIC_DRAW);return m})}
 function loadTex(url,fmt){return new Promise((ok,bad)=>{const im=new Image();im.onload=()=>{const t=gl.createTexture();gl.bindTexture(gl.TEXTURE_2D,t);gl.pixelStorei(gl.UNPACK_FLIP_Y_WEBGL,false);gl.texImage2D(gl.TEXTURE_2D,0,fmt,fmt,gl.UNSIGNED_BYTE,im);gl.texParameteri(gl.TEXTURE_2D,gl.TEXTURE_MIN_FILTER,gl.LINEAR_MIPMAP_LINEAR);gl.texParameteri(gl.TEXTURE_2D,gl.TEXTURE_MAG_FILTER,gl.LINEAR);gl.texParameteri(gl.TEXTURE_2D,gl.TEXTURE_WRAP_S,gl.CLAMP_TO_EDGE);gl.texParameteri(gl.TEXTURE_2D,gl.TEXTURE_WRAP_T,gl.CLAMP_TO_EDGE);gl.generateMipmap(gl.TEXTURE_2D);ok(t)};im.onerror=bad;im.src=url})}
 function launch(){gl.activeTexture(gl.TEXTURE0);gl.uniform1i(loc.sampler,0);
-Promise.all([loadTex(window.JS_ATLAS_URL,gl.RGB),window.JS_SPRITE_URL?loadTex(window.JS_SPRITE_URL,gl.RGBA).catch(()=>null):Promise.resolve(null),window.JS_DECAL_URL?loadTex(window.JS_DECAL_URL,gl.RGBA).catch(()=>null):Promise.resolve(null),window.JS_LIGHTBOX_URL?loadTex(window.JS_LIGHTBOX_URL,gl.RGB).catch(()=>null):Promise.resolve(null),window.JS_MAN_URL?loadTex(window.JS_MAN_URL,gl.RGBA).catch(()=>null):Promise.resolve(null)]).then(([a,b,c,d,e])=>{if(e){manTex=e;manParts=buildMan()}atlasTex=a;spriteTex=b;decTex=c;if(d&&LBQ){lbTex=d;const P=[];for(const i of [0,1,2,0,2,3])P.push(...LBQ[i]);lbMesh=mesh(P,[0,1,1,1,1,0,0,1,1,0,0,0],[1.12,1.12,1.12,1.12,1.12,1.12])}gl.enable(gl.DEPTH_TEST);gl.disable(gl.CULL_FACE);$('loading').hidden=true;setArea('entrance');last=performance.now();requestAnimationFrame(render)}).catch(()=>{$('loading').innerHTML='<div class="loadbox">Unable to load 3D textures. Extract the whole ZIP first.</div>'})}
+Promise.all([loadTex(window.JS_ATLAS_URL,gl.RGB),window.JS_SPRITE_URL?loadTex(window.JS_SPRITE_URL,gl.RGBA).catch(()=>null):Promise.resolve(null),window.JS_DECAL_URL?loadTex(window.JS_DECAL_URL,gl.RGBA).catch(()=>null):Promise.resolve(null),window.JS_LIGHTBOX_URL?loadTex(window.JS_LIGHTBOX_URL,gl.RGB).catch(()=>null):Promise.resolve(null),window.JS_MAN_URL?loadTex(window.JS_MAN_URL,gl.RGBA).catch(()=>null):Promise.resolve(null),window.JS_GIFT_URL?loadTex(window.JS_GIFT_URL,gl.RGBA).catch(()=>null):Promise.resolve(null)]).then(([a,b,c,d,e,f])=>{if(f&&GV.length){giftTex=f;giftMesh=mesh(GV,GU,GS)}if(e){manTex=e;manParts=buildMan()}atlasTex=a;spriteTex=b;decTex=c;if(d&&LBQ){lbTex=d;const P=[];for(const i of [0,1,2,0,2,3])P.push(...LBQ[i]);lbMesh=mesh(P,[0,1,1,1,1,0,0,1,1,0,0,0],[1.12,1.12,1.12,1.12,1.12,1.12])}gl.enable(gl.DEPTH_TEST);gl.disable(gl.CULL_FACE);$('loading').hidden=true;setArea('entrance');last=performance.now();requestAnimationFrame(render)}).catch(()=>{$('loading').innerHTML='<div class="loadbox">Unable to load 3D textures. Extract the whole ZIP first.</div>'})}
 launch();
 })();
