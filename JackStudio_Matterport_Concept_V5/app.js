@@ -293,10 +293,10 @@ function giftItems(cx,cz,yT){const R=window.JS_GIFT;
   for(const sx of [-1,1])for(const sz of [-1,1])wire(I,[bx+sx*.2,0,bz+sz*.06],[bx+sx*.2,y0,bz+sz*.06],.004);
   for(const sz of [-1,1])wire(I,[bx-.2,y0,bz+sz*.06],[bx+.2,y0,bz+sz*.06],.004);
   for(const sx of [-1,1])wire(I,[bx+sx*.2,y0,bz-.06],[bx+sx*.2,y0,bz+.06],.004);
-  box(I,[bx,y0,bz],W,H,D,{f:'bag',s:'c_bagside',t:'c_bagin'});
+  box(I,[bx,y0,bz],W,H,D,{f:'bag',b:'bag',s:'c_bagside',t:'c_bagin'});
   const bp=(u,v,dz=.006)=>[cx+bx-W/2+u*W,yT+y0+H-v*H,cz+fz+dz],W0=p=>p;
   const rope=[[.299,.048],[.357,.122],[.428,.211],[.481,.291],[.513,.353],[.507,.397],[.481,.419],[.454,.396],[.445,.348],[.463,.299],[.516,.23],[.604,.129],[.687,.042]];
-  for(let i=0;i+1<rope.length;i++)cyl(W0,bp(...rope[i]),bp(...rope[i+1]),.004,'c_leather',null,6);
+  for(const side of [0,1])for(let i=0;i+1<rope.length;i++){const f=(u,v)=>{const p=bp(u,v);if(side){p[0]=2*(cx+bx)-p[0];p[2]=cz+bz-D/2-.006}return p};cyl(W0,f(...rope[i]),f(...rope[i+1]),.004,'c_leather',null,6)}
   const tc=bp(.33,.77,.03);cyl(W0,[tc[0],tc[1],tc[2]-.002],[tc[0],tc[1],tc[2]],.042,'c_white',null,24);disc([tc[0],tc[1],tc[2]+.0005],.042,[1,0,0],[0,1,0],'tag')}
  // --- open gift box (stickers inside) and the log slice with bark ---
  box(I,[.05,0,.03],.2,.012,.14,{s:'c_darkbox'});
@@ -316,9 +316,25 @@ function giftItems(cx,cz,yT){const R=window.JS_GIFT;
   roll([tx-.33,.008+.022,.13],[tx+.33,.008+.022,.13],.022,'roll_dark');
   roll([tx-.24,.008+.03,.18],[tx+.36,.008+.03,.18],.03,'roll_dark');
   roll([tx-.36,.008+.036,.25],[tx+.35,.008+.036,.25],.036,'roll_light');
-  for(const dy of [0,.014]){const y0=yT+.078+dy,x0=cx+tx-.2,x1=cx+tx+.36,z0=cz+.30,z1=cz+.06;
-   q([x0,y0,z0],[x1,y0,z0],[x1,y0+.01,z1],[x0,y0+.01,z1],'sprig',1.05)}
-  cyl(I,[tx-.17,.07,.26],[tx-.52,.004,.36],.0035,'c_twig',null,6)}
+  // pine sprig in 3D: twig stalk, bottle-brush branches with needles, berry cluster, pine cone
+  {let sd=7;const rnd=()=>(sd=(sd*16807)%2147483647)/2147483647,P=(x,y,z)=>[tx+x,y,z];
+   const sph=(c,r,k,k2)=>{const NA=8,NB=5;for(let i=0;i<NA;i++)for(let j=0;j<NB;j++){const a0=i/NA*6.283,a1=(i+1)/NA*6.283,b0=j/NB*3.1416-1.5708,b1=(j+1)/NB*3.1416-1.5708,
+     v=(a,b)=>[cx+c[0]+r*Math.cos(b)*Math.cos(a),yT+c[1]+r*Math.sin(b),cz+c[2]+r*Math.cos(b)*Math.sin(a)];q(v(a0,b0),v(a1,b0),v(a1,b1),v(a0,b1),(j>2)?k:k2,.75+.35*(j/NB))}};
+   const stalk=[P(-.52,.004,.36),P(-.36,.04,.31),P(-.2,.075,.27),P(-.08,.088,.24)];
+   for(let i=0;i<3;i++)cyl(I,stalk[i],stalk[i+1],.0038,'c_twig',null,6);
+   const bases=[[-.12,.086,.25],[-.1,.087,.25],[-.08,.088,.245],[-.06,.088,.24],[-.04,.089,.24],[-.02,.089,.235],[0,.09,.23],[.02,.09,.23],[-.05,.088,.25],[.03,.09,.235],[-.09,.087,.255],[.0,.09,.24]];
+   const dirs=[[.22,.0,-.15],[.30,.0,-.11],[.36,.0,-.07],[.40,.0,-.02],[.34,.0,.05],[.24,.0,.08],[.18,.0,-.13],[.28,.0,-.1],[.14,.0,.09],[.30,.0,.0],[.12,.0,-.12],[.22,.0,.03]];
+   for(let k=0;k<bases.length;k++){const b0=P(...bases[k]),d=dirs[k],L=Math.hypot(d[0],d[2]),e=[b0[0]+d[0],b0[1]+.004,b0[2]+d[2]];
+    cyl(I,b0,e,.0022,'c_pine',null,4);
+    const n=Math.round(L/.008);for(let s=1;s<=n;s++){const t=s/n,c=b0.map((v,i)=>v+(e[i]-v)*t),len=.036*(1-.5*t)+.006;
+     for(let m=0;m<9;m++){const a=m/9*6.283+rnd()*.7,dx=d[0]/L,dz=d[2]/L,
+       nx=-dz*Math.cos(a)*.9+dx*.45,ny=Math.sin(a)*.9,nz=dx*Math.cos(a)*.9+dz*.45;
+       if(c[1]+ny*len<.068)continue;cyl(I,c,[c[0]+nx*len,c[1]+ny*len*.7,c[2]+nz*len],.0011,m%2?'c_pine':'c_pine2',null,3)}}}
+   const ber=[[-.03,.1,.245],[-.01,.105,.235],[.01,.1,.25],[-.05,.095,.255],[.02,.108,.23],[.04,.1,.24],[-.02,.112,.22],[.0,.098,.265],[.06,.102,.225],[-.07,.094,.265],[.03,.096,.255],[-.04,.106,.23],[.05,.108,.212],[.08,.1,.21],[-.09,.092,.275],[.015,.115,.215],[-.06,.1,.24],[.07,.094,.24]];
+   for(const c of ber){cyl(I,P(-.1,.088,.25),P(...c),.0012,'c_berry2',null,3);sph(P(...c),.0095+rnd()*.003,'c_berry','c_berry2')}
+   {const c0=P(-.15,.092,.255),ax=[.05,.0,-.012];for(let r=0;r<9;r++){const t=r/8,rad=.022*Math.sin(.25+t*2.7),c=c0.map((v,i)=>v+ax[i]*t);
+     for(let m=0;m<8;m++){const a=m/8*6.283+r*.4,p=[c[0],c[1]+Math.sin(a)*rad,c[2]+Math.cos(a)*rad];cyl(I,c,[p[0]+.006,p[1],p[2]],.005*(1-t*.4),r%2?'c_cone':'c_cone2',null,4)}}}}
+  }
 }
 // Wallet counter behind the gifting table: light-wood top on a black frame with the black
 // JACK STUDIO cloth hanging in front (photo), dressed like the wallet display photo - two linen
