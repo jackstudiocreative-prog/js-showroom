@@ -14,7 +14,7 @@ const verts=[],UVS=[],shades=[];
 const SP=window.JS_SPRITES||{},SPS=window.JS_SPRITE_SIZE||[1,1],sV=[],sU=[],sS=[];
 // Each product is a photo card that turns (around its vertical axis) to face the viewer, so it is
 // always seen from the front; the turn is limited so cards never swing out of their shelf.
-const SPR=[];let LBQ=null,lbTex=null,lbMesh=null;
+const SPR=[];let MANQ=null,manParts=null,manTex=null;let LBQ=null,lbTex=null,lbMesh=null;
 function sprite(x,zc,hw,y0,y1,key,shade=1,turn=true){const m=SP[key];if(!m)return;const [u,v,w,h]=m.uv;
  let b=[x,y0,zc],t=[x,y1,zc],e=[x,y0,zc+hw];if(XF){b=XF(b);t=XF(t);e=XF(e)}
  SPR.push({x:b[0],z:b[2],y0:b[1],y1:t[1],hw:e[2]-b[2],turn,uv:[(u+.5)/SPS[0],(v+.5)/SPS[1],(u+w-.5)/SPS[0],(v+h-.5)/SPS[1]],shade})}
@@ -342,7 +342,8 @@ function essentialZone(){
   prod('tg_P1',F,.002);prod('tg_P2',X+.05,.07);prod('tg_P3',X+.06,.025);prod('tg_P4',X+.06,.025);prod('tg_P5',X+.06,.025);
   for(const k of ['tg_BL1','tg_BL2','tg_BL3']){const m=SP[k];if(!m)continue;const [a,b,c,d]=m.px;prod(k,F,.01);tube([F,Y(b)-.02,(Z(a)+Z(c))/2],[F+.05,Y(b)-.015,(Z(a)+Z(c))/2],.005,.005,[.8,.8,.8])}}
  // mannequin, facing the room
- dressForm(X+.85,Z(570),1.16,.12);
+ MANQ={x:X+.85,z:Z(570),yaw:.12,h:1.47};   // GLB mannequin (assets/mannequin-data.js); dressForm() kept as fallback
+ if(!window.JS_MAN)dressForm(X+.85,Z(570),1.16,.12);
  // tall shelf, 10 cm off the wall
  const D=.45,xb=X+.1,xf=xb+D,xm=(xf+xb)/2,zl=Z(722),zr=Z(1145),TOP=Y(45),BD=[235,425,680,905].map(Y);
  for(const z of [zl,zr])for(const x of [xf,xb])box(x,TOP/2,z,.04,TOP,.04,'metal',1);
@@ -823,9 +824,17 @@ let lastOverlay=0;
 function render(now){const dt=Math.min(.055,(now-last)/1000||.016);last=now;animate(dt);const dpr=Math.min(window.devicePixelRatio||1,1.6);const w=Math.round(canvas.clientWidth*dpr),h=Math.round(canvas.clientHeight*dpr);if(canvas.width!==w||canvas.height!==h){canvas.width=w;canvas.height=h;gl.viewport(0,0,w,h)}
 gl.clearColor(.81,.79,.73,1);gl.clear(gl.COLOR_BUFFER_BIT|gl.DEPTH_BUFFER_BIT);
 const fw=[Math.sin(cam.yaw)*Math.cos(cam.pitch),Math.sin(cam.pitch),-Math.cos(cam.yaw)*Math.cos(cam.pitch)];const proj=perspective(Math.PI/3.1,w/h,.09,75),view=lookAt([cam.x,cam.y,cam.z],[cam.x+fw[0],cam.y+fw[1],cam.z+fw[2]]);mvp=mul(proj,view);
-gl.uniformMatrix4fv(loc.mvp,false,mvp);gl.uniform3f(loc.camera,cam.x,cam.y,cam.z);bindMesh(worldMesh);gl.bindTexture(gl.TEXTURE_2D,atlasTex);gl.uniform1f(loc.cut,-1.);gl.drawArrays(gl.TRIANGLES,0,worldMesh.n);if(lbMesh){bindMesh(lbMesh);gl.bindTexture(gl.TEXTURE_2D,lbTex);gl.drawArrays(gl.TRIANGLES,0,6)}if(decTex)drawLit();if(spriteTex&&spriteMesh.n){updateSprites();bindMesh(spriteMesh);gl.bindTexture(gl.TEXTURE_2D,spriteTex);gl.uniform1f(loc.cut,.5);gl.drawArrays(gl.TRIANGLES,0,spriteMesh.n)}if(now-lastOverlay>45){updateOverlay();lastOverlay=now}requestAnimationFrame(render)}
+gl.uniformMatrix4fv(loc.mvp,false,mvp);gl.uniform3f(loc.camera,cam.x,cam.y,cam.z);bindMesh(worldMesh);gl.bindTexture(gl.TEXTURE_2D,atlasTex);gl.uniform1f(loc.cut,-1.);gl.drawArrays(gl.TRIANGLES,0,worldMesh.n);if(lbMesh){bindMesh(lbMesh);gl.bindTexture(gl.TEXTURE_2D,lbTex);gl.drawArrays(gl.TRIANGLES,0,6)}if(manParts){gl.bindTexture(gl.TEXTURE_2D,manTex);gl.uniform1f(loc.cut,.5);for(const m of manParts){bindMesh(m);gl.bindBuffer(gl.ELEMENT_ARRAY_BUFFER,m.i);gl.drawElements(gl.TRIANGLES,m.n,gl.UNSIGNED_SHORT,0)}gl.uniform1f(loc.cut,-1.)}if(decTex)drawLit();if(spriteTex&&spriteMesh.n){updateSprites();bindMesh(spriteMesh);gl.bindTexture(gl.TEXTURE_2D,spriteTex);gl.uniform1f(loc.cut,.5);gl.drawArrays(gl.TRIANGLES,0,spriteMesh.n)}if(now-lastOverlay>45){updateOverlay();lastOverlay=now}requestAnimationFrame(render)}
+function buildMan(){const J=window.JS_MAN,Q=MANQ;if(!J||!Q)return null;const dec=(b,T)=>{const r=atob(b),u=new Uint8Array(r.length);for(let i=0;i<r.length;i++)u[i]=r.charCodeAt(i);return new T(u.buffer)};
+ const sc=Q.h/(J.meta.ytop-J.meta.ybot),c=Math.cos(Q.yaw),sn=Math.sin(Q.yaw);
+ return J.parts.map(P=>{const ip=dec(P.p,Int16Array),iu=dec(P.u,Uint16Array),is=dec(P.s,Uint8Array),n=P.n,V=new Float32Array(n*3),U=new Float32Array(n*2),S=new Float32Array(n);
+  for(let k=0;k<n;k++){const mx=ip[k*3]/16000*sc,my=(ip[k*3+1]/16000-J.meta.ybot)*sc,mz=ip[k*3+2]/16000*sc;
+   // model faces +z -> world +x (the room), then the small extra turn
+   const wx=mz,wz=-mx;V[k*3]=Q.x+wx*c+wz*sn;V[k*3+1]=my;V[k*3+2]=Q.z-wx*sn+wz*c;U[k*2]=iu[k*2]/65535;U[k*2+1]=iu[k*2+1]/65535;S[k]=is[k]/100}
+  const m={n:P.m};for(const [k,d] of [['p',V],['u',U],['s',S]]){m[k]=gl.createBuffer();gl.bindBuffer(gl.ARRAY_BUFFER,m[k]);gl.bufferData(gl.ARRAY_BUFFER,d,gl.STATIC_DRAW)}
+  m.i=gl.createBuffer();gl.bindBuffer(gl.ELEMENT_ARRAY_BUFFER,m.i);gl.bufferData(gl.ELEMENT_ARRAY_BUFFER,dec(P.i,Uint16Array),gl.STATIC_DRAW);return m})}
 function loadTex(url,fmt){return new Promise((ok,bad)=>{const im=new Image();im.onload=()=>{const t=gl.createTexture();gl.bindTexture(gl.TEXTURE_2D,t);gl.pixelStorei(gl.UNPACK_FLIP_Y_WEBGL,false);gl.texImage2D(gl.TEXTURE_2D,0,fmt,fmt,gl.UNSIGNED_BYTE,im);gl.texParameteri(gl.TEXTURE_2D,gl.TEXTURE_MIN_FILTER,gl.LINEAR_MIPMAP_LINEAR);gl.texParameteri(gl.TEXTURE_2D,gl.TEXTURE_MAG_FILTER,gl.LINEAR);gl.texParameteri(gl.TEXTURE_2D,gl.TEXTURE_WRAP_S,gl.CLAMP_TO_EDGE);gl.texParameteri(gl.TEXTURE_2D,gl.TEXTURE_WRAP_T,gl.CLAMP_TO_EDGE);gl.generateMipmap(gl.TEXTURE_2D);ok(t)};im.onerror=bad;im.src=url})}
 function launch(){gl.activeTexture(gl.TEXTURE0);gl.uniform1i(loc.sampler,0);
-Promise.all([loadTex(window.JS_ATLAS_URL,gl.RGB),window.JS_SPRITE_URL?loadTex(window.JS_SPRITE_URL,gl.RGBA).catch(()=>null):Promise.resolve(null),window.JS_DECAL_URL?loadTex(window.JS_DECAL_URL,gl.RGBA).catch(()=>null):Promise.resolve(null),window.JS_LIGHTBOX_URL?loadTex(window.JS_LIGHTBOX_URL,gl.RGB).catch(()=>null):Promise.resolve(null)]).then(([a,b,c,d])=>{atlasTex=a;spriteTex=b;decTex=c;if(d&&LBQ){lbTex=d;const P=[];for(const i of [0,1,2,0,2,3])P.push(...LBQ[i]);lbMesh=mesh(P,[0,1,1,1,1,0,0,1,1,0,0,0],[1.12,1.12,1.12,1.12,1.12,1.12])}gl.enable(gl.DEPTH_TEST);gl.disable(gl.CULL_FACE);$('loading').hidden=true;setArea('entrance');last=performance.now();requestAnimationFrame(render)}).catch(()=>{$('loading').innerHTML='<div class="loadbox">Unable to load 3D textures. Extract the whole ZIP first.</div>'})}
+Promise.all([loadTex(window.JS_ATLAS_URL,gl.RGB),window.JS_SPRITE_URL?loadTex(window.JS_SPRITE_URL,gl.RGBA).catch(()=>null):Promise.resolve(null),window.JS_DECAL_URL?loadTex(window.JS_DECAL_URL,gl.RGBA).catch(()=>null):Promise.resolve(null),window.JS_LIGHTBOX_URL?loadTex(window.JS_LIGHTBOX_URL,gl.RGB).catch(()=>null):Promise.resolve(null),window.JS_MAN_URL?loadTex(window.JS_MAN_URL,gl.RGBA).catch(()=>null):Promise.resolve(null)]).then(([a,b,c,d,e])=>{if(e){manTex=e;manParts=buildMan()}atlasTex=a;spriteTex=b;decTex=c;if(d&&LBQ){lbTex=d;const P=[];for(const i of [0,1,2,0,2,3])P.push(...LBQ[i]);lbMesh=mesh(P,[0,1,1,1,1,0,0,1,1,0,0,0],[1.12,1.12,1.12,1.12,1.12,1.12])}gl.enable(gl.DEPTH_TEST);gl.disable(gl.CULL_FACE);$('loading').hidden=true;setArea('entrance');last=performance.now();requestAnimationFrame(render)}).catch(()=>{$('loading').innerHTML='<div class="loadbox">Unable to load 3D textures. Extract the whole ZIP first.</div>'})}
 launch();
 })();
