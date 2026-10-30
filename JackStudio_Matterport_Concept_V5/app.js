@@ -156,11 +156,25 @@ function ucPiece(P,R,xf,zc,y0,G,d){const w=P.w*G,h=P.h*G,c=P.c,n=c.length,r=R[P.
  for(const ix of [0,1,2,0,2,3])push(W(F[ix][0],F[ix][1],d/2+.0005),UVf[ix],1.02);
  const UVb=[[rb[2],rb[3]],[rb[0],rb[3]],[rb[0],rb[1]],[rb[2],rb[1]]];
  for(const ix of [0,2,1,0,3,2])push(W(F[ix][0],F[ix][1],-d/2-.0005),UVb[ix],.72)}
+// inflated product body: depth field F (fraction of d/2 at each grid point) -> rounded front and back
+// surfaces that meet at the product's silhouette; front/back photos projected straight on.
+function ucInflate(P,R,Fd,xf,zc,y0,G,d){const w=P.w*G,h=P.h*G,gw=Fd.gw,gh=Fd.gh,r=R[P.id],rb=R[P.bk||P.id];
+ const raw=atob(Fd.f),f=new Float32Array(raw.length);for(let i=0;i<raw.length;i++)f[i]=raw.charCodeAt(i)/255;
+ const F=(i,j)=>f[Math.max(0,Math.min(gh,j))*(gw+1)+Math.max(0,Math.min(gw,i))],du=w/gw,dv=h/gh,hd=d/2;
+ const W=(u,v,t)=>[xf+.05+hd-t,y0+v,zc+u];
+ for(const sg of [1,-1]){
+  const vert=(i,j)=>{const t=sg*F(i,j)*hd,gx=(F(i+1,j)-F(i-1,j))*hd/(2*du),gy=-(F(i,j+1)-F(i,j-1))*hd/(2*dv),l=Math.hypot(gx,gy,1),
+    nu=-gx/l,nv=-gy/l,nt=1/l,shd=Math.max(.35,(.6+.24*nv+.2*nt-.05*nu*sg)*(sg>0?1:.8));
+    const uv=sg>0?[r[0]+(r[2]-r[0])*i/gw,r[1]+(r[3]-r[1])*j/gh]:[rb[2]-(rb[2]-rb[0])*i/gw,rb[1]+(rb[3]-rb[1])*j/gh];
+    return [W((i/gw-.5)*w,(1-j/gh)*h,t),uv,shd]};
+  for(let j=0;j<gh;j++)for(let i=0;i<gw;i++){if(F(i,j)+F(i+1,j)+F(i,j+1)+F(i+1,j+1)===0)continue;
+   const q=[vert(i,j),vert(i+1,j),vert(i+1,j+1),vert(i,j+1)],ord=sg>0?[0,1,2,0,2,3]:[0,2,1,0,3,2];
+   for(const k of ord){UCV.push(...q[k][0]);UCU.push(...q[k][1]);UCS.push(q[k][2])}}}}
 function ucItems(Z0,sl,xf,G){const J=window.JS_UC;if(!J)return false;
  const DEP={uf_coffee:.035,uf_card:.03,uf_duffel:.2,uf_bags:.13,uf_hangL:.1,uf_hangR:.11};
  for(const P of J.P){const shelf=P.kind==='shelf',w=P.w*G,d=P.d||DEP[P.kind]||Math.max(.05,Math.min(.17,w*.42));
   const zc=shelf?sl+P.z*G:Z0+P.z*G,x=P.kind.startsWith('uf_hang')?xf+.12-.05-d/2:xf;
-  ucPiece(P,J.R,x,zc,P.y*G,G,d);
+  if(J.F&&J.F[P.id])ucInflate(P,J.R,J.F[P.id],x,zc,P.y*G,G,d);else ucPiece(P,J.R,x,zc,P.y*G,G,d);
   if(P.pid==='duf'){const sx=xf+.05+d/2,y0=1.62*G,y1=P.y*G;                 // chrome duffel stand: round base, pole, T-cradle
    for(let i=0;i<20;i++){const a0=i/20*6.283,a1=(i+1)/20*6.283;tube([sx+Math.cos(a0)*.075,y0+.004,zc+Math.sin(a0)*.075],[sx+Math.cos(a1)*.075,y0+.004,zc+Math.sin(a1)*.075],.006,.006,SILVER,MET,6)}
    tube([sx,y0+.004,zc],[sx,y1+.02,zc],.007,.007,SILVER,MET,8);tube([sx,y1+.02,zc-.09],[sx,y1+.02,zc+.09],.006,.006,SILVER,MET,8)}}
