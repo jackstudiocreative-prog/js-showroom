@@ -252,55 +252,73 @@ function giftItems(cx,cz,yT){const R=window.JS_GIFT;
   for(let i=0;i<N;i++){const t0=i/N*Math.PI*2,t1=(i+1)/N*Math.PI*2,pt=t=>c.map((v,j)=>v+r*(Math.cos(t)*ex[j]+Math.sin(t)*ey[j]));
    for(const [P,U] of [[c,[cu,cv]],[pt(t0),[cu+Math.cos(t0)*hu,cv-Math.sin(t0)*hv]],[pt(t1),[cu+Math.cos(t1)*hu,cv-Math.sin(t1)*hv]]]){GV.push(...P);GU.push(...U);GS.push(sh)}}};
  const I=F(0,0);
- // --- gift boxes, leaning back ---
- box(F(-.42,-.27,0,.22),[0,0,0],.30,.21,.045,{f:'box_cream',s:'c_dcream',t:'c_cream'});
- box(F(-.46,-.19,0,.22),[0,0,0],.30,.21,.045,{f:'box_pink',s:'c_pink'});
- box(F(-.51,-.11,0,.22),[0,0,0],.30,.21,.045,{f:'box_diag',s:'c_dcream',t:'c_cream'});
- // --- sage and copper card stacks ---
- for(let i=0;i<12;i++){const z=-.05+i*.009;
-  box(F(-.545,z,0,.32),[0,0,0],.15,.10,.003,{f:'c_sagecard',s:'c_paper',t:'c_paper',b:'c_sagecard'});
-  box(F(-.38,z,0,.32),[0,0,0],.15,.10,.003,{f:'c_cucard',s:'c_paper',t:'c_paper',b:'c_cucard'})}
- // --- Just for You: big holder with stacked cards, small holder in front ---
- box(I,[-.47,0,.15],.42,.03,.05,{s:'c_holder',t:'c_holder'});
- for(let i=3;i>=0;i--)box(F(-.58,.152-i*.007,0,.12,.012),[0,0,0],.155,.105,.003,{f:i?'c_cucard':'jfy_cu',s:'c_paper',t:'c_paper',b:'c_cucard'});
- box(F(-.43,.162,0,.12,.012),[0,0,0],.155,.105,.003,{f:'jfy_sg',s:'c_paper',t:'c_paper',b:'c_sagecard'});
- box(I,[-.37,0,.27],.27,.022,.045,{s:'c_holder',t:'c_holder'});
- box(F(-.44,.268,0,.1,.01),[0,0,0],.09,.055,.002,{f:'jfy_sg_s',s:'c_paper',b:'c_sagecard'});
- box(F(-.30,.268,0,.1,.01),[0,0,0],.09,.055,.002,{f:'jfy_cu_s',s:'c_paper',b:'c_cucard'});
- box(I,[-.37,0,.289],.27,.03,.007,{s:'c_holder',t:'c_holder'});
+ // textured roll: texture runs along the axis (u) and once around (v)
+ const roll=(a,b,r,k,N=18)=>{const rc=R[k],d=b.map((v,i)=>v-a[i]),L=Math.hypot(...d),n=d.map(v=>v/L),e1=[0,1,0],e2=[n[1]*e1[2]-n[2]*e1[1],n[2]*e1[0]-n[0]*e1[2],n[0]*e1[1]-n[1]*e1[0]];
+  const pt=(c,t)=>c.map((v,i)=>v+r*(Math.cos(t)*e2[i]+Math.sin(t)*e1[i]));
+  for(let i=0;i<N;i++){const t0=i/N*Math.PI*2,t1=(i+1)/N*Math.PI*2,v0=rc[1]+(rc[3]-rc[1])*i/N,v1=rc[1]+(rc[3]-rc[1])*(i+1)/N,sh=.7+.36*Math.max(0,Math.sin((t0+t1)/2)*.7+.3);
+   tri([pt(a,t0),pt(b,t0),pt(b,t1),pt(a,t1)].map(p=>[p[0]+cx,p[1]+yT,p[2]+cz]),[[rc[0],v0],[rc[2],v0],[rc[2],v1],[rc[0],v1]],sh)}
+  cyl(I,a,a.map((v,i)=>v-n[i]*.001),r,'c_paper',null,N);cyl(I,b,b.map((v,i)=>v+n[i]*.001),r,'c_paper',null,N)};
+ const wire=(T,p0,p1,r=.0025)=>cyl(T,p0,p1,r,'c_wire',null,6);
+ // --- gift boxes leaning back on black wire racks (front: diagonal stripe, then mauve, then sage) ---
+ for(const [x,z,lift,k,sk] of [[-.36,-.26,.07,'box_cream','c_cream'],[-.38,-.17,.035,'box_pink','c_pink'],[-.43,-.08,0,'box_diag','c_dcream']]){
+  const T=F(x,z,0,.3,lift);box(T,[0,0,0],.33,.24,.045,{f:k,s:sk,t:sk});
+  for(const dx of [-.12,.12]){wire(I,[x+dx,0,z+.02],[x+dx,lift+.004,z+.02]);wire(I,[x+dx,0,z+.02],[x+dx,0,z-.09]);
+   wire(I,[x+dx,0,z-.09],[x+dx,lift+.2*Math.cos(.3),z+.02-.2*Math.sin(.3)-.03])}
+  wire(I,[x-.12,lift+.004,z+.02],[x+.12,lift+.004,z+.02])}
+ // --- copper and sage card stacks, fanned upright in clear L-stands ---
+ for(const [x0,fk,bk] of [[-.53,'c_cucard','c_cucard'],[-.29,'c_sagecard','c_sagecard']]){
+  box(I,[x0,0,-.005],.2,.004,.11,{s:'c_acrylic'});
+  for(let i=0;i<14;i++)box(F(x0,-.05+i*.007,0,.18-i*.004,.004),[0,0,0],.2,.135,.0025,{f:fk,s:'c_paper',t:'c_paper',b:bk})}
+ // --- Just for You: big wooden holder (copper left, sage right), small holder in front ---
+ box(I,[-.47,0,.15],.5,.035,.06,{s:'c_holder',t:'c_holder'});
+ for(let i=4;i>=0;i--){box(F(-.6,.148-i*.006,0,.1,.018),[0,0,0],.2,.135,.0025,{f:i?'c_cucard':'jfy_cu',s:'c_paper',t:'c_paper',b:'c_cucard'});
+  box(F(-.38,.152-i*.006,0,.1,.018),[0,0,0],.2,.135,.0025,{f:i?'c_sagecard':'jfy_sg',s:'c_paper',t:'c_paper',b:'c_sagecard'})}
+ box(I,[-.47,0,.255],.36,.025,.05,{s:'c_holder',t:'c_holder'});
+ for(let i=2;i>=0;i--){box(F(-.55,.255-i*.005,0,.08,.012),[0,0,0],.095,.06,.002,{f:i?'c_sagecard':'jfy_sg_s',s:'c_paper',b:'c_sagecard'});
+  box(F(-.40,.255-i*.005,0,.08,.012),[0,0,0],.095,.06,.002,{f:i?'c_cucard':'jfy_cu_s',s:'c_paper',b:'c_cucard'})}
+ box(I,[-.47,0,.277],.36,.034,.008,{s:'c_holder',t:'c_holder'});
  // --- sticker pack on a small wooden easel ---
- {const E=F(-.19,0,0,.25,.035);box(E,[0,0,0],.21,.148,.003,{f:'st_pack',s:'c_white'});
-  box(I,[-.19,.035,.012],.12,.01,.02,{s:'c_easel'});
-  for(const dx of [-.04,.04])box(F(-.19+dx,-.012,0,.25),[0,0,0],.008,.17,.006,{s:'c_easel'});
-  box(F(-.19,-.04,0,-.35),[0,0,0],.008,.15,.006,{s:'c_easel'})}
- // --- the two A4 signs in acrylic stands ---
- for(const [x,z,yaw,tilt,k] of [[-.09,-.13,0,.12,'mp_sign'],[.19,-.07,-.08,.2,'eg_sign']]){
-  box(F(x,z,yaw),[0,0,0],.225,.008,.08,{s:'c_acrylic'});
-  box(F(x,z,yaw,tilt,.008),[0,0,0],.21,.297,.003,{f:k,s:'c_white'});
-  box(F(x,z,yaw,tilt,.008),[0,0,-.004],.215,.30,.003,{s:'c_acrylic',f:'c_acrylic'})}
- // --- paper bag, rope handles and round tag ---
- {const bx=.36,bz=-.26,W=.46,H=.58,D=.15,fz=bz+D/2;box(I,[bx,0,bz],W,H,D,{f:'bag',s:'c_bagside',t:'c_bagin'});
-  const bp=(u,v,dz=.006)=>[cx+bx-W/2+u/615*W,yT+H-v/715*H,cz+fz+dz];
-  const rope=[[172,27],[200,70],[235,130],[262,175],[285,205],[292,235],[280,265],[262,278],[240,265],[238,235],[250,205],[272,180],[300,145],[345,95],[390,55],[425,30]];
-  const W0=p=>p;for(let i=0;i+1<rope.length;i++)cyl(W0,bp(...rope[i]),bp(...rope[i+1]),.0035,'c_leather',null,6);
-  const tc=bp(270,447,.07);cyl(W0,bp(262,278),[tc[0],tc[1]+.04,tc[2]],.0008,'c_paper',null,4);
-  cyl(W0,[tc[0],tc[1],tc[2]-.002],[tc[0],tc[1],tc[2]],.04,'c_white',null,24);disc([tc[0],tc[1],tc[2]+.0005],.04,[1,0,0],[0,1,0],'tag')}
- // --- open gift box and the log slice ---
- box(I,[.21,0,.035],.19,.02,.125,{s:'c_darkbox'});box(I,[.21,.02,.035],.175,.03,.11,{s:'c_darkbox',t:'box_in'});
- cyl(I,[.385,0,.005],[.385,.045,.005],.09,'c_bark',null,28);disc([cx+.385,yT+.0455,cz+.005],.09,[1,0,0],[0,0,-1],'slice',1.0);
+ {const E=F(-.12,-.02,0,.22,.035);box(E,[0,0,0],.2,.186,.003,{f:'st_pack',s:'c_white'});
+  box(I,[-.12,.035,-.008],.11,.01,.018,{s:'c_easel'});
+  for(const dx of [-.04,.04])box(F(-.12+dx,-.03,0,.22),[0,0,0],.009,.16,.006,{s:'c_easel'});
+  box(F(-.12,-.06,0,-.35),[0,0,0],.009,.14,.006,{s:'c_easel'})}
+ // --- MAKE IT PERSONAL on a dark wood block; ENGRAVING in a clear acrylic stand ---
+ box(I,[-.06,0,-.16],.24,.03,.07,{s:'c_wood2',t:'c_wood2'});
+ box(F(-.06,-.16,0,.12,.03),[0,0,0],.21,.297,.003,{f:'mp_sign',s:'c_white'});
+ box(F(.15,-.08,-.06),[0,0,0],.225,.008,.08,{s:'c_acrylic'});
+ box(F(.15,-.08,-.06,.16,.008),[0,0,0],.21,.30,.003,{f:'eg_sign',s:'c_white'});
+ box(F(.15,-.08,-.06,.16,.008),[0,0,-.004],.215,.305,.003,{s:'c_acrylic',f:'c_acrylic'});
+ // --- big sage paper bag on a black wire riser, rope handles, round ENGRAVING tag ---
+ {const bx=.33,bz=-.25,W=.5,H=.52,D=.16,y0=.075,fz=bz+D/2;
+  for(const sx of [-1,1])for(const sz of [-1,1])wire(I,[bx+sx*.2,0,bz+sz*.06],[bx+sx*.2,y0,bz+sz*.06],.004);
+  for(const sz of [-1,1])wire(I,[bx-.2,y0,bz+sz*.06],[bx+.2,y0,bz+sz*.06],.004);
+  for(const sx of [-1,1])wire(I,[bx+sx*.2,y0,bz-.06],[bx+sx*.2,y0,bz+.06],.004);
+  box(I,[bx,y0,bz],W,H,D,{f:'bag',s:'c_bagside',t:'c_bagin'});
+  const bp=(u,v,dz=.006)=>[cx+bx-W/2+u*W,yT+y0+H-v*H,cz+fz+dz],W0=p=>p;
+  const rope=[[.299,.048],[.357,.122],[.428,.211],[.481,.291],[.513,.353],[.507,.397],[.481,.419],[.454,.396],[.445,.348],[.463,.299],[.516,.23],[.604,.129],[.687,.042]];
+  for(let i=0;i+1<rope.length;i++)cyl(W0,bp(...rope[i]),bp(...rope[i+1]),.004,'c_leather',null,6);
+  const tc=bp(.33,.77,.03);cyl(W0,[tc[0],tc[1],tc[2]-.002],[tc[0],tc[1],tc[2]],.042,'c_white',null,24);disc([tc[0],tc[1],tc[2]+.0005],.042,[1,0,0],[0,1,0],'tag')}
+ // --- open gift box (stickers inside) and the log slice with bark ---
+ box(I,[.05,0,.03],.2,.012,.14,{s:'c_darkbox'});
+ {const t=.05,ox=.05,oz=.03,w=.185,d=.125,h=.035;box(I,[ox,0,oz-d/2+t/10],w,h,.006,{s:'c_darkbox'});box(I,[ox,0,oz+d/2-.003],w,h,.006,{s:'c_darkbox'});
+  for(const sx of [-1,1])box(I,[ox+sx*(w/2-.003),0,oz],.006,h,d,{s:'c_darkbox'});
+  q([cx+ox-w/2,yT+.013,cz+oz+d/2],[cx+ox+w/2,yT+.013,cz+oz+d/2],[cx+ox+w/2,yT+.013,cz+oz-d/2],[cx+ox-w/2,yT+.013,cz+oz-d/2],'box_top',1.0)}
+ cyl(I,[.25,0,.0],[.25,.05,.0],.1,'c_bark',null,28);disc([cx+.25,yT+.0505,cz],.1,[1,0,0],[0,0,-1],'slice',1.0);
  // --- keychain board with four keychains ---
- {const K=F(.57,-.05,0,.1);box(K,[0,0,0],.17,.25,.018,{f:'kc_board',s:'c_birch'});
-  for(const dx of [-.06,-.02,.02,.06]){cyl(K,[dx,.19,.009],[dx,.19,.03],.003,'c_birch',null,6);
-   cyl(K,[dx,.178,.02],[dx,.178,.025],.013,'c_silver',null,12);cyl(K,[dx,.178,.021],[dx,.178,.026],.008,'c_leather',null,10);
-   box(K,[dx,.16,.022],.012,.012,.006,{s:'c_silver'});box(K,[dx,.075,.02],.022,.085,.006,{f:'strap',s:'c_leather'})}}
- // --- linen tray, grey paper rolls, pine sprig ---
- {const tx=.175,tz=.22,TW=.79,TD=.24,TH=.035,th=.012;box(I,[tx,0,tz],TW,.008,TD,{s:'c_linen'});
+ {const K=F(.58,-.03,-.1,.1);box(K,[0,0,0],.2,.3,.02,{f:'kc_board',s:'c_birch'});box(I,[.58,0,-.07],.2,.02,.07,{s:'c_birch'});
+  for(const dx of [-.072,-.024,.024,.072]){cyl(K,[dx,.2,.01],[dx,.2,.035],.003,'c_birch',null,6);
+   cyl(K,[dx,.185,.022],[dx,.185,.027],.014,'c_silver',null,12);cyl(K,[dx,.185,.023],[dx,.185,.028],.009,'c_leather',null,10);
+   box(K,[dx,.163,.022],.016,.014,.008,{s:'c_silver'});box(K,[dx,.07,.02],.026,.09,.007,{f:'strap',s:'c_leather'})}}
+ // --- linen tray with wrapping-paper rolls and the pine sprig ---
+ {const tx=.1,tz=.215,TW=.78,TD=.25,TH=.04,th=.014;box(I,[tx,0,tz],TW,.008,TD,{s:'c_linen'});
   box(I,[tx,0,tz+TD/2-th/2],TW,TH,th,{s:'c_linen'});box(I,[tx,0,tz-TD/2+th/2],TW,TH,th,{s:'c_linen'});
   for(const sx of [-1,1])box(I,[tx+sx*(TW/2-th/2),0,tz],th,TH,TD-2*th,{s:'c_linen'});
-  for(const [x,z,r,l,k] of [[.15,.14,.024,.64,'c_grey2'],[.17,.19,.027,.70,'c_grey'],[.2,.245,.024,.70,'c_grey'],[.08,.30,.022,.56,'c_grey2']])
-   cyl(I,[x-l/2,.008+r,z],[x+l/2,.008+r,z],r,k,k,14);
-  for(const dy of [0,.012]){const y0=yT+.062+dy;q([cx-.27,y0,cz+.31],[cx+.21,y0,cz+.31],[cx+.21,y0+.02,cz+.06],[cx-.27,y0+.02,cz+.06],'branch',1.05)}
-  cyl(I,[.14,.07,.2],[.55,.072,.17],.002,'c_twig',null,5)}
+  roll([tx-.33,.008+.022,.13],[tx+.33,.008+.022,.13],.022,'roll_dark');
+  roll([tx-.24,.008+.03,.18],[tx+.36,.008+.03,.18],.03,'roll_dark');
+  roll([tx-.36,.008+.036,.25],[tx+.35,.008+.036,.25],.036,'roll_light');
+  for(const dy of [0,.014]){const y0=yT+.078+dy,x0=cx+tx-.2,x1=cx+tx+.36,z0=cz+.30,z1=cz+.06;
+   q([x0,y0,z0],[x1,y0,z0],[x1,y0+.01,z1],[x0,y0+.01,z1],'sprig',1.05)}
+  cyl(I,[tx-.17,.07,.26],[tx-.52,.004,.36],.0035,'c_twig',null,6)}
 }
 // Wallet counter behind the gifting table: light-wood top on a black frame with the black
 // JACK STUDIO cloth hanging in front (photo), dressed like the wallet display photo - two linen
