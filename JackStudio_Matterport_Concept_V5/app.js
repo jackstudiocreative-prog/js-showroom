@@ -214,13 +214,13 @@ var CHV=[],CHU=[],CHS=[],chMesh=null,chTex=null;
 // CRAFT HERITAGE contents modelled in 3D (no photo cut-outs): leather goods are shaded leather geometry
 // (rounded bodies, pockets, zips, stitching, straps, buckles, logo studs); only printed matter (signs,
 // cards, badges) carries a print, and the log slices their wood. +x = display side, +z = entrance end.
-function heritageItems(cx,cz,yT,L,DP){const R=window.JS_CH,{q,F,box,cyl,disc:tdisc,I}=mkTM(R,CHV,CHU,CHS,cx,cz,yT);
+function heritageItems(cx,cz,yT,L,DP){const R=window.JS_CH,{q,tri,F,box,cyl,disc:tdisc,I}=mkTM(R,CHV,CHU,CHS,cx,cz,yT);
  const A=Math.PI/2,LE=()=>LEA,ME=()=>MET;
  // ---- textured parts: oak top, logs, prints ----
  box(I,[0,-.05,0],DP,.05,L,{t:'c_oakc',s:'c_oakc',d:'c_oakc'});
  {const n=4,y=.0005;for(let i=0;i<n;i++){const z0=-L/2+i*L/n,z1=z0+L/n;q(I([DP/2,y,z1]),I([DP/2,y,z0]),I([-DP/2,y,z0]),I([-DP/2,y,z1]),'oak',1)}}
  const log=(x,z,r,h)=>{cyl(I,[x,0,z],[x,h,z],r,'bark',24);tdisc([cx+x,yT+h+.0005,cz+z],r,[1,0,0],[0,0,-1],'slice',1)};
- log(.33,.92,.1,.05);log(.06,-.47,.09,.05);log(.3,-.82,.1,.045);log(-.14,-.78,.07,.06);
+ log(.33,.92,.1,.05);log(.06,-.2,.09,.05);log(.34,-.55,.1,.045);log(-.14,-.78,.07,.06);
  [[.2,1.13,.075,'badge1',.004],[.17,1.27,.055,'badge2',.008],[.2,1.38,.055,'badge3',.012]].forEach(([x,z,r,k,y])=>{cyl(I,[x,y,z],[x,y+.004,z],r,'c_white',24);tdisc([cx+x,yT+y+.0045,cz+z],r,[1,0,0],[0,0,-1],k)});
  box(I,[.25,0,.88],.18,.015,.05,{s:'c_walnut'});box(F(.25,.88,0,.12,.015),[0,0,0],.17,.075,.003,{f:'daily',s:'c_acrylic'});
  box(I,[.12,0,.48],.25,.04,.06,{s:'c_walnut'});box(F(.12,.48,A/2,.08,.04),[0,0,0],.23,.33,.004,{f:'sign',s:'c_acrylic'});
@@ -287,25 +287,46 @@ function heritageItems(cx,cz,yT,L,DP){const R=window.JS_CH,{q,F,box,cyl,disc:tdi
  const flatT=(x,z,yaw,y0=0)=>{const f=F(x,z,yaw,0,y0);return p=>f([p[0],p[2]+0,-p[1]]).map((v,i)=>v)};
  const lie=(x,z,yaw,w,l,d,k,o={})=>{const f=F(x,z,yaw,0,d/2+(o.y||0));prod(p=>f([p[0],p[2],-(p[1]-l/2)]),rrect(w,l,o.rc||.006,o.rc||.006),w,l,d,'P_'+k,'P_'+k,{r:Math.min(.006,d/2),side:'S_'+k})};
  const webbing=(T,pts,wd,col)=>{for(let i=0;i+1<pts.length;i++){const a=T(pts[i]),b=T(pts[i+1]);bar((p,n)=>[p,n],a,b,[0,1,0],.003,wd,col,LEA)}};
+ // textured strap along a path (table-local points); vert: image runs top->bottom along the path
+ const strip=(pts,wd,k,acr,vert=false,rep=1,sh=1)=>{const r=R[k],L=[0];for(let i=1;i<pts.length;i++)L.push(L[i-1]+Math.hypot(...pts[i].map((v,j)=>v-pts[i-1][j])));
+  const tot=L[L.length-1]||1,W=p=>[cx+p[0],yT+p[1],cz+p[2]],uv=(t,s0)=>vert?[r[0]+(r[2]-r[0])*s0,r[1]+(r[3]-r[1])*t]:[r[0]+(r[2]-r[0])*((t*rep)%1.0001),r[1]+(r[3]-r[1])*s0];
+  for(let i=0;i+1<pts.length;i++){const A0=typeof acr==='function'?acr(i):acr,A1=typeof acr==='function'?acr(i+1):acr,a=pts[i],b=pts[i+1],t0=L[i]/tot,t1=L[i+1]/tot;
+   let u0=t0*rep,u1=t1*rep;if(!vert&&Math.floor(u0)!==Math.floor(u1-1e-6)){u0=u0%1;u1=u0+(t1-t0)*rep}
+   const T0=vert?t0:u0/rep,T1=vert?t1:u1/rep;
+   const P=[a.map((v,j)=>v-A0[j]*wd/2),b.map((v,j)=>v-A1[j]*wd/2),b.map((v,j)=>v+A1[j]*wd/2),a.map((v,j)=>v+A0[j]*wd/2)].map(W);
+   const U=vert?[uv(t0,0),uv(t1,0),uv(t1,1),uv(t0,1)]:[[r[0]+(r[2]-r[0])*Math.min(1,u0),r[1]+(r[3]-r[1])],[r[0]+(r[2]-r[0])*Math.min(1,u1),r[1]+(r[3]-r[1])],[r[0]+(r[2]-r[0])*Math.min(1,u1),r[1]],[r[0]+(r[2]-r[0])*Math.min(1,u0),r[1]]];
+   tri(P,U,sh)}};
+ // belt wound into a coil lying on its side (band upright): spiral from r0 inwards
+ const coilT=(x,z,y0,r0,wd,turns,k,a0=0)=>{const P=[];for(let i=0;i<=turns*36;i++){const a=a0+i/36*6.2832,r=r0-i/36*.0075;P.push([x+Math.cos(a)*r,y0+wd/2,z+Math.sin(a)*r])}strip(P,wd,k,[0,1,0],false,turns*2.2,.92)};
+ // belt rolled and standing on edge (roll axis along x)
+ const rollT=(x,z,y0,r0,wd,turns,k)=>{const P=[];for(let i=0;i<=turns*36;i++){const a=i/36*6.2832,r=r0-i/36*.006;P.push([x,y0+r0+Math.sin(a)*r,z+Math.cos(a)*r])}strip(P,wd,k,[1,0,0],false,turns*2,.9)};
+ const buckle=(t,u,v,w,bw,bh,col,th=.0032)=>{[[[-bw/2,0],[bw/2,0]],[[bw/2,0],[bw/2,bh]],[[bw/2,bh],[-bw/2,bh]],[[-bw/2,bh],[-bw/2,0]]].forEach(([p0,p1])=>tube(t([u+p0[0],v+p0[1],w],[0,0,1])[0],t([u+p1[0],v+p1[1],w],[0,0,1])[0],th,th,col,MET,6));
+  tube(t([u,v,w],[0,0,1])[0],t([u,v+bh*.9,w+.004],[0,0,1])[0],th*.8,th*.8,col,MET,6)};
+ const BRASS=[.68,.56,.3];
  const GL=[.21,.11,.075],GL2=[.27,.15,.1],CH=[.44,.29,.17],CH2=[.36,.23,.14],TAN=[.64,.39,.18],DK=[.28,.23,.19],BLK=[.07,.065,.065];
- // ---- C end: black hide on an orange-wood board, belt tray with six belts, coiled belts ----
- {const t=T(-.12,1.33,0);rbox(t,[0,.02,0],[.23,.02,.12],.004,[.74,.44,.22],null,[2,2,2]);
-  const hide=[[-.12,-.1],[.14,-.1],[.16,-.05],[.15,.02],[.17,.09],[.12,.1],[.06,.085],[0,.1],[-.07,.085],[-.12,.1],[-.15,.05],[-.13,-.02],[-.15,-.07]].map(([u,w])=>[u,.04,w]);
-  prism(t,hide,[0,.003,0],BLK,LEA);disc(t,[0,.0435,-.06],.008,.0006,[.75,.6,.3],MET)}
- {const t=T(-.12,1.02,0);rbox(t,[0,.02,0],[.25,.02,.15],.005,[.24,.14,.1],LE,[2,2,2]);
-  for(const s of [-1,1])rbox(t,[s*.245,.045,0],[.006,.025,.15],.004,[.24,.14,.1],LE,[2,2,2]);rbox(t,[0,.045,.145],[.25,.025,.006],.004,[.24,.14,.1],LE,[2,2,2]);rbox(t,[0,.06,-.145],[.25,.04,.006],.004,[.24,.14,.1],LE,[2,2,2]);
-  stitchRect(t,-.24,.24,.025,.065,.152,[.85,.8,.7]);rbox(t,[0,.041,0],[.24,.002,.14],.002,[.84,.79,.7],null,[1,1,1]);
-  const BC=[[.52,.22,.1],[.38,.1,.09],[.6,.3,.13],[.08,.07,.07],[.72,.38,.14],[.09,.08,.08]];
-  BC.forEach((c,j)=>{const u=-.2+j*.08,bt=T(-.12+u,1.02,0,.045,-.95);rbox(bt,[0,.12,0],[.029,.12,.004],.003,c,LE,[2,2,2]);
-   for(let k=0;k<2;k++)rbox(bt,[0,.03+k*.035,.007],[.031,.008,.003],.002,sh(c,.9),LE,[1,1,1]);
-   const bf=T(-.12+u,1.02+.13,0,.042),gold=j==1||j==4;[[[-.03,0],[.03,0]],[[.03,0],[.03,.04]],[[.03,.04],[-.03,.04]],[[-.03,.04],[-.03,0]]].forEach(([a,b])=>tube(bf([a[0],a[1],0],[0,0,1])[0],bf([b[0],b[1],0],[0,0,1])[0],.003,.003,gold?[.66,.55,.3]:SILVER,MET,6));
-   if(j%2==0)rbox(bf,[.015,.0,.02],[.012,.018,.001],.001,[.42,.42,.7],null,[1,1,1])})}
- const coil=(x,z,r0,wd,turns,col,y0=0)=>{const N=Math.round(turns*30);let prev=null;for(let i=0;i<=N;i++){const a=i/30*6.2832,r=r0-a/6.2832*.011,p=[x+Math.cos(a)*r,y0,z+Math.sin(a)*r];
-   if(prev)bar(W0,prev,p,[0,1,0],.003,wd,col,LEA);prev=p}};
- coil(.33,.92,.085,.038,2.4,[.48,.07,.12],.051);ln(W0,[.33,.07,1.003],[.33,.07,1.003],.001,.001,[0,0,0]);
- {const bt=T(.33,1.005,0,.055);[[[-.03,0],[.03,0]],[[.03,0],[.03,.032]],[[.03,.032],[-.03,.032]],[[-.03,.032],[-.03,0]]].forEach(([a,b])=>tube(bt([a[0],a[1],0],[0,0,1])[0],bt([b[0],b[1],0],[0,0,1])[0],.0035,.0035,[.66,.55,.3],MET,6))}
- coil(.18,1.08,.06,.035,3,[.3,.17,.1]);
- {const t=T(.38,1.28,.25);rbox(t,[0,.004,0],[.017,.004,.25],.003,BLK,LE,[2,2,2]);rbox(t,[0,.012,.1],[.022,.004,.024],.002,SILVER,ME);rbox(t,[0,.012,.1],[.006,.005,.018],.002,sh(SILVER,.6),ME)}
+ // ---- C end (photo 13): orange-wood board with the black hide, three round badges, the brown leather belt
+ //      tray (six belts rolled in its slots, tails with buckles over the front lip), the brown pebbled belt
+ //      standing, the red/black belt coiled on a log, the black H-buckle belt lying flat ----
+ box(I,[-.12,0,1.33],.46,.042,.25,{t:'P_hboard',s:'c_orangewood'});
+ {const t=T(-.12,1.0,0),TR=[.27,.15,.1],TW=[.9,.86,.78];rbox(t,[0,.012,0],[.25,.012,.17],.004,TR,LE,[2,2,2]);
+  for(const sg of [-1,1])rbox(t,[sg*.245,.04,0],[.007,.03,.17],.004,TR,LE,[2,2,2]);rbox(t,[0,.03,.165],[.25,.018,.007],.004,TR,LE,[2,2,2]);rbox(t,[0,.06,-.165],[.25,.05,.007],.004,TR,LE,[2,2,2]);
+  stitchRect(t,-.24,.24,.016,.044,.1725,TW);rbox(t,[0,.024,0],[.238,.002,.16],.002,[.86,.82,.74],null,[1,1,1]);
+  for(let j=0;j<7;j++)rbox(t,[-.24+j*.08,.03,-.02],[.004,.01,.14],.002,[.86,.82,.74],null,[1,1,1]);
+  for(let j=0;j<6;j++){const x=-.12-.2+j*.08;
+   for(let k=0;k<3;k++)rollT(x,.88+.0,.026,.04-k*.009,.06,1,'P_belt'+(j+1));
+   strip([[x,.1,.9],[x,.098,.97],[x,.08,1.08],[x,.064,1.16],[x,.05,1.176],[x,.0,1.18]],.06,'P_belt'+(j+1),[1,0,0],true);
+   buckle((p,n)=>[[cx+p[0],yT+p[1],cz+p[2]],n],x,.0,1.186,.068,.05,j==4||j==1?BRASS:[.62,.62,.6]);
+   if(j%2==0)rbox(W0,[x+.02,.03,1.19],[.012,.02,.0015],.001,[.5,.5,.8],null,[1,1,1])}}
+ [[.2,1.13,.075,'badge1',.004],[.17,1.27,.055,'badge2',.008],[.2,1.38,.055,'badge3',.012]].forEach(()=>{});
+ // brown pebbled belt standing in a loop, tail up with its brass roller buckle
+ rollT(.18,1.08,0,.05,.045,2.5,'P_brnband');strip([[.18,.0,1.03],[.18,.08,1.02],[.18,.16,1.03]],.045,'P_bbelt',[1,0,0],true);
+ buckle((p,n)=>[[cx+p[0],yT+p[1],cz+p[2]],n],.18,.02,1.0,.055,.05,BRASS);
+ // red belt (black edge, white stitch) coiled on the log, square brass buckle
+ coilT(.33,.92,.051,.088,.04,2.3,'P_redband');
+ {const bt=T(.33,1.012,0,.056);buckle(bt,0,0,0,.06,.035,BRASS,.0042)}
+ // black belt with the silver H buckle lying along the front edge
+ strip([[.44,.004,1.45],[.44,.004,1.0],[.43,.004,.8]],.035,'P_blkband',[1,0,0],false,4);
+ {const t=T(.44,1.1,A,.008);rbox(t,[0,.0,0],[.03,.004,.02],.002,SILVER,ME);for(const sg of [-1,1])rbox(t,[sg*.026,.0,0],[.005,.006,.024],.002,SILVER,ME);rbox(t,[0,.0,0],[.03,.006,.004],.002,SILVER,ME)}
  // ---- dark glossy bags ----
  prod(stand(-.32,.6,0),rrect(.2,.32,.05,.02),.2,.32,.1,'P_g_sling','P_g_sling',{r:.03});
  prod(stand(-.28,.8,0),rrect(.32,.23,.03,.02),.32,.23,.1,'P_m_mb_f','P_m_mb_b',{r:.03});strapArc(T(-.28,.8,0),.32,.23,.1,[.16,.1,.07],.02);
@@ -341,27 +362,23 @@ function heritageItems(cx,cz,yT,L,DP){const R=window.JS_CH,{q,F,box,cyl,disc:tdi
  prod(stand(-.13,-.02,A),rrect(.23,.16,.03,.02),.23,.16,.08,'P_s_sc_f','P_s_sc_b',{r:.03});
  prod(stand(-.3,-.38,A),rrect(.2,.32,.05,.02),.2,.32,.1,'P_c_sling','P_c_sling',{r:.03});
  prod(stand(-.12,-.42,A),rrect(.27,.15,.035,.025),.27,.15,.09,'P_t_cd_f','P_t_cd_b',{r:.03});
- // ---- wallets, card holders, money clips, hide, pampas ----
- const wal=(x,z,w,l,h,col,yaw=A,o={})=>{const t=T(x,z,yaw);rbox(t,[0,h/2,0],[w/2,h/2,l/2],.006,col,LE,[2,2,2]);
-  ln(t,[-w/2+.004,h,-l/2+.006],[-w/2+.004,h,l/2-.006],.0015,.0005,sh(col,1.25),LEA,[0,1,0]);stitchRect(t,-w/2+.005,w/2-.005,h+.0003,h+.0003,0,sh(col,1.2));
-  ln(t,[-w/2+.005,h+.0004,l/2-.005],[w/2-.005,h+.0004,l/2-.005],.0012,.0004,sh(col,1.3),LEA,[0,1,0]);ln(t,[-w/2+.005,h+.0004,-l/2+.005],[w/2-.005,h+.0004,-l/2+.005],.0012,.0004,sh(col,1.3),LEA,[0,1,0]);
-  const lt=T(x,z,yaw,h+.0006);disc(lt,[w*.3,0,l*.32],.008,.0006,sh(col,.6),LEA);ln(lt,[w*.3-.004,.0007,l*.32+.006],[w*.3+.004,.0007,l*.32-.006],.0015,.0004,sh(col,.55),LEA,[0,1,0]);
-  if(o.stack)for(let i=1;i<=o.stack;i++)rbox(t,[.004*i,h/2-h*i,.003*i],[w/2,h/2,l/2],.006,i%2?[.6,.32,.16]:sh(col,1.05),LE,[2,2,2])};
- lie(.07,.0,A,.095,.19,.018,'wl1');lie(.07,-.13,A,.095,.19,.018,'wl1');lie(.07,-.26,A,.095,.19,.018,'wl2');
- lie(.25,.14,A,.095,.19,.018,'wl1');lie(.26,.0,A,.115,.095,.02,'wb2');lie(.26,-.15,A,.115,.095,.02,'wb1');
- lie(.25,-.32,A,.115,.095,.022,'wb3');lie(.25,-.32,A+.08,.115,.095,.02,'wb4',{y:.022});
- {const t=T(.26,-.5,A+.3);rbox(t,[0,.006,0],[.065,.006,.05],.004,[.64,.32,.18],LE,[2,2,2]);const t2=T(.26,-.5,A+.3,.012,-.6);rbox(t2,[0,.0,-.05],[.065,.004,.05],.004,[.66,.34,.19],LE,[2,2,2]);
-  for(let k=0;k<4;k++)rbox(t,[0,.014+k*.003,.01-k*.012],[.06,.0015,.02],.001,[.56,.27,.15],LE,[1,1,1]);rbox(t,[.01,.02,-.01],[.03,.002,.02],.001,[.75,.75,.78],ME)}
- lie(.42,-.05,A,.115,.095,.02,'wb5');lie(.42,-.17,A,.115,.095,.02,'wb6');lie(.41,-.3,A,.095,.19,.018,'wl2');lie(.42,-.55,A,.115,.095,.02,'wb3');
- ['ch2','ch1','ch3'].forEach((k,i)=>{const f=F(.06,-.52+i*.05,A,-.35,.05);prod(p=>f([p[0],p[1],p[2]]),rrect(.1,.075,.006,.006),.1,.075,.005,'P_'+k,'P_'+k,{r:.0025})});
- {const t=T(.13,-.68,A);rbox(t,[0,.004,0],[.1,.004,.05],.002,[.1,.1,.1],ME);for(let i=0;i<3;i++){const c=[[.6,.38,.2],[.25,.2,.17],[.45,.32,.22]][i],tt=T(.13+(i-1)*.03,-.68,A,.008,-.4);rbox(tt,[0,.05,0],[.055,.05,.006],.005,c,LE,[2,2,2]);logo(tt,.03,.02,.006,.006)}}
- [[[.08,.08,.08],.27,-.86],[[.28,.23,.2],.33,-.8],[[.55,.36,.2],.3,-.77]].forEach(([c,x,z])=>{const t=T(x,z,.6,.046);const P=[];for(let i=0;i<=8;i++){const a=Math.PI+i/8*Math.PI;P.push([.018*Math.cos(a),0,.012+.018*Math.sin(a)*-1])}
-   prism(t,[[-.018,0,-.03],[.018,0,-.03],...P.slice().reverse().map(p=>[p[0],0,p[2]+.0])].map(p=>p),[0,.004,0],c,LEA);logo(T(x,z,.6,.0505),0,0,.0,.005)});
- {const t=T(.36,.3,A);const P=[[-.12,-.1],[-.04,-.12],[.04,-.11],[.12,-.12],[.13,-.03],[.11,.04],[.13,.1],[.05,.12],[-.02,.1],[-.1,.12],[-.13,.05],[-.11,-.02]].map(([u,w])=>[u,0,w]);prism(t,P,[0,.003,0],[.86,.62,.5],LEA);
-  disc(T(.36,.3,A,.0035),[0,0,-.03],.014,.0004,[.8,.62,.26],MET)}
- for(let i=0;i<22;i++){const a=-.45+i/22*.9,z0=.08+Math.sin(i*1.7)*.03,x0=.34+i*.003;const tip=[x0+.16*Math.cos(a),.012,z0+.12*Math.sin(a)];
-  tube([cx+x0,yT+.006,cz+z0],[cx+tip[0],yT+tip[1],cz+tip[2]],.007,.004,i%2?[.78,.52,.26]:[.68,.44,.2],LEA,5)}
- tube([cx+.33,yT+.004,cz+.08],[cx+.52,yT+.004,cz-.1],.0025,.0025,[.5,.62,.3],LEA,4);
+ // ---- wallet field (photos 6/7/8): long wallets in a row, bifolds in front of them, card holders on a log,
+ //      bifolds upright on a black wire stand, money clips on a log, tan hide with the gold logo, pampas ----
+ lie(.02,.36,A,.095,.19,.018,'wl1');lie(.02,.23,A,.095,.19,.018,'ltan');lie(.02,.1,A,.095,.19,.018,'lbrown');lie(.02,-.03,A,.095,.19,.018,'ldark');
+ lie(.22,.44,A,.11,.095,.02,'wb2');lie(.22,.3,A,.11,.095,.02,'borange');lie(.22,.16,A,.11,.095,.02,'bplum');
+ lie(.22,.02,A,.115,.1,.022,'wb6');lie(.225,.025,A+.12,.11,.095,.02,'bplum',{y:.022});lie(.23,-.13,A+.25,.11,.095,.022,'w11');lie(.22,-.3,A,.11,.095,.025,'bblack');
+ lie(.4,.28,A,.08,.11,.015,'bbrown');lie(.4,.15,A,.08,.11,.02,'bblack');lie(.4,.0,A,.095,.19,.018,'lplum');
+ ['ch2','ch1','ch3'].forEach((k,i)=>{const f=F(.06,-.2+(i-1)*.05,A,-.35,.05);prod(p=>f([p[0],p[1],p[2]]),rrect(.1,.075,.006,.006),.1,.075,.005,'P_'+k,'P_'+k,{r:.0025})});
+ {const x=.08,z=-.45;for(const sg of [-1,1]){tube([cx+x-.06,yT+.004,cz+z+sg*.06],[cx+x+.06,yT+.004,cz+z+sg*.06],.003,.003,[.08,.08,.08],MET,5);tube([cx+x-.06,yT+.004,cz+z+sg*.06],[cx+x-.07,yT+.12,cz+z+sg*.06],.003,.003,[.08,.08,.08],MET,5)}
+  ['wb2','wb1','wb4'].forEach((k,i)=>{const f=F(x-.02+i*.035,z,A,.32,.004);prod(p=>f(p),rrect(.115,.095,.006,.006),.115,.095,.02,'P_'+k,'P_'+k,{r:.006})})}
+ [[[.08,.08,.08],.31,-.6],[[.28,.23,.2],.37,-.54],[[.55,.36,.2],.34,-.5]].forEach(([c,x,z])=>{const t=T(x,z,.6,.046);const P=[];for(let i=0;i<=8;i++){const a=Math.PI+i/8*Math.PI;P.push([.018*Math.cos(a),0,.012-.018*Math.sin(a)])}
+   prism(t,[[-.018,0,-.03],[.018,0,-.03],...P.slice().reverse()],[0,.004,0],c,LEA);logo(T(x,z,.6,.0505),0,0,.0,.005)});
+ {const ar=window.JS_CH_AR.hide_tan,f=F(.37,.52,A,0,.001),h=.13;q(f([-h,0,h*ar]),f([h,0,h*ar]),f([h,0,-h*ar]),f([-h,0,-h*ar]),'hide_tan',1.02)}
+ {let sd=3;const rnd=()=>(sd=(sd*16807)%2147483647)/2147483647;
+  for(let i=0;i<70;i++){const t=i/70,bx=.33+t*.12,bz=.44-t*.24,ang=rnd()*6.28,rr=.012+.02*Math.sin(t*Math.PI);
+   const b=[bx+Math.cos(ang)*rr*.5,.006,bz+Math.sin(ang)*rr*.5],e=[b[0]+.015+rnd()*.01,.012+rnd()*.012,b[2]-.02+(rnd()-.5)*.02];
+   tube([cx+b[0],yT+b[1],cz+b[2]],[cx+e[0],yT+e[1],cz+e[2]],.0035,.0015,rnd()>.5?[.8,.55,.28]:[.7,.46,.22],LEA,4)}
+  tube([cx+.33,yT+.004,cz+.44],[cx+.5,yT+.004,cz+.2],.002,.002,[.5,.66,.3],LEA,4)}
  // ---- D end: owl coin pouch, NEW ARRIVAL board, chrome hook stand with two toiletry bags, keychains, rolled belts ----
  {const t=T(-.14,-.78,A,.06);rbox(t,[0,.045,0],[.04,.045,.035],.03,[.3,.22,.16],LE,[4,4,4]);for(const s of [-1,1])disc(t,[s*.017,.06,.036],.014,.002,[.5,.36,.2],LEA,16);
   const P=[];for(let i=0;i<=8;i++){const a=i/8*Math.PI;P.push([-.03*Math.cos(a),.09+.05*Math.sin(a),0])}tb(t,P,.004,[.4,.27,.17])}
@@ -375,9 +392,10 @@ function heritageItems(cx,cz,yT,L,DP){const R=window.JS_CH,{q,F,box,cyl,disc:tdi
  {const t=T(.38,-1.12,A,0,.15),PN=[.86,.76,.6];rbox(t,[0,.125,0],[.085,.125,.01],.003,PN,null,[2,2,2]);rbox(W0,[.38,.01,-1.08],[.03,.01,.085],.003,PN,null,[2,2,2]);
   [[.25,.24,.2],[.5,.33,.2],[.12,.1,.1]].forEach((c,j)=>{const dx=-.05+j*.05;tube(t([dx,.2,.01],[0,1,0])[0],t([dx+.003,.205,.035],[0,1,0])[0],.003,.003,PN,LEA,6);
    for(let i=0;i<10;i++){const a0=i/10*6.283,a1=(i+1)/10*6.283;tube(t([dx+.011*Math.cos(a0),.19+.011*Math.sin(a0),.03],[0,1,0])[0],t([dx+.011*Math.cos(a1),.19+.011*Math.sin(a1),.03],[0,1,0])[0],.0018,.0018,SILVER,MET,5)}
-   const kt=F(.38,-1.12,A+.2*(j-1),.15,0);prod(p=>kt([p[0]+dx,p[1]+.07,p[2]+.034]),rrect(.032,.11,.006,.006),.032,.11,.005,'P_k'+(j+1)+'s','P_k'+(j+1)+'s',{r:.002})})}
- for(const [dz,r] of [[-.06,.055],[.06,.05]]){const z=-1.38+dz;for(let k=0;k<4;k++){const rr=r-k*.008;let prev=null;for(let i=0;i<=20;i++){const a=i/20*6.283,p=[cx+.42+Math.cos(a)*rr,yT+r+Math.sin(a)*rr,cz+z];if(prev)bar((p,n)=>[p,n],prev,p,[0,0,1],.036,.003,BLK,LEA);prev=p}}
-  rbox(W0,[.42+r,.03,z],[.006,.022,.02],.002,SILVER,ME)}
+   const kt=F(.38,-1.12,A+.2*(j-1),-.15,0);prod(p=>kt([p[0]+dx,p[1]+.06,p[2]+.03]),rrect(.036,.12,.006,.006),.036,.12,.006,'P_k'+(j+1)+'s','P_k'+(j+1)+'s',{r:.002})})}
+ box(I,[.42,0,-1.38],.1,.006,.16,{s:'c_acrylic'});
+ for(const [dz,r] of [[-.04,.05],[.045,.046]]){const z=-1.38+dz;rollT(.42,z,.006,r,.036,4,'P_blkband');
+  const t=T(.42+.0,z,A,.006);rbox(t,[0,.03,.0],[.022,.03,.004],.003,SILVER,ME);rbox(t,[0,.03,.005],[.016,.024,.002],.002,sh(SILVER,.7),ME)}
 }
 function craftHeritage(cx,cz){
  const S=1.15,L=2.66*S,DP=.9*S,TH=.75*S,T=.05*S,front=cx+DP/2,back=cx-DP/2,y=TH;
