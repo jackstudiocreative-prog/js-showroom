@@ -135,6 +135,33 @@ function ladderSide(xf,xb,z,top,angled,dir){const post=(x,h)=>box(x,h/2,z,.04,h,
  if(angled){post(xf,top-.28);post(xb,top);line3([xf,top-.28,z],[xf+.2,top,z],.04,'metal');line3([xf+.2,top,z],[xb,top,z],.04,'metal')}
  else{post(xf,top);post(xb,top);box((xf+xb)/2,top,z,xb-xf,.04,.04,'metal',1)}
  for(let y=.3;y<top-.32;y+=.3)box((xf+xb)/2,y,z,xb-xf,.035,.035,'metal',1)}
+
+// URBAN CARRY products as solid 3D pieces: each product's silhouette (from the store photo) is
+// extruded to its real depth with a rounded, bulging edge band; the photo is its front face, the
+// mirrored photo its back, the band its own leather colour (atlas assets/urban-data.js).
+var UCV=[],UCU=[],UCS=[],ucMesh=null,ucTex=null;
+function ucPiece(P,R,xf,zc,y0,G,d){const w=P.w*G,h=P.h*G,c=P.c,n=c.length,r=R[P.id],sw=R['sw_'+P.id],bul=Math.min(.014,d*.16),K=6;
+ const W=(u,v,t)=>[xf+.05+d/2-t,y0+v,zc+u];          // u -> +z (viewer's right), v up, t toward the room (-x)
+ let ar=0;for(let i=0;i<n;i++){const a=c[i],b=c[(i+1)%n];ar+=a[0]*b[1]-b[0]*a[1]}const sg=ar>0?1:-1;
+ const pu=i=>(c[i][0]-.5)*w,pv=i=>c[i][1]*h;
+ const nrm=c.map((p,i)=>{const a=c[(i-1+n)%n],b=c[(i+1)%n],dx=(b[0]-a[0])*w,dy=(b[1]-a[1])*h,l=Math.hypot(dx,dy)||1;return [sg*dy/l,-sg*dx/l]});
+ const push=(p,uv,shd)=>{UCV.push(...p);UCU.push(...uv);UCS.push(shd)};
+ const sU=(sw[0]+sw[2])/2,sV=(sw[1]+sw[3])/2;
+ for(let k=0;k<K;k++){const t0=k/K*Math.PI,t1=(k+1)/K*Math.PI;
+  for(let i=0;i<n;i++){const j=(i+1)%n,V=(q,t)=>{const o=bul*Math.sin(t);return W(pu(q)+nrm[q][0]*o,pv(q)+nrm[q][1]*o,d/2*Math.cos(t))},
+    S=(q,t)=>{const ny=nrm[q][1]*Math.sin(t),nt=Math.cos(t);return Math.max(.35,.62+.26*ny+.16*nt)};
+   const quad=[[i,t0],[j,t0],[j,t1],[i,t1]];for(const ix of [0,1,2,0,2,3]){const [q,t]=quad[ix];push(V(q,t),[sU,sV],S(q,t))}}}
+ // front (photo, alpha-cut) and back (mirrored photo)
+ const F=[[-w/2,0],[w/2,0],[w/2,h],[-w/2,h]],UVf=[[r[0],r[3]],[r[2],r[3]],[r[2],r[1]],[r[0],r[1]]];
+ for(const ix of [0,1,2,0,2,3])push(W(F[ix][0],F[ix][1],d/2+.0005),UVf[ix],1.02);
+ const UVb=[[r[2],r[3]],[r[0],r[3]],[r[0],r[1]],[r[2],r[1]]];
+ for(const ix of [0,2,1,0,3,2])push(W(F[ix][0],F[ix][1],-d/2-.0005),UVb[ix],.72)}
+function ucItems(Z0,sl,xf,G){const J=window.JS_UC;if(!J)return false;
+ const DEP={uf_coffee:.035,uf_card:.03,uf_duffel:.2,uf_bags:.13,uf_hangL:.1,uf_hangR:.11};
+ for(const P of J.P){const shelf=P.kind==='shelf',w=P.w*G,d=DEP[P.kind]||Math.max(.05,Math.min(.17,w*.42));
+  const zc=shelf?sl+P.z*G:Z0+P.z*G,x=P.kind.startsWith('uf_hang')?xf+.12-.05-d/2:xf;
+  ucPiece(P,J.R,x,zc,P.y*G,G,d)}
+ return true}
 function urbanZone(){
 const W=5.43,G=1.12,Z0=-1.85+1.22*G,Z=u=>Z0+u*G,D=.45*G,xf=W-D,xb=W-.03,xm=(xf+xb)/2;
 const card=(k,x,turn=true)=>{const m=SP[k];if(m)sprite(x,Z(m.z0!==undefined?0:m.z),m.w*G/2,m.y*G,(m.y+m.h)*G,k,1.05,turn)};
@@ -144,19 +171,22 @@ const card=(k,x,turn=true)=>{const m=SP[k];if(m)sprite(x,Z(m.z0!==undefined?0:m.
 // its right side is the big shelf's left ladder (shared, as in the store)
 const fl=Z(0.0),fr=Z(1.41),ftop=3.4*G,SV=1.62*G,RV=1.36*G;
 ladderSide(xf,xb,fl,ftop,true);
-box(xm,SV-.015,(fl+fr)/2,D-.02,.03,fr-fl-.03,'birch',1.1);box(xf+.06,SV-.034,(fl+fr)/2,.02,.008,fr-fl-.1,'white',1.6);
+box(xm,SV-.015,(fl+fr)/2,D-.02,.03,fr-fl-.03,'birch',1.1);box(xf+.06,SV-.034,(fl+fr)/2,.02,.008,fr-fl-.1,'cream',2.0);
 box(xf+.12,RV,(fl+fr)/2,.035,.035,fr-fl,'metal',1);
-for(const k of ['uf_coffee','uf_duffel','uf_card','uf_bags'])card(k,xm-.02);
-for(const k of ['uf_hangL','uf_hangR']){const m=SP[k];if(!m)continue;const zc=Z(m.z);sprite(xf+.12,zc,m.w*G/2,m.y*G,(m.y+m.h)*G,k,1.05,false);
+const UC=window.JS_UC&&ucItems(Z0,Z(1.41),xf,G);
+if(!UC)for(const k of ['uf_coffee','uf_duffel','uf_card','uf_bags'])card(k,xm-.02);
+for(const k of ['uf_hangL','uf_hangR']){const m=SP[k];if(!m)continue;const zc=Z(m.z);if(!UC)sprite(xf+.12,zc,m.w*G/2,m.y*G,(m.y+m.h)*G,k,1.05,false);
  box(xf+.12,RV-.02,zc,.03,.05,.025,'metal',1);
- if(k==='uf_hangR'){const ty=(m.y+m.h)*G-.02;for(const dz of [-.12,.12])line3([xf+.12,ty,zc+dz*G],[xf+.12,RV-.03,zc],.012,'darkleather')}}
+ if(UC){const ps=window.JS_UC.P.filter(P=>P.kind===k).sort((a,b)=>b.w*b.h-a.w*a.h),P=ps[0];if(P){const bz=Z0+P.z*G,ty=(P.y+P.h)*G-.015,hw=P.w*G*.36;
+  for(const dz of [-hw,hw])line3([xf+.12,ty,bz+dz],[xf+.12,RV-.03,zc],.01,'darkleather')}}
+ else if(k==='uf_hangR'){const ty=(m.y+m.h)*G-.02;for(const dz of [-.12,.12])line3([xf+.12,ty,zc+dz*G],[xf+.12,RV-.03,zc],.012,'darkleather')}}
 // ---- big two-bay ladder shelf (image 2): 2 x 1.22 u bays, 5 levels, X bracing, LED strips
 const sl=Z(1.41),BW=1.22*G,sr=sl+2*BW,top=3.36*G,LV=[.11,.58,1.28,1.94,2.62].map(v=>v*G);
 ladderSide(xf,xb,sl,top,true);ladderSide(xf,xb,sr,top,true);
 box(xf,top/2,sl+BW,.04,top,.04,'metal',1);box(xb,top/2,sl+BW,.04,top,.04,'metal',1);box(xm,top,sl+BW,D,.04,.04,'metal',1);
-for(let b=0;b<2;b++){const zc=sl+BW*(b+.5);for(const y of LV){box(xm,y-.015,zc,D-.02,.03,BW-.03,'birch',1.1);if(y>.5)box(xf+.06,y-.034,zc,.02,.008,BW-.1,'white',1.6)}}
+for(let b=0;b<2;b++){const zc=sl+BW*(b+.5);for(const y of LV){box(xm,y-.015,zc,D-.02,.03,BW-.03,'birch',1.1);if(y>.5)box(xf+.06,y-.034,zc,.02,.008,BW-.1,'cream',2.0)}}
 for(const [b,y0,y1] of [[0,LV[1],LV[2]],[1,LV[2],LV[3]]]){const z0=sl+BW*b+.03,z1=sl+BW*(b+1)-.03;line3([xb-.01,y0+.03,z0],[xb-.01,y1-.03,z1],.014,'metal');line3([xb-.01,y1-.03,z0],[xb-.01,y0+.03,z1],.014,'metal')}
-for(const [k,m] of Object.entries(SP)){if(!k.startsWith('ub_'))continue;const zc=sl+(m.z-0.0)*G*(2*BW/(2*1.22*G));sprite(xf+D*.48,zc,m.w*G/2,m.y*G,(m.y+m.h)*G,k,1.05,true)}
+if(!UC)for(const [k,m] of Object.entries(SP)){if(!k.startsWith('ub_'))continue;const zc=sl+(m.z-0.0)*G*(2*BW/(2*1.22*G));sprite(xf+D*.48,zc,m.w*G/2,m.y*G,(m.y+m.h)*G,k,1.05,true)}
 }
 // CRAFT INNOVATIVE: the MagWallet display near the entrance and the chrome sign stand beside it,
 // rebuilt from the store photos (white plinth, black tray with light strip, backboard with the
@@ -1185,7 +1215,7 @@ let lastOverlay=0;
 function render(now){const dt=Math.min(.055,(now-last)/1000||.016);last=now;animate(dt);const dpr=Math.min(window.devicePixelRatio||1,1.6);const w=Math.round(canvas.clientWidth*dpr),h=Math.round(canvas.clientHeight*dpr);if(canvas.width!==w||canvas.height!==h){canvas.width=w;canvas.height=h;gl.viewport(0,0,w,h)}
 gl.clearColor(.81,.79,.73,1);gl.clear(gl.COLOR_BUFFER_BIT|gl.DEPTH_BUFFER_BIT);
 const fw=[Math.sin(cam.yaw)*Math.cos(cam.pitch),Math.sin(cam.pitch),-Math.cos(cam.yaw)*Math.cos(cam.pitch)];const proj=perspective(Math.PI/3.1,w/h,.09,75),view=lookAt([cam.x,cam.y,cam.z],[cam.x+fw[0],cam.y+fw[1],cam.z+fw[2]]);mvp=mul(proj,view);
-gl.uniformMatrix4fv(loc.mvp,false,mvp);gl.uniform3f(loc.camera,cam.x,cam.y,cam.z);bindMesh(worldMesh);gl.bindTexture(gl.TEXTURE_2D,atlasTex);gl.uniform1f(loc.cut,-1.);gl.drawArrays(gl.TRIANGLES,0,worldMesh.n);if(lbMesh){bindMesh(lbMesh);gl.bindTexture(gl.TEXTURE_2D,lbTex);gl.drawArrays(gl.TRIANGLES,0,6)}if(chMesh){bindMesh(chMesh);gl.bindTexture(gl.TEXTURE_2D,chTex);gl.uniform1f(loc.cut,.5);gl.drawArrays(gl.TRIANGLES,0,chMesh.n);gl.uniform1f(loc.cut,-1.)}if(giftMesh){bindMesh(giftMesh);gl.bindTexture(gl.TEXTURE_2D,giftTex);gl.uniform1f(loc.cut,.5);gl.drawArrays(gl.TRIANGLES,0,giftMesh.n);gl.uniform1f(loc.cut,-1.)}if(manParts){gl.bindTexture(gl.TEXTURE_2D,manTex);gl.uniform1f(loc.cut,.5);for(const m of manParts){bindMesh(m);gl.bindBuffer(gl.ELEMENT_ARRAY_BUFFER,m.i);gl.drawElements(gl.TRIANGLES,m.n,gl.UNSIGNED_SHORT,0)}gl.uniform1f(loc.cut,-1.)}if(decTex)drawLit();if(spriteTex&&spriteMesh.n){updateSprites();bindMesh(spriteMesh);gl.bindTexture(gl.TEXTURE_2D,spriteTex);gl.uniform1f(loc.cut,.5);gl.drawArrays(gl.TRIANGLES,0,spriteMesh.n)}if(now-lastOverlay>45){updateOverlay();lastOverlay=now}requestAnimationFrame(render)}
+gl.uniformMatrix4fv(loc.mvp,false,mvp);gl.uniform3f(loc.camera,cam.x,cam.y,cam.z);bindMesh(worldMesh);gl.bindTexture(gl.TEXTURE_2D,atlasTex);gl.uniform1f(loc.cut,-1.);gl.drawArrays(gl.TRIANGLES,0,worldMesh.n);if(lbMesh){bindMesh(lbMesh);gl.bindTexture(gl.TEXTURE_2D,lbTex);gl.drawArrays(gl.TRIANGLES,0,6)}if(ucMesh){bindMesh(ucMesh);gl.bindTexture(gl.TEXTURE_2D,ucTex);gl.uniform1f(loc.cut,.5);gl.drawArrays(gl.TRIANGLES,0,ucMesh.n);gl.uniform1f(loc.cut,-1.)}if(chMesh){bindMesh(chMesh);gl.bindTexture(gl.TEXTURE_2D,chTex);gl.uniform1f(loc.cut,.5);gl.drawArrays(gl.TRIANGLES,0,chMesh.n);gl.uniform1f(loc.cut,-1.)}if(giftMesh){bindMesh(giftMesh);gl.bindTexture(gl.TEXTURE_2D,giftTex);gl.uniform1f(loc.cut,.5);gl.drawArrays(gl.TRIANGLES,0,giftMesh.n);gl.uniform1f(loc.cut,-1.)}if(manParts){gl.bindTexture(gl.TEXTURE_2D,manTex);gl.uniform1f(loc.cut,.5);for(const m of manParts){bindMesh(m);gl.bindBuffer(gl.ELEMENT_ARRAY_BUFFER,m.i);gl.drawElements(gl.TRIANGLES,m.n,gl.UNSIGNED_SHORT,0)}gl.uniform1f(loc.cut,-1.)}if(decTex)drawLit();if(spriteTex&&spriteMesh.n){updateSprites();bindMesh(spriteMesh);gl.bindTexture(gl.TEXTURE_2D,spriteTex);gl.uniform1f(loc.cut,.5);gl.drawArrays(gl.TRIANGLES,0,spriteMesh.n)}if(now-lastOverlay>45){updateOverlay();lastOverlay=now}requestAnimationFrame(render)}
 function buildMan(){const J=window.JS_MAN,Q=MANQ;if(!J||!Q)return null;const dec=(b,T)=>{const r=atob(b),u=new Uint8Array(r.length);for(let i=0;i<r.length;i++)u[i]=r.charCodeAt(i);return new T(u.buffer)};
  const sc=Q.h/(J.meta.ytop-J.meta.ybot),c=Math.cos(Q.yaw),sn=Math.sin(Q.yaw);
  return J.parts.map(P=>{const ip=dec(P.p,Int16Array),iu=dec(P.u,Uint16Array),is=dec(P.s,Uint8Array),n=P.n,V=new Float32Array(n*3),U=new Float32Array(n*2),S=new Float32Array(n);
@@ -1196,6 +1226,6 @@ function buildMan(){const J=window.JS_MAN,Q=MANQ;if(!J||!Q)return null;const dec
   m.i=gl.createBuffer();gl.bindBuffer(gl.ELEMENT_ARRAY_BUFFER,m.i);gl.bufferData(gl.ELEMENT_ARRAY_BUFFER,dec(P.i,Uint16Array),gl.STATIC_DRAW);return m})}
 function loadTex(url,fmt){return new Promise((ok,bad)=>{const im=new Image();im.onload=()=>{const t=gl.createTexture();gl.bindTexture(gl.TEXTURE_2D,t);gl.pixelStorei(gl.UNPACK_FLIP_Y_WEBGL,false);gl.texImage2D(gl.TEXTURE_2D,0,fmt,fmt,gl.UNSIGNED_BYTE,im);gl.texParameteri(gl.TEXTURE_2D,gl.TEXTURE_MIN_FILTER,gl.LINEAR_MIPMAP_LINEAR);gl.texParameteri(gl.TEXTURE_2D,gl.TEXTURE_MAG_FILTER,gl.LINEAR);gl.texParameteri(gl.TEXTURE_2D,gl.TEXTURE_WRAP_S,gl.CLAMP_TO_EDGE);gl.texParameteri(gl.TEXTURE_2D,gl.TEXTURE_WRAP_T,gl.CLAMP_TO_EDGE);gl.generateMipmap(gl.TEXTURE_2D);ok(t)};im.onerror=bad;im.src=url})}
 function launch(){gl.activeTexture(gl.TEXTURE0);gl.uniform1i(loc.sampler,0);
-Promise.all([loadTex(window.JS_ATLAS_URL,gl.RGB),window.JS_SPRITE_URL?loadTex(window.JS_SPRITE_URL,gl.RGBA).catch(()=>null):Promise.resolve(null),window.JS_DECAL_URL?loadTex(window.JS_DECAL_URL,gl.RGBA).catch(()=>null):Promise.resolve(null),window.JS_LIGHTBOX_URL?loadTex(window.JS_LIGHTBOX_URL,gl.RGB).catch(()=>null):Promise.resolve(null),window.JS_MAN_URL?loadTex(window.JS_MAN_URL,gl.RGBA).catch(()=>null):Promise.resolve(null),window.JS_GIFT_URL?loadTex(window.JS_GIFT_URL,gl.RGBA).catch(()=>null):Promise.resolve(null),window.JS_CH_URL?loadTex(window.JS_CH_URL,gl.RGBA).catch(()=>null):Promise.resolve(null)]).then(([a,b,c,d,e,f,g])=>{if(g&&CHV.length){chTex=g;chMesh=mesh(CHV,CHU,CHS)}if(f&&GV.length){giftTex=f;giftMesh=mesh(GV,GU,GS)}if(e){manTex=e;manParts=buildMan()}atlasTex=a;spriteTex=b;decTex=c;if(d&&LBQ){lbTex=d;const P=[];for(const i of [0,1,2,0,2,3])P.push(...LBQ[i]);lbMesh=mesh(P,[0,1,1,1,1,0,0,1,1,0,0,0],[1.12,1.12,1.12,1.12,1.12,1.12])}gl.enable(gl.DEPTH_TEST);gl.disable(gl.CULL_FACE);$('loading').hidden=true;setArea('entrance');last=performance.now();requestAnimationFrame(render)}).catch(()=>{$('loading').innerHTML='<div class="loadbox">Unable to load 3D textures. Extract the whole ZIP first.</div>'})}
+Promise.all([loadTex(window.JS_ATLAS_URL,gl.RGB),window.JS_SPRITE_URL?loadTex(window.JS_SPRITE_URL,gl.RGBA).catch(()=>null):Promise.resolve(null),window.JS_DECAL_URL?loadTex(window.JS_DECAL_URL,gl.RGBA).catch(()=>null):Promise.resolve(null),window.JS_LIGHTBOX_URL?loadTex(window.JS_LIGHTBOX_URL,gl.RGB).catch(()=>null):Promise.resolve(null),window.JS_MAN_URL?loadTex(window.JS_MAN_URL,gl.RGBA).catch(()=>null):Promise.resolve(null),window.JS_GIFT_URL?loadTex(window.JS_GIFT_URL,gl.RGBA).catch(()=>null):Promise.resolve(null),window.JS_CH_URL?loadTex(window.JS_CH_URL,gl.RGBA).catch(()=>null):Promise.resolve(null),window.JS_UC_URL?loadTex(window.JS_UC_URL,gl.RGBA).catch(()=>null):Promise.resolve(null)]).then(([a,b,c,d,e,f,g,h])=>{if(h&&UCV.length){ucTex=h;ucMesh=mesh(UCV,UCU,UCS)}if(g&&CHV.length){chTex=g;chMesh=mesh(CHV,CHU,CHS)}if(f&&GV.length){giftTex=f;giftMesh=mesh(GV,GU,GS)}if(e){manTex=e;manParts=buildMan()}atlasTex=a;spriteTex=b;decTex=c;if(d&&LBQ){lbTex=d;const P=[];for(const i of [0,1,2,0,2,3])P.push(...LBQ[i]);lbMesh=mesh(P,[0,1,1,1,1,0,0,1,1,0,0,0],[1.12,1.12,1.12,1.12,1.12,1.12])}gl.enable(gl.DEPTH_TEST);gl.disable(gl.CULL_FACE);$('loading').hidden=true;setArea('entrance');last=performance.now();requestAnimationFrame(render)}).catch(()=>{$('loading').innerHTML='<div class="loadbox">Unable to load 3D textures. Extract the whole ZIP first.</div>'})}
 launch();
 })();
