@@ -290,27 +290,58 @@ function giftItems(cx,cz,yT){const R=window.JS_GIFT;
  box(F(.15,-.08,-.06),[0,0,0],.225,.008,.08,{s:'c_acrylic'});
  box(F(.15,-.08,-.06,.16,.008),[0,0,0],.21,.30,.003,{f:'eg_sign',s:'c_white'});
  box(F(.15,-.08,-.06,.16,.008),[0,0,-.004],.215,.305,.003,{s:'c_acrylic',f:'c_acrylic'});
- // --- big sage paper bag on a black wire riser, rope handles, round ENGRAVING tag ---
- {const bx=.33,bz=-.25,W=.5,H=.52,D=.16,y0=.075,fz=bz+D/2;
+ // --- big sage paper bag on a black wire riser: front/back panels, side gussets folded inward,
+ //     open top, twisted black rope handles standing off the face, round ENGRAVING tag ---
+ {const bx=.33,bz=-.25,W=.5,H=.52,D=.16,y0=.075,G=.05,fz=bz+D/2,kz=bz-D/2;
   for(const sx of [-1,1])for(const sz of [-1,1])wire(I,[bx+sx*.2,0,bz+sz*.06],[bx+sx*.2,y0,bz+sz*.06],.004);
   for(const sz of [-1,1])wire(I,[bx-.2,y0,bz+sz*.06],[bx+.2,y0,bz+sz*.06],.004);
   for(const sx of [-1,1])wire(I,[bx+sx*.2,y0,bz-.06],[bx+sx*.2,y0,bz+.06],.004);
-  box(I,[bx,y0,bz],W,H,D,{f:'bag',b:'bag',s:'bag_side',t:'c_bagin'});
-  const bp=(u,v,dz=.006)=>[cx+bx-W/2+u*W,yT+y0+H-v*H,cz+fz+dz],W0=p=>p;
+  const Wp=(x,y,z)=>[cx+x,yT+y,cz+z],x0=bx-W/2,x1=bx+W/2,yb=y0,yt=y0+H;
+  q(Wp(x0,yb,fz),Wp(x1,yb,fz),Wp(x1,yt,fz),Wp(x0,yt,fz),'bag',1.0);                       // front
+  q(Wp(x1,yb,kz),Wp(x0,yb,kz),Wp(x0,yt,kz),Wp(x1,yt,kz),'bag',.8);                        // back
+  q(Wp(x0+.004,yb+.01,fz-.003),Wp(x1-.004,yb+.01,fz-.003),Wp(x1-.004,yt,fz-.003),Wp(x0+.004,yt,fz-.003),'c_bagin',.62); // inside faces
+  q(Wp(x1-.004,yb+.01,kz+.003),Wp(x0+.004,yb+.01,kz+.003),Wp(x0+.004,yt,kz+.003),Wp(x1-.004,yt,kz+.003),'c_bagin',.55);
+  q(Wp(x0,yb+.001,kz),Wp(x1,yb+.001,kz),Wp(x1,yb+.001,fz),Wp(x0,yb+.001,fz),'c_bagin',.5);  // bottom
+  // gussets: each side folds in to a centre crease (texture: left half / right half of the side photo)
+  {const r=R.bag_side,um=(r[0]+r[2])/2;
+   for(const sx of [-1,1]){const xe=sx<0?x0:x1,xc=xe-sx*G;
+    tri([Wp(xe,yb,fz),Wp(xc,yb,bz),Wp(xc,yt,bz),Wp(xe,yt,fz)],sx<0?[[r[0],r[3]],[um,r[3]],[um,r[1]],[r[0],r[1]]]:[[r[2],r[3]],[um,r[3]],[um,r[1]],[r[2],r[1]]],sx<0?.86:.8);
+    tri([Wp(xc,yb,bz),Wp(xe,yb,kz),Wp(xe,yt,kz),Wp(xc,yt,bz)],sx<0?[[um,r[3]],[r[2],r[3]],[r[2],r[1]],[um,r[1]]]:[[um,r[3]],[r[0],r[3]],[r[0],r[1]],[um,r[1]]],sx<0?.72:.68)}}
+  // twisted rope: smooth path through the photo points, standing off the face, two strands wound round it
   const rope=[[.299,.048],[.357,.122],[.428,.211],[.481,.291],[.513,.353],[.507,.397],[.481,.419],[.454,.396],[.445,.348],[.463,.299],[.516,.23],[.604,.129],[.687,.042]];
-  for(const side of [0,1])for(let i=0;i+1<rope.length;i++){const f=(u,v)=>{const p=bp(u,v);if(side){p[0]=2*(cx+bx)-p[0];p[2]=cz+bz-D/2-.006}return p};cyl(W0,f(...rope[i]),f(...rope[i+1]),.004,'c_leather',null,6)}
-  const tc=bp(.33,.77,.03);cyl(W0,[tc[0],tc[1],tc[2]-.002],[tc[0],tc[1],tc[2]],.042,'c_white',null,24);disc([tc[0],tc[1],tc[2]+.0005],.042,[1,0,0],[0,1,0],'tag')}
+  const cr=(p0,p1,p2,p3,t)=>p1.map((_,i)=>.5*((2*p1[i])+(-p0[i]+p2[i])*t+(2*p0[i]-5*p1[i]+4*p2[i]-p3[i])*t*t+(-p0[i]+3*p1[i]-3*p2[i]+p3[i])*t*t*t));
+  for(const side of [1,-1]){const pts=[];
+   for(let i=0;i+1<rope.length;i++)for(let k=0;k<6;k++){const t=k/6,P=cr(rope[Math.max(0,i-1)],rope[i],rope[i+1],rope[Math.min(rope.length-1,i+2)],t);
+    const u=side>0?P[0]:1-P[0],v=P[1],off=.004+.03*Math.sin(Math.min(1,v/.42)*Math.PI*.5);
+    pts.push([bx-W/2+u*W,yt-v*H,side>0?fz+off:kz-off])}
+   pts.push(side>0?[bx-W/2+.687*W,yt-.042*H,fz+.004]:[bx-W/2+.313*W,yt-.042*H,kz-.004]);
+   for(let i=0;i+1<pts.length;i++){cyl(I,pts[i],pts[i+1],.0042,'c_rope',null,6);
+    const d=pts[i+1].map((v,j)=>v-pts[i][j]),L=Math.hypot(...d);
+    for(const ph of [0,Math.PI]){const a0=i*1.3+ph,a1=(i+1)*1.3+ph,o=(a)=>[Math.cos(a)*.0026*(-d[1]/L),Math.cos(a)*.0026*(d[0]/L),Math.sin(a)*.0026];
+     const p0=pts[i].map((v,j)=>v+o(a0)[j]),p1=pts[i+1].map((v,j)=>v+o(a1)[j]);cyl(I,p0,p1,.0022,'c_rope2',null,4)}}
+   for(const e of [rope[0],rope[rope.length-1]]){const u=side>0?e[0]:1-e[0];cyl(I,[bx-W/2+u*W,yt-e[1]*H,side>0?fz:kz],[bx-W/2+u*W,yt-e[1]*H,side>0?fz+.0015:kz-.0015],.007,'c_gun',null,10)}}
+  const tc=Wp(bx-W/2+.33*W,yt-.77*H,fz+.03);cyl(p=>p,[tc[0],tc[1],tc[2]-.002],[tc[0],tc[1],tc[2]],.042,'c_white',null,24);disc([tc[0],tc[1],tc[2]+.0005],.042,[1,0,0],[0,1,0],'tag');
+  cyl(p=>p,Wp(bx-W/2+.33*W,yt-.42*H,fz+.03),[tc[0],tc[1]+.042,tc[2]],.0006,'c_paper',null,3)}
  // --- open gift box (stickers inside) and the log slice with bark ---
  box(I,[.05,0,.03],.2,.012,.14,{s:'darkbox'});
  {const t=.05,ox=.05,oz=.03,w=.185,d=.125,h=.035;box(I,[ox,0,oz-d/2+t/10],w,h,.006,{s:'darkbox'});box(I,[ox,0,oz+d/2-.003],w,h,.006,{s:'darkbox'});
   for(const sx of [-1,1])box(I,[ox+sx*(w/2-.003),0,oz],.006,h,d,{s:'darkbox'});
   q([cx+ox-w/2,yT+.013,cz+oz+d/2],[cx+ox+w/2,yT+.013,cz+oz+d/2],[cx+ox+w/2,yT+.013,cz+oz-d/2],[cx+ox-w/2,yT+.013,cz+oz-d/2],'box_top',1.0)}
  cyl(I,[.25,0,.0],[.25,.05,.0],.1,'bark',null,28);disc([cx+.25,yT+.0505,cz],.1,[1,0,0],[0,0,-1],'slice',1.0);
- // --- keychain board with four keychains ---
- {const K=F(.58,-.03,-.1,.1);box(K,[0,0,0],.2,.3,.02,{f:'kc_board',s:'pine'});box(I,[.58,0,-.07],.2,.02,.07,{s:'pine'});
-  for(const dx of [-.072,-.024,.024,.072]){cyl(K,[dx,.2,.01],[dx,.2,.035],.003,'pine',null,6);
-   cyl(K,[dx,.185,.022],[dx,.185,.027],.014,'c_silver',null,12);cyl(K,[dx,.185,.023],[dx,.185,.028],.009,'c_leather',null,10);
-   box(K,[dx,.163,.022],.016,.014,.008,{s:'c_silver'});box(K,[dx,.07,.02],.026,.09,.007,{f:'strap',s:'c_leather'})}}
+ // --- keychain board (no price tag): four keychains as in the photo - gunmetal spring rings hung on
+ //     angled pegs, swivel, chrome logo collar, folded leather loop (grey-brown, then three black) ---
+ {const K=F(.58,-.03,-.1,.1);box(K,[0,0,0],.2,.31,.02,{f:'kc_board',s:'pine_h',t:'pine_h'});box(I,[.58,0,-.07],.2,.02,.07,{s:'pine_h',t:'pine_h'});
+  for(let j=0;j<7;j++){const dx=-.075+j*.025;cyl(K,[dx,.27,.01],[dx+.004,.28,.03],.0025,'pine',null,6)}
+  [-.069,-.023,.023,.069].forEach((dx,j)=>{const rc=.165,R0=.017;
+   cyl(K,[dx-.012,rc+.014,.01],[dx-.004,rc+.018,.045],.003,'pine',null,6);                      // peg through the ring
+   for(let i=0;i<16;i++){const a0=i/16*6.283,a1=(i+1)/16*6.283;
+    cyl(K,[dx+Math.cos(a0)*R0,rc+Math.sin(a0)*R0,.032],[dx+Math.cos(a1)*R0,rc+Math.sin(a1)*R0,.032],.0029,i%4?'c_gun':'c_gun2',null,6)}
+   cyl(K,[dx,rc-R0,.032],[dx,rc-R0-.012,.032],.0045,'c_gun',null,8);cyl(K,[dx,rc-R0-.012,.032],[dx,rc-R0-.016,.032],.006,'c_gun2',null,8);
+   const yc=rc-R0-.016,ch=.018,sw=.032,top=yc-ch,bot=.022,th=.004;
+   box(K,[dx,top,.032],sw+.002,ch,.013,{f:'cl'+(j+1),s:'c_gun2',t:'c_gun2',b:'c_gun'});        // collar
+   box(K,[dx,bot+.004,.0365],sw,top-bot-.004,th,{f:'kc'+(j+1),s:'c_leather',t:'c_leather'});      // front of the loop
+   box(K,[dx,bot+.004,.0275],sw-.002,top-bot-.004,th,{s:'c_leather',f:'c_leather'});               // back of the loop
+   cyl(K,[dx-sw/2,bot+.004,.032],[dx+sw/2,bot+.004,.032],.0065,'c_leather',null,10)})}             // rounded fold
  // --- linen tray with wrapping-paper rolls and the pine sprig ---
  {const tx=.1,tz=.215,TW=.78,TD=.25,TH=.04,th=.014;box(I,[tx,0,tz],TW,.008,TD,{s:'linen'});
   box(I,[tx,0,tz+TD/2-th/2],TW,TH,th,{s:'linen'});box(I,[tx,0,tz-TD/2+th/2],TW,TH,th,{s:'linen'});
