@@ -472,10 +472,10 @@ function ceiling(){
  fan(2.3,1.9);fan(-2.0,-6.2);
  // backlit light box on four wires: centred over the middle of the store, long side across the room,
  // print reading the right way up for someone walking in from the entrance
- {const m=SP.cl_lightbox,y=C-.5,cx=0,cz=(FRONT-10.22)/2+.2,Wx=4.2,Lz=Wx/(m?1/m.aspect:1.5),F=.07;
-  box(cx,y+.05,cz,Wx-.01,.1,Lz-.01,'metal',.55);                                  // slim dark housing, hidden behind the print
+ {const m=SP.cl_lightbox,y=C-.5,cx=0,cz=-2.6,Wx=8.2,Lz=Wx*(m?m.aspect:.667);   // spans the ceiling between the side tracks
+  box(cx,y+.012,cz,Wx-.02,.02,Lz-.02,'metal',.55);
   if(m)photoQuad('cl_lightbox',[[cx-Wx/2,y-.004,cz-Lz/2],[cx+Wx/2,y-.004,cz-Lz/2],[cx+Wx/2,y-.004,cz+Lz/2],[cx-Wx/2,y-.004,cz+Lz/2]],1.12);
-  for(const dx of [-1,1])for(const dz of [-1,1])box(cx+dx*(Wx/2-.15),(y+.1+C)/2,cz+dz*(Lz/2-.15),.006,C-y-.1,.006,'metal',.6)}
+  for(const dx of [-1,1])for(const dz of [-1,1])box(cx+dx*(Wx/2-.3),(y+.02+C)/2,cz+dz*(Lz/2-.3),.006,C-y-.02,.006,'metal',.6)}
 }
 function travelZone(){
 const W=5.43,FR=W-.45;
