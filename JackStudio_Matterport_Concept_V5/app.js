@@ -52,7 +52,7 @@ function buildWorld(){
 // Floor: repeated genuine volumetric floor geometry, light-oak texture.
 for(let x=-5.4;x<5.4;x+=1.35)for(let z=-10.1;z<FRONT-.05;z+=1.6)
 quad([x,0,z+1.6],[x+1.35,0,z+1.6],[x+1.35,0,z],[x,0,z],'floor',.95+((Math.round(z*5+x*2)%3)*.018));
-box(0,4.14,RC,11,0.17,RL,'cream',1.04);
+box(0,4.14,RC,11,0.17,RL,'cream',1.04);quad([-5.5,4.054,FRONT],[5.5,4.054,FRONT],[5.5,4.054,-10.22],[-5.5,4.054,-10.22],'cream',1.0);   // ceiling underside, lit
 // White plaster walls, room boundary and entrance side returns.
 box(5.52,2,RC,.18,4,RL,'wall',.99);
 {const zA=OS.zs-OS.m2,zB=OS.zs-OS.W;box(-5.52+OS.SW/2,2.03,(FRONT+zA)/2,.18+OS.SW,4.06,FRONT-zA,'wall',.95);box(-5.52,2,(zB-10.22)/2,.18,4,zB+10.22,'wall',.95);
@@ -72,15 +72,7 @@ box(5.52,2,RC,.18,4,RL,'wall',.99);
 // Wall skirt/baseboard around all sides
 box(5.38,.13,RC,.12,.26,RL-.2,'wood',.82);{const zA=OS.zs-OS.m2,zB=OS.zs-OS.W;box(-5.38+OS.SW,.13,(FRONT-.1+zA)/2,.12,.26,FRONT-.1-zA,'wood',.82);box(-5.38,.13,(zB-10.12)/2,.12,.26,zB+10.12,'wood',.82)}
 for(const s of [-1,1])box(s*(5.3+2.17)/2,.11,-10.075,5.3-2.17,.22,.11,'wood',.85);
-// Ceiling tracks and multiple recessed lights
-for(const x of [-2.5,2.5]){
- box(x,4,RC,.07,.06,RL-2,'metal',1);
- for(const z of [-7.4,-4.8,-2.0,1.0,3.4]){
-  box(x,3.955,z,.44,.05,.22,'white',1.14);
-  box(x,3.915,z,.34,.035,.14,'cream',1.25);
- }
-}
-for(const z of [-7.3,-2.1,3.1])box(0,4.0,z,3.2,.06,.06,'metal',.8);
+ceiling();
 backWall();
 // Main wall arrays with actual store photos integrated into the display backing.
 brandWalls();essentialZone();
@@ -451,6 +443,38 @@ function brandWalls(){
  box(X+.03+D/2,.48,Z(2.89-.012),D-.06,.78,.006,'metal',.45);
 
  }
+}
+// Ceiling, from the store walkthrough video: cream ceiling with a deep beam running along the top of
+// each side wall and one cross beam, white conduit along the beams, black track lights (one track
+// along each side about 0.9 m off the wall, cross tracks front and back) with round white spot heads,
+// two white three-blade ceiling fans, and the big backlit JACK STUDIO / GENUINE LEATHER light box
+// hanging on wires over the middle of the store.
+function ceiling(){
+ const C=4.054,BD=.42,BW=.38;
+ for(const sx of [-1,1])box(sx*(5.43-BW/2),C-BD/2,(FRONT-10.22)/2,BW,BD,FRONT+10.22,'wall',.93);
+ box(0,C-BD/2,.6,10.86,BD,.36,'wall',.93);
+ quad([-5.43,C-BD-.002,.42],[5.43,C-BD-.002,.42],[5.43,C-BD-.002,.78],[-5.43,C-BD-.002,.78],'wall',.86);
+ for(const sx of [-1,1]){const xa=sx*5.43,xb=sx*(5.43-BW);quad([xa,C-BD-.002,FRONT],[xb,C-BD-.002,FRONT],[xb,C-BD-.002,-10.22],[xa,C-BD-.002,-10.22],'wall',.86)}
+ for(const sx of [-1,1])box(sx*(5.43-BW-.02),C-BD+.03,(FRONT-10.22)/2,.025,.025,FRONT+10.22,'white',1.05);
+ const spot=(x,y,z,aim)=>{box(x,y-.03,z,.05,.06,.05,'metal',1);
+  const h=[x+aim[0]*.08,y-.11,z+aim[2]*.08];tube([x,y-.06,z],h,.012,.012,[.08,.08,.09],[0,0],6);
+  tube(h,[h[0]+aim[0]*.05,h[1]-.06,h[2]+aim[2]*.05],.045,.05,[.92,.92,.9],[0,0],12);
+  disc((p,n)=>[[p[0],p[2],p[1]],[n[0],n[2],n[1]]],[h[0]+aim[0]*.05,h[2]+aim[2]*.05,h[1]-.061],.04,.002,[1.6,1.55,1.4],[0,0])};
+ const track=(x0,z0,x1,z1,n,aim)=>{const y=C-.03;box((x0+x1)/2,y,(z0+z1)/2,Math.abs(x1-x0)+.035,.035,Math.abs(z1-z0)+.035,'metal',1);
+  for(let i=0;i<n;i++){const t=(i+.5)/n;spot(x0+(x1-x0)*t,y,z0+(z1-z0)*t,aim)}};
+ track(4.5,-9.6,4.5,FRONT-.6,16,[1,0,0]);track(-4.5,-9.6,-4.5,FRONT-.6,16,[-1,0,0]);
+ track(-3.4,3.6,3.4,3.6,6,[0,0,-1]);track(-3.4,-8.6,3.4,-8.6,6,[0,0,-1]);track(1.8,-5.5,1.8,-1.2,4,[-1,0,0]);
+ // ceiling fans
+ const fan=(x,z)=>{const W=[.93,.92,.88];tube([x,C,z],[x,C-.32,z],.018,.018,W,[0,0],8);
+  loft(x,z,[[C-.4,.11,.11],[C-.34,.12,.12],[C-.31,.09,.09]],W,18);
+  for(let k=0;k<3;k++){const a=k*2.094+.4,c=Math.cos(a),s=Math.sin(a);
+   const P=(r,w)=>[x+c*r-s*w,C-.36,z+s*r+c*w];quad(P(.1,-.04),P(.68,-.07),P(.68,.07),P(.1,.04),'white',.95);quad(P(.1,.04),P(.68,.07),P(.68,-.07),P(.1,-.04),'white',.95)}};
+ fan(2.3,1.9);fan(-2.0,-6.2);
+ // backlit light box on four wires
+ {const m=SP.cl_lightbox,y=C-.42,cx=-.3,cz=-1.4,Lz=3.0,Wx=2.0;
+  box(cx,y+.04,cz,Lz+.08,.08,Wx+.08,'white',1.15);
+  if(m)photoQuad('cl_lightbox',[[cx-Lz/2,y-.002,cz-Wx/2],[cx+Lz/2,y-.002,cz-Wx/2],[cx+Lz/2,y-.002,cz+Wx/2],[cx-Lz/2,y-.002,cz+Wx/2]],1.0);
+  for(const dx of [-1,1])for(const dz of [-1,1])box(cx+dx*(Lz/2-.1),(y+C)/2,cz+dz*(Wx/2-.1),.006,C-y,.006,'metal',.6)}
 }
 function travelZone(){
 const W=5.43,FR=W-.45;
