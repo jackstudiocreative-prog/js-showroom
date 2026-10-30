@@ -140,7 +140,7 @@ function ladderSide(xf,xb,z,top,angled,dir){const post=(x,h)=>box(x,h/2,z,.04,h,
 // extruded to its real depth with a rounded, bulging edge band; the photo is its front face, the
 // mirrored photo its back, the band its own leather colour (atlas assets/urban-data.js).
 var UCV=[],UCU=[],UCS=[],ucMesh=null,ucTex=null;
-function ucPiece(P,R,xf,zc,y0,G,d){const w=P.w*G,h=P.h*G,c=P.c,n=c.length,r=R[P.id],sw=R['sw_'+P.id],bul=Math.min(.014,d*.16),K=6;
+function ucPiece(P,R,xf,zc,y0,G,d){const w=P.w*G,h=P.h*G,c=P.c,n=c.length,r=R[P.id],rb=R[P.bk||P.id],sw=R[P.sw||'sw_'+P.id],bul=Math.min(.014,d*.16),K=6;
  const W=(u,v,t)=>[xf+.05+d/2-t,y0+v,zc+u];          // u -> +z (viewer's right), v up, t toward the room (-x)
  let ar=0;for(let i=0;i<n;i++){const a=c[i],b=c[(i+1)%n];ar+=a[0]*b[1]-b[0]*a[1]}const sg=ar>0?1:-1;
  const pu=i=>(c[i][0]-.5)*w,pv=i=>c[i][1]*h;
@@ -154,13 +154,16 @@ function ucPiece(P,R,xf,zc,y0,G,d){const w=P.w*G,h=P.h*G,c=P.c,n=c.length,r=R[P.
  // front (photo, alpha-cut) and back (mirrored photo)
  const F=[[-w/2,0],[w/2,0],[w/2,h],[-w/2,h]],UVf=[[r[0],r[3]],[r[2],r[3]],[r[2],r[1]],[r[0],r[1]]];
  for(const ix of [0,1,2,0,2,3])push(W(F[ix][0],F[ix][1],d/2+.0005),UVf[ix],1.02);
- const UVb=[[r[2],r[3]],[r[0],r[3]],[r[0],r[1]],[r[2],r[1]]];
+ const UVb=[[rb[2],rb[3]],[rb[0],rb[3]],[rb[0],rb[1]],[rb[2],rb[1]]];
  for(const ix of [0,2,1,0,3,2])push(W(F[ix][0],F[ix][1],-d/2-.0005),UVb[ix],.72)}
 function ucItems(Z0,sl,xf,G){const J=window.JS_UC;if(!J)return false;
  const DEP={uf_coffee:.035,uf_card:.03,uf_duffel:.2,uf_bags:.13,uf_hangL:.1,uf_hangR:.11};
- for(const P of J.P){const shelf=P.kind==='shelf',w=P.w*G,d=DEP[P.kind]||Math.max(.05,Math.min(.17,w*.42));
+ for(const P of J.P){const shelf=P.kind==='shelf',w=P.w*G,d=P.d||DEP[P.kind]||Math.max(.05,Math.min(.17,w*.42));
   const zc=shelf?sl+P.z*G:Z0+P.z*G,x=P.kind.startsWith('uf_hang')?xf+.12-.05-d/2:xf;
-  ucPiece(P,J.R,x,zc,P.y*G,G,d)}
+  ucPiece(P,J.R,x,zc,P.y*G,G,d);
+  if(P.pid==='duf'){const sx=xf+.05+d/2,y0=1.62*G,y1=P.y*G;                 // chrome duffel stand: round base, pole, T-cradle
+   for(let i=0;i<20;i++){const a0=i/20*6.283,a1=(i+1)/20*6.283;tube([sx+Math.cos(a0)*.075,y0+.004,zc+Math.sin(a0)*.075],[sx+Math.cos(a1)*.075,y0+.004,zc+Math.sin(a1)*.075],.006,.006,SILVER,MET,6)}
+   tube([sx,y0+.004,zc],[sx,y1+.02,zc],.007,.007,SILVER,MET,8);tube([sx,y1+.02,zc-.09],[sx,y1+.02,zc+.09],.006,.006,SILVER,MET,8)}}
  return true}
 function urbanZone(){
 const W=5.43,G=1.12,Z0=-1.85+1.22*G,Z=u=>Z0+u*G,D=.45*G,xf=W-D,xb=W-.03,xm=(xf+xb)/2;
@@ -183,8 +186,8 @@ if(!UC)for(const k of ['uf_coffee','uf_duffel','uf_card','uf_bags'])card(k,xm-.0
 for(const k of ['uf_hangL','uf_hangR']){const m=SP[k];if(!m)continue;const zc=Z(m.z);if(!UC)sprite(xf+.12,zc,m.w*G/2,m.y*G,(m.y+m.h)*G,k,1.05,false);
  box(xf+.12,RV-.02,zc,.03,.05,.025,'metal',1);
  if(UC){const ps=window.JS_UC.P.filter(P=>P.kind===k).sort((a,b)=>b.w*b.h-a.w*a.h),P=ps[0];if(P){const bz=Z0+P.z*G,ty=(P.y+P.h)*G-.015,hw=P.w*G*.36;
-  for(const dz of [-hw,hw])line3([xf+.12,ty,bz+dz],[xf+.12,RV-.03,zc],.01,'darkleather')}}
- else if(k==='uf_hangR'){const ty=(m.y+m.h)*G-.02;for(const dz of [-.12,.12])line3([xf+.12,ty,zc+dz*G],[xf+.12,RV-.03,zc],.012,'darkleather')}}
+  for(const dz of [-hw,hw])line3([xf+.12,ty,bz+dz],[xf+.12,RV-.03,zc],.01,'metal')}}
+ else if(k==='uf_hangR'){const ty=(m.y+m.h)*G-.02;for(const dz of [-.12,.12])line3([xf+.12,ty,zc+dz*G],[xf+.12,RV-.03,zc],.012,'metal')}}
 // ---- big two-bay ladder shelf (image 2): 2 x 1.22 u bays, 5 levels, X bracing, LED strips
 const sl=Z(1.41),BW=1.22*G,sr=sl+2*BW,top=3.36*G,LV=[.11,.58,1.28,1.94,2.62].map(v=>v*G);
 ladderSide(xf,xb,sl,top,true);ladderSide(xf,xb,sr,top,true);
