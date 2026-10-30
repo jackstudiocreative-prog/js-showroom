@@ -185,8 +185,8 @@ const card=(k,x,turn=true)=>{const m=SP[k];if(m)sprite(x,Z(m.z0!==undefined?0:m.
 // ---- wall: lettering + poster (photo, above the frame's shelf)
 // URBAN CARRY cut letters and the framed poster, straightened from the store photo (atlas urban-data.js)
 if(window.JS_UC&&window.JS_UC.R.uc_letters){const R=window.JS_UC.R,zc0=Z(.705),qd=(x,y0,y1,z0,z1,k,sh)=>{const r=R[k],P=[[x,y0,z0],[x,y0,z1],[x,y1,z1],[x,y1,z0]],U=[[r[0],r[3]],[r[2],r[3]],[r[2],r[1]],[r[0],r[1]]];for(const i of [0,1,2,0,2,3]){UCV.push(...P[i]);UCU.push(...U[i]);UCS.push(sh)}};
- const LW=.92,LH=LW*275/1725,LY=3.2;qd(W-.004,LY-.008,LY+LH-.008,zc0-LW/2-.006,zc0+LW/2-.006,'uc_letters',.25);qd(W-.012,LY,LY+LH,zc0-LW/2,zc0+LW/2,'uc_letters',1.0);
- const FW=.74,FH=1.03,FY=1.92,FZ=zc0-.04,FB=.022,FD=.025;box(W-FD/2-.002,FY+FH/2,FZ,FD,FH,FW,'metal',.55);
+ const LW=.92,LH=LW*296/1814,LY=3.2;qd(W-.01,LY,LY+LH,zc0-LW/2,zc0+LW/2,'uc_letters',1.0);
+ const FW=.74,FH=1.03,FY=1.92,FZ=zc0,FB=.022,FD=.025;box(W-FD/2-.002,FY+FH/2,FZ,FD,FH,FW,'metal',.55);
  qd(W-FD-.003,FY+FB,FY+FH-FB,FZ-FW/2+FB,FZ+FW/2-FB,'uc_poster',1.0)}
 else{const m=SP.uw_wall;if(m)sprite(W-.006,Z((m.u0+m.u1)/2),(m.u1-m.u0)*G/2,m.v0*G,m.v1*G,'uw_wall',.76,false);}
 // ---- open ladder frame: two ladder sides, one shelf with LED strip, hanging rail
