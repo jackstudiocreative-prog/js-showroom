@@ -463,18 +463,20 @@ function ceiling(){
  const track=(x0,z0,x1,z1,n,aim)=>{const y=C-.03;box((x0+x1)/2,y,(z0+z1)/2,Math.abs(x1-x0)+.035,.035,Math.abs(z1-z0)+.035,'metal',1);
   for(let i=0;i<n;i++){const t=(i+.5)/n;spot(x0+(x1-x0)*t,y,z0+(z1-z0)*t,aim)}};
  track(4.5,-9.6,4.5,FRONT-.6,16,[1,0,0]);track(-4.5,-9.6,-4.5,FRONT-.6,16,[-1,0,0]);
- track(-3.4,3.6,3.4,3.6,6,[0,0,-1]);track(-3.4,-8.6,3.4,-8.6,6,[0,0,-1]);track(1.8,-5.5,1.8,-1.2,4,[-1,0,0]);
+ track(-3.4,3.6,3.4,3.6,6,[0,0,-1]);track(-3.4,-8.6,3.4,-8.6,6,[0,0,-1]);
  // ceiling fans
  const fan=(x,z)=>{const W=[.93,.92,.88];tube([x,C,z],[x,C-.32,z],.018,.018,W,[0,0],8);
   loft(x,z,[[C-.4,.11,.11],[C-.34,.12,.12],[C-.31,.09,.09]],W,18);
   for(let k=0;k<3;k++){const a=k*2.094+.4,c=Math.cos(a),s=Math.sin(a);
    const P=(r,w)=>[x+c*r-s*w,C-.36,z+s*r+c*w];quad(P(.1,-.04),P(.68,-.07),P(.68,.07),P(.1,.04),'white',.95);quad(P(.1,.04),P(.68,.07),P(.68,-.07),P(.1,-.04),'white',.95)}};
  fan(2.3,1.9);fan(-2.0,-6.2);
- // backlit light box on four wires
- {const m=SP.cl_lightbox,y=C-.42,cx=-.3,cz=-1.4,Lz=3.0,Wx=2.0;
-  box(cx,y+.04,cz,Lz+.08,.08,Wx+.08,'white',1.15);
-  if(m)photoQuad('cl_lightbox',[[cx-Lz/2,y-.002,cz-Wx/2],[cx+Lz/2,y-.002,cz-Wx/2],[cx+Lz/2,y-.002,cz+Wx/2],[cx-Lz/2,y-.002,cz+Wx/2]],1.0);
-  for(const dx of [-1,1])for(const dz of [-1,1])box(cx+dx*(Lz/2-.1),(y+C)/2,cz+dz*(Wx/2-.1),.006,C-y,.006,'metal',.6)}
+ // backlit light box on four wires: centred over the middle of the store, long side across the room,
+ // print reading the right way up for someone walking in from the entrance
+ {const m=SP.cl_lightbox,y=C-.5,cx=0,cz=(FRONT-10.22)/2+.2,Wx=4.2,Lz=Wx/(m?1/m.aspect:1.5),F=.07;
+  box(cx,y+.05,cz,Wx+2*F,.1,Lz+2*F,'white',1.1);                                  // white aluminium frame
+  quad([cx-Wx/2-F,y-.001,cz+Lz/2+F],[cx+Wx/2+F,y-.001,cz+Lz/2+F],[cx+Wx/2+F,y-.001,cz-Lz/2-F],[cx-Wx/2-F,y-.001,cz-Lz/2-F],'white',1.2);
+  if(m)photoQuad('cl_lightbox',[[cx-Wx/2,y-.004,cz-Lz/2],[cx+Wx/2,y-.004,cz-Lz/2],[cx+Wx/2,y-.004,cz+Lz/2],[cx-Wx/2,y-.004,cz+Lz/2]],1.12);
+  for(const dx of [-1,1])for(const dz of [-1,1])box(cx+dx*(Wx/2-.15),(y+.1+C)/2,cz+dz*(Lz/2-.15),.006,C-y-.1,.006,'metal',.6)}
 }
 function travelZone(){
 const W=5.43,FR=W-.45;
