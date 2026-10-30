@@ -473,8 +473,7 @@ function ceiling(){
  // backlit light box on four wires: centred over the middle of the store, long side across the room,
  // print reading the right way up for someone walking in from the entrance
  {const m=SP.cl_lightbox,y=C-.5,cx=0,cz=(FRONT-10.22)/2+.2,Wx=4.2,Lz=Wx/(m?1/m.aspect:1.5),F=.07;
-  box(cx,y+.05,cz,Wx+2*F,.1,Lz+2*F,'white',1.1);                                  // white aluminium frame
-  quad([cx-Wx/2-F,y-.001,cz+Lz/2+F],[cx+Wx/2+F,y-.001,cz+Lz/2+F],[cx+Wx/2+F,y-.001,cz-Lz/2-F],[cx-Wx/2-F,y-.001,cz-Lz/2-F],'white',1.2);
+  box(cx,y+.05,cz,Wx-.01,.1,Lz-.01,'metal',.55);                                  // slim dark housing, hidden behind the print
   if(m)photoQuad('cl_lightbox',[[cx-Wx/2,y-.004,cz-Lz/2],[cx+Wx/2,y-.004,cz-Lz/2],[cx+Wx/2,y-.004,cz+Lz/2],[cx-Wx/2,y-.004,cz+Lz/2]],1.12);
   for(const dx of [-1,1])for(const dz of [-1,1])box(cx+dx*(Wx/2-.15),(y+.1+C)/2,cz+dz*(Lz/2-.15),.006,C-y-.1,.006,'metal',.6)}
 }
