@@ -117,7 +117,7 @@ function proItems(){const J=window.JS_PRO;if(!J)return false;const R=J.R,Gm=J.G,
   for(let i=0;i<raw.length;i++)f[i]=raw.charCodeAt(i)/255;const FF=(i,j)=>f[Math.max(0,Math.min(gh,j))*(gw+1)+Math.max(0,Math.min(gw,i))],du=w/gw,dv=h/gh;
   for(const sg of [1,-1]){const vert=(i,j)=>{const t=sg*FF(i,j)*hd,gx=(FF(i+1,j)-FF(i-1,j))*hd/(2*du),gy=-(FF(i,j+1)-FF(i,j-1))*hd/(2*dv),l=Math.hypot(gx,gy,1),
      shd=Math.max(.35,(.6+.24*(-gy/l)+.2/l+.05*gx/l*sg)*(sg>0?1:.8)),uv=sg>0?[r[0]+(r[2]-r[0])*i/gw,r[1]+(r[3]-r[1])*j/gh]:[rb[2]-(rb[2]-rb[0])*i/gw,rb[1]+(rb[3]-rb[1])*j/gh];
-     return [[P.cx-t,P.y0+(1-j/gh)*h,P.zc+(i/gw-.5)*w],uv,shd]};
+     const vv=(1-j/gh)*h,tl=P.tilt||0;return [[P.cx-t*Math.cos(tl)+vv*Math.sin(tl),P.y0+vv*Math.cos(tl)+t*Math.sin(tl)*0,P.zc+(i/gw-.5)*w],uv,shd]};
    for(let j=0;j<gh;j++)for(let i=0;i<gw;i++){if(FF(i,j)+FF(i+1,j)+FF(i,j+1)+FF(i+1,j+1)===0)continue;
     const Q=[vert(i,j),vert(i+1,j),vert(i+1,j+1),vert(i,j+1)];for(const k of (sg>0?[0,1,2,0,2,3]:[0,2,1,0,3,2])){PRV.push(...Q[k][0]);PRU.push(...Q[k][1]);PRS.push(Q[k][2])}}}};
  const BX=5.43-.006-.018,WOOD=[.86,.72,.54];
