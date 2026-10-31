@@ -140,8 +140,11 @@ function proItems(){const J=window.JS_PRO;if(!J)return false;const R=J.R,Gm=J.G,
  {const L=Gm.letters,r=R.letters,x=5.43-.012,h=(L.z1-L.z0)*L.ar,P=[[x,L.y0,L.z0],[x,L.y0,L.z1],[x,L.y0+h,L.z1],[x,L.y0+h,L.z0]],U=[[r[0],r[3]],[r[2],r[3]],[r[2],r[1]],[r[0],r[1]]];
   for(const i of [0,1,2,0,2,3]){PRV.push(...P[i]);PRU.push(...U[i]);PRS.push(1)}}
  // chrome T-stands under the bags that hang on them
- for(const [z,y0,y1] of Gm.stands){const x=Gm.cx;disc((p,n)=>[[x+p[0],y0+.004+p[2],z+p[1]],[n[0],n[2],n[1]]],[0,0,0],.07,.006,SILVER,MET,24);
+ for(const [z,y0,y1,dx] of Gm.stands){const x=Gm.cx+(dx||0);disc((p,n)=>[[x+p[0],y0+.004+p[2],z+p[1]],[n[0],n[2],n[1]]],[0,0,0],.07,.006,SILVER,MET,24);
   tube([x,y0,z],[x,y1,z],.007,.007,SILVER,MET,8);tube([x,y1,z-.1],[x,y1,z+.1],.006,.006,SILVER,MET,8);for(const sz of [-1,1])tube([x,y1,z+sz*.1],[x-.03,y1+.04,z+sz*.12],.005,.005,SILVER,MET,6)}
+ // log slice under the front briefcase (as in the store)
+ for(const [z,y0,r,hh] of (Gm.logs||[])){const x=Gm.cx;disc((p,n)=>[[x+p[0],y0+p[2],z+p[1]],[n[0],n[2],n[1]]],[0,0,0],r,hh,[.36,.25,.17],LEA,26);
+  disc((p,n)=>[[x+p[0],y0+hh+p[2],z+p[1]],[n[0],n[2],n[1]]],[0,0,0],r*.9,.0015,[.78,.62,.44],LEA,26)}
  for(const P of J.P)infl(P);
  return true}
 function profZone(){
