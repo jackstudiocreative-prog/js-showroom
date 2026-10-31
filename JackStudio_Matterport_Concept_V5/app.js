@@ -106,10 +106,48 @@ box(0,OH-.004,F+.002,OW*2,.008,.004,'metal',.6);
 // Left: the tall black ladder shelf with its products (cut out of the photo, one card per product).
 // Right: the PROFESSIONAL wall (perspective-corrected photo: lettering, two pegboards, belts) and
 // the two mannequins standing in front of it.
+
+// PROFESSIONAL zone rebuilt from the store photos (atlas assets/pro-data.js): real pegboard panels with
+// the measured hole lattice, pine shelves on dowels, every product a solid 3D body built from its photo
+// silhouette, belts as hanging straps with their buckles, chrome stands, printed signs on acrylic.
+var PRV=[],PRU=[],PRS=[],proMesh=null,proTex=null;
+function proItems(){const J=window.JS_PRO;if(!J)return false;const R=J.R,Gm=J.G,A=Math.PI/2;
+ const {q,F,box,cyl}=mkTM(R,PRV,PRU,PRS,0,0,0);
+ const infl=P=>{const Fd=P.F,w=P.w,h=P.h,gw=Fd.gw,gh=Fd.gh,r=R[P.id],rb=R[P.bk],hd=P.d/2,raw=atob(Fd.f),f=new Float32Array(raw.length);
+  for(let i=0;i<raw.length;i++)f[i]=raw.charCodeAt(i)/255;const FF=(i,j)=>f[Math.max(0,Math.min(gh,j))*(gw+1)+Math.max(0,Math.min(gw,i))],du=w/gw,dv=h/gh;
+  for(const sg of [1,-1]){const vert=(i,j)=>{const t=sg*FF(i,j)*hd,gx=(FF(i+1,j)-FF(i-1,j))*hd/(2*du),gy=-(FF(i,j+1)-FF(i,j-1))*hd/(2*dv),l=Math.hypot(gx,gy,1),
+     shd=Math.max(.35,(.6+.24*(-gy/l)+.2/l+.05*gx/l*sg)*(sg>0?1:.8)),uv=sg>0?[r[0]+(r[2]-r[0])*i/gw,r[1]+(r[3]-r[1])*j/gh]:[rb[2]-(rb[2]-rb[0])*i/gw,rb[1]+(rb[3]-rb[1])*j/gh];
+     return [[P.cx-t,P.y0+(1-j/gh)*h,P.zc+(i/gw-.5)*w],uv,shd]};
+   for(let j=0;j<gh;j++)for(let i=0;i<gw;i++){if(FF(i,j)+FF(i+1,j)+FF(i,j+1)+FF(i+1,j+1)===0)continue;
+    const Q=[vert(i,j),vert(i+1,j),vert(i+1,j+1),vert(i,j+1)];for(const k of (sg>0?[0,1,2,0,2,3]:[0,2,1,0,3,2])){PRV.push(...Q[k][0]);PRU.push(...Q[k][1]);PRS.push(Q[k][2])}}}};
+ const BX=5.43-.006-.018,WOOD=[.86,.72,.54];
+ // pegboard panels (18 mm), front face = wood grain with the hole lattice; panel seam
+ for(const [g,k] of [[Gm.left,'boardL'],[Gm.right,'boardR']]){const T=F((g.z0+g.z1)/2,0,-A,0,0),w=g.z1-g.z0,h=g.y1-g.y0;
+  box(F(5.43-.006-.009,(g.z0+g.z1)/2,-A),[0,g.y0,-.009],w,h,.018,{f:k,s:'c_edge',b:'c_edge'});
+  box(F(BX-.0005,(g.z0+g.z1)/2,-A),[0,g.seam-.0008,0],w-.004,.0016,.001,{s:'c_edge'});
+  for(const [z0,z1,y,dd] of g.shelves){const zz0=g===Gm.left?g.z0+z0/1000:z0,zz1=g===Gm.left?g.z0+z1/1000:z1,yy=g===Gm.left?g.y1-y/1000:y;
+   box(F(BX-dd/2,(zz0+zz1)/2,-A),[0,yy,0],zz1-zz0,.018,dd,{s:'c_wood',t:'c_wood'});
+   for(const zz of [zz0+.03,zz1-.03])tube([BX,yy-.012,zz],[BX-dd-.012,yy-.012,zz],.011,.011,WOOD,[0,0],10)}
+  for(const [z,y] of g.dowels){const zz=g===Gm.left?g.z0+z/1000:z,yy=g===Gm.left?g.y1-y/1000:y;tube([BX,yy,zz],[BX-.07,yy+.012,zz],.011,.011,WOOD,[0,0],10)}
+  for(const b of g.belts){let zz,yt,yb,c;if(g===Gm.left){zz=g.z0+b[0]/1000;yt=g.y1-b[1]/1000;yb=g.y1-b[2]/1000;c=b[3]}else{[zz,yt,yb,c]=b}
+   bar((p,n)=>[p,n],[BX-.012,yt,zz],[BX-.006,yb,zz],[0,0,1],.035,.0045,c,LEA);
+   for(const sz of [-1,1])bar((p,n)=>[p,n],[BX-.0145,yt-.02,zz+sz*.013],[BX-.0085,yb+.02,zz+sz*.013],[0,0,1],.0012,.0005,c.map(v=>v*2.2+.08),LEA);
+   if(R.L_htag&&g===Gm.left&&b[0]!==1025){const ty=yt-.17;box(F(BX-.02,zz+.004,-A),[0,ty,0],.042,.075,.0015,{f:'L_htag',s:'c_white'})}}
+  for(const st of (g.straps||[]))bar((p,n)=>[p,n],[BX-.06,st[0][1],st[0][0]],[BX-.03,st[1][1],st[1][0]],[1,0,0],.022,.003,[.05,.05,.06],LEA)}
+ // printed matter: signs, cards, price labels (thin boards, leaning back by t)
+ for(const p of J.PR){if(!p.d)continue;const T=F(p.x,(p.z0+p.z1)/2,-A,p.t||0,p.y0);box(T,[0,0,0],p.z1-p.z0,p.y1-p.y0,p.d,{f:p.k,s:'c_white',b:'c_white'})}
+ // PROFESSIONAL cut letters
+ {const L=Gm.letters,r=R.letters,x=5.43-.012,h=(L.z1-L.z0)*L.ar,P=[[x,L.y0,L.z0],[x,L.y0,L.z1],[x,L.y0+h,L.z1],[x,L.y0+h,L.z0]],U=[[r[0],r[3]],[r[2],r[3]],[r[2],r[1]],[r[0],r[1]]];
+  for(const i of [0,1,2,0,2,3]){PRV.push(...P[i]);PRU.push(...U[i]);PRS.push(1)}}
+ // chrome T-stands under the bags that hang on them
+ for(const [z,y0,y1] of Gm.stands){const x=Gm.cx;disc((p,n)=>[[x+p[0],y0+.004+p[2],z+p[1]],[n[0],n[2],n[1]]],[0,0,0],.07,.006,SILVER,MET,24);
+  tube([x,y0,z],[x,y1,z],.007,.007,SILVER,MET,8);tube([x,y1,z-.1],[x,y1,z+.1],.006,.006,SILVER,MET,8);for(const sz of [-1,1])tube([x,y1,z+sz*.1],[x-.03,y1+.04,z+sz*.12],.005,.005,SILVER,MET,6)}
+ for(const P of J.P)infl(P);
+ return true}
 function profZone(){
-const W=5.43,G=1.12,ZP=-1.85,Z=u=>ZP+u*G,id=(p,n)=>[p,n];
+const W=5.43,G=1.12,ZP=-1.85,Z=u=>ZP+u*G,id=(p,n)=>[p,n];const PRO=window.JS_PRO&&proItems();
 // ---- wall photo
-{const m=SP.pf_wall;if(m)sprite(W-.006,Z((m.u0+m.u1)/2),(m.u1-m.u0)*G/2,(m.v0+.13)*G,(m.v1+.13)*G,'pf_wall',.76,false);}
+{const m=SP.pf_wall;if(m&&!PRO)sprite(W-.006,Z((m.u0+m.u1)/2),(m.u1-m.u0)*G/2,(m.v0+.13)*G,(m.v1+.13)*G,'pf_wall',.76,false);}
 // ---- tall ladder shelf: 1.23 u wide, 0.45 u deep, left side is a ladder with an angled top
 const SW=1.23*G,SD=.45*G,zl=Z(-2.56),zr=zl+SW,xf=W-SD,xb=W-.03,post=(x,z,y0,y1)=>box(x,(y0+y1)/2,z,.04,y1-y0,.04,'metal',1);
 const top=3.58*G,LV=[.14,1.11,2.03,2.75].map(v=>v*G);
@@ -121,12 +159,12 @@ for(const y of LV){box((xf+xb)/2,y-.015,(zl+zr)/2,SD-.02,.03,SW-.03,'birch',1.1)
 for(const [y0,y1] of [[LV[0],LV[1]],[LV[1],LV[2]]]){line3([xb-.01,y0+.03,zl+.03],[xb-.01,y1-.03,zr-.03],.014,'metal');line3([xb-.01,y1-.03,zl+.03],[xb-.01,y0+.03,zr-.03],.014,'metal')}
 // products (cards face the viewer like the other shelves); chrome poles under the hanging pieces
 const xc=xf+SD*.48;
-for(const k of ['pf_bp_black','pf_bp_blue','pf_bp_brown','pf_bag_l','pf_bag_m','pf_bag_r','pf_hang','pf_tags','pf_bp_navy','pf_wallets3','pf_poster','pf_belts','pf_bags4','pf_books','pf_wallets4']){
+if(!PRO)for(const k of ['pf_bp_black','pf_bp_blue','pf_bp_brown','pf_bag_l','pf_bag_m','pf_bag_r','pf_hang','pf_tags','pf_bp_navy','pf_wallets3','pf_poster','pf_belts','pf_bags4','pf_books','pf_wallets4']){
  const m=SP[k];if(!m)continue;const zc=zl+m.z*G,y0=m.y*G;sprite(xc,zc,m.w*G/2,y0,y0+m.h*G,k,1.05,true);}
-for(const [k,lv] of [['pf_bag_r',2],['pf_hang',1],['pf_tags',1]]){const m=SP[k];if(!m)continue;const zc=zl+m.z*G;box(xc+.05,(LV[lv]+m.y*G+.05)/2,zc,.012,m.y*G+.05-LV[lv],.012,'white',.95);box(xc+.05,LV[lv]+.004,zc,.14,.008,.14,'metal',1.3)}
-{const m=SP.pf_poster;if(m)box(xc+.06,(LV[1]+m.y*G)/2,zl+m.z*G,.16,m.y*G-LV[1],m.w*G*.8,'metal',.75);}
+for(const [k,lv] of [['pf_bag_r',2],['pf_hang',1],['pf_tags',1]]){const m=SP[k];if(!m||PRO)continue;const zc=zl+m.z*G;box(xc+.05,(LV[lv]+m.y*G+.05)/2,zc,.012,m.y*G+.05-LV[lv],.012,'white',.95);box(xc+.05,LV[lv]+.004,zc,.14,.008,.14,'metal',1.3)}
+{const m=SP.pf_poster;if(m&&!PRO)box(xc+.06,(LV[1]+m.y*G)/2,zl+m.z*G,.16,m.y*G-LV[1],m.w*G*.8,'metal',.75);}
 // ---- mannequins (cut out of the photos; base on the floor, facing the room)
-for(const [k,u,d] of [['pf_mq_lanyard',-.9,.55],['pf_mq_suit',-.21,.62]]){const m=SP[k];if(m)sprite(W-d*G,Z(u),m.w*G/2,0,m.h*G,k,1.0,true)}
+for(const [k,u,d] of [['pf_mq_lanyard',-.9,.55],['pf_mq_suit',-.21,.62]]){const m=SP[k];if(m&&!PRO)sprite(W-d*G,Z(u),m.w*G/2,0,m.h*G,k,1.0,true)}
 }
 // URBAN CARRY zone (right wall, after Professional), rebuilt from the store photos (same units as
 // profZone). Left: the open ladder frame in front of the URBAN CARRY lettering and poster, with one
@@ -1237,7 +1275,7 @@ let lastOverlay=0;
 function render(now){const dt=Math.min(.055,(now-last)/1000||.016);last=now;animate(dt);const dpr=Math.min(window.devicePixelRatio||1,1.6);const w=Math.round(canvas.clientWidth*dpr),h=Math.round(canvas.clientHeight*dpr);if(canvas.width!==w||canvas.height!==h){canvas.width=w;canvas.height=h;gl.viewport(0,0,w,h)}
 gl.clearColor(.81,.79,.73,1);gl.clear(gl.COLOR_BUFFER_BIT|gl.DEPTH_BUFFER_BIT);
 const fw=[Math.sin(cam.yaw)*Math.cos(cam.pitch),Math.sin(cam.pitch),-Math.cos(cam.yaw)*Math.cos(cam.pitch)];const proj=perspective(Math.PI/3.1,w/h,.09,75),view=lookAt([cam.x,cam.y,cam.z],[cam.x+fw[0],cam.y+fw[1],cam.z+fw[2]]);mvp=mul(proj,view);
-gl.uniformMatrix4fv(loc.mvp,false,mvp);gl.uniform3f(loc.camera,cam.x,cam.y,cam.z);bindMesh(worldMesh);gl.bindTexture(gl.TEXTURE_2D,atlasTex);gl.uniform1f(loc.cut,-1.);gl.drawArrays(gl.TRIANGLES,0,worldMesh.n);if(lbMesh){bindMesh(lbMesh);gl.bindTexture(gl.TEXTURE_2D,lbTex);gl.drawArrays(gl.TRIANGLES,0,6)}if(ucMesh){bindMesh(ucMesh);gl.bindTexture(gl.TEXTURE_2D,ucTex);gl.uniform1f(loc.cut,.5);gl.drawArrays(gl.TRIANGLES,0,ucMesh.n);gl.uniform1f(loc.cut,-1.)}if(chMesh){bindMesh(chMesh);gl.bindTexture(gl.TEXTURE_2D,chTex);gl.uniform1f(loc.cut,.5);gl.drawArrays(gl.TRIANGLES,0,chMesh.n);gl.uniform1f(loc.cut,-1.)}if(giftMesh){bindMesh(giftMesh);gl.bindTexture(gl.TEXTURE_2D,giftTex);gl.uniform1f(loc.cut,.5);gl.drawArrays(gl.TRIANGLES,0,giftMesh.n);gl.uniform1f(loc.cut,-1.)}if(manParts){gl.bindTexture(gl.TEXTURE_2D,manTex);gl.uniform1f(loc.cut,.5);for(const m of manParts){bindMesh(m);gl.bindBuffer(gl.ELEMENT_ARRAY_BUFFER,m.i);gl.drawElements(gl.TRIANGLES,m.n,gl.UNSIGNED_SHORT,0)}gl.uniform1f(loc.cut,-1.)}if(decTex)drawLit();if(spriteTex&&spriteMesh.n){updateSprites();bindMesh(spriteMesh);gl.bindTexture(gl.TEXTURE_2D,spriteTex);gl.uniform1f(loc.cut,.5);gl.drawArrays(gl.TRIANGLES,0,spriteMesh.n)}if(now-lastOverlay>45){updateOverlay();lastOverlay=now}requestAnimationFrame(render)}
+gl.uniformMatrix4fv(loc.mvp,false,mvp);gl.uniform3f(loc.camera,cam.x,cam.y,cam.z);bindMesh(worldMesh);gl.bindTexture(gl.TEXTURE_2D,atlasTex);gl.uniform1f(loc.cut,-1.);gl.drawArrays(gl.TRIANGLES,0,worldMesh.n);if(lbMesh){bindMesh(lbMesh);gl.bindTexture(gl.TEXTURE_2D,lbTex);gl.drawArrays(gl.TRIANGLES,0,6)}if(proMesh){bindMesh(proMesh);gl.bindTexture(gl.TEXTURE_2D,proTex);gl.uniform1f(loc.cut,.5);gl.drawArrays(gl.TRIANGLES,0,proMesh.n);gl.uniform1f(loc.cut,-1.)}if(ucMesh){bindMesh(ucMesh);gl.bindTexture(gl.TEXTURE_2D,ucTex);gl.uniform1f(loc.cut,.5);gl.drawArrays(gl.TRIANGLES,0,ucMesh.n);gl.uniform1f(loc.cut,-1.)}if(chMesh){bindMesh(chMesh);gl.bindTexture(gl.TEXTURE_2D,chTex);gl.uniform1f(loc.cut,.5);gl.drawArrays(gl.TRIANGLES,0,chMesh.n);gl.uniform1f(loc.cut,-1.)}if(giftMesh){bindMesh(giftMesh);gl.bindTexture(gl.TEXTURE_2D,giftTex);gl.uniform1f(loc.cut,.5);gl.drawArrays(gl.TRIANGLES,0,giftMesh.n);gl.uniform1f(loc.cut,-1.)}if(manParts){gl.bindTexture(gl.TEXTURE_2D,manTex);gl.uniform1f(loc.cut,.5);for(const m of manParts){bindMesh(m);gl.bindBuffer(gl.ELEMENT_ARRAY_BUFFER,m.i);gl.drawElements(gl.TRIANGLES,m.n,gl.UNSIGNED_SHORT,0)}gl.uniform1f(loc.cut,-1.)}if(decTex)drawLit();if(spriteTex&&spriteMesh.n){updateSprites();bindMesh(spriteMesh);gl.bindTexture(gl.TEXTURE_2D,spriteTex);gl.uniform1f(loc.cut,.5);gl.drawArrays(gl.TRIANGLES,0,spriteMesh.n)}if(now-lastOverlay>45){updateOverlay();lastOverlay=now}requestAnimationFrame(render)}
 function buildMan(){const J=window.JS_MAN,Q=MANQ;if(!J||!Q)return null;const dec=(b,T)=>{const r=atob(b),u=new Uint8Array(r.length);for(let i=0;i<r.length;i++)u[i]=r.charCodeAt(i);return new T(u.buffer)};
  const sc=Q.h/(J.meta.ytop-J.meta.ybot),c=Math.cos(Q.yaw),sn=Math.sin(Q.yaw);
  return J.parts.map(P=>{const ip=dec(P.p,Int16Array),iu=dec(P.u,Uint16Array),is=dec(P.s,Uint8Array),n=P.n,V=new Float32Array(n*3),U=new Float32Array(n*2),S=new Float32Array(n);
@@ -1248,6 +1286,6 @@ function buildMan(){const J=window.JS_MAN,Q=MANQ;if(!J||!Q)return null;const dec
   m.i=gl.createBuffer();gl.bindBuffer(gl.ELEMENT_ARRAY_BUFFER,m.i);gl.bufferData(gl.ELEMENT_ARRAY_BUFFER,dec(P.i,Uint16Array),gl.STATIC_DRAW);return m})}
 function loadTex(url,fmt){return new Promise((ok,bad)=>{const im=new Image();im.onload=()=>{const t=gl.createTexture();gl.bindTexture(gl.TEXTURE_2D,t);gl.pixelStorei(gl.UNPACK_FLIP_Y_WEBGL,false);gl.texImage2D(gl.TEXTURE_2D,0,fmt,fmt,gl.UNSIGNED_BYTE,im);gl.texParameteri(gl.TEXTURE_2D,gl.TEXTURE_MIN_FILTER,gl.LINEAR_MIPMAP_LINEAR);gl.texParameteri(gl.TEXTURE_2D,gl.TEXTURE_MAG_FILTER,gl.LINEAR);gl.texParameteri(gl.TEXTURE_2D,gl.TEXTURE_WRAP_S,gl.CLAMP_TO_EDGE);gl.texParameteri(gl.TEXTURE_2D,gl.TEXTURE_WRAP_T,gl.CLAMP_TO_EDGE);gl.generateMipmap(gl.TEXTURE_2D);ok(t)};im.onerror=bad;im.src=url})}
 function launch(){gl.activeTexture(gl.TEXTURE0);gl.uniform1i(loc.sampler,0);
-Promise.all([loadTex(window.JS_ATLAS_URL,gl.RGB),window.JS_SPRITE_URL?loadTex(window.JS_SPRITE_URL,gl.RGBA).catch(()=>null):Promise.resolve(null),window.JS_DECAL_URL?loadTex(window.JS_DECAL_URL,gl.RGBA).catch(()=>null):Promise.resolve(null),window.JS_LIGHTBOX_URL?loadTex(window.JS_LIGHTBOX_URL,gl.RGB).catch(()=>null):Promise.resolve(null),window.JS_MAN_URL?loadTex(window.JS_MAN_URL,gl.RGBA).catch(()=>null):Promise.resolve(null),window.JS_GIFT_URL?loadTex(window.JS_GIFT_URL,gl.RGBA).catch(()=>null):Promise.resolve(null),window.JS_CH_URL?loadTex(window.JS_CH_URL,gl.RGBA).catch(()=>null):Promise.resolve(null),window.JS_UC_URL?loadTex(window.JS_UC_URL,gl.RGBA).catch(()=>null):Promise.resolve(null)]).then(([a,b,c,d,e,f,g,h])=>{if(h&&UCV.length){ucTex=h;ucMesh=mesh(UCV,UCU,UCS)}if(g&&CHV.length){chTex=g;chMesh=mesh(CHV,CHU,CHS)}if(f&&GV.length){giftTex=f;giftMesh=mesh(GV,GU,GS)}if(e){manTex=e;manParts=buildMan()}atlasTex=a;spriteTex=b;decTex=c;if(d&&LBQ){lbTex=d;const P=[];for(const i of [0,1,2,0,2,3])P.push(...LBQ[i]);lbMesh=mesh(P,[0,1,1,1,1,0,0,1,1,0,0,0],[1.12,1.12,1.12,1.12,1.12,1.12])}gl.enable(gl.DEPTH_TEST);gl.disable(gl.CULL_FACE);$('loading').hidden=true;setArea('entrance');last=performance.now();requestAnimationFrame(render)}).catch(()=>{$('loading').innerHTML='<div class="loadbox">Unable to load 3D textures. Extract the whole ZIP first.</div>'})}
+Promise.all([loadTex(window.JS_ATLAS_URL,gl.RGB),window.JS_SPRITE_URL?loadTex(window.JS_SPRITE_URL,gl.RGBA).catch(()=>null):Promise.resolve(null),window.JS_DECAL_URL?loadTex(window.JS_DECAL_URL,gl.RGBA).catch(()=>null):Promise.resolve(null),window.JS_LIGHTBOX_URL?loadTex(window.JS_LIGHTBOX_URL,gl.RGB).catch(()=>null):Promise.resolve(null),window.JS_MAN_URL?loadTex(window.JS_MAN_URL,gl.RGBA).catch(()=>null):Promise.resolve(null),window.JS_GIFT_URL?loadTex(window.JS_GIFT_URL,gl.RGBA).catch(()=>null):Promise.resolve(null),window.JS_CH_URL?loadTex(window.JS_CH_URL,gl.RGBA).catch(()=>null):Promise.resolve(null),window.JS_UC_URL?loadTex(window.JS_UC_URL,gl.RGBA).catch(()=>null):Promise.resolve(null),window.JS_PRO_URL?loadTex(window.JS_PRO_URL,gl.RGBA).catch(()=>null):Promise.resolve(null)]).then(([a,b,c,d,e,f,g,h,i9])=>{if(i9&&PRV.length){proTex=i9;proMesh=mesh(PRV,PRU,PRS)}if(h&&UCV.length){ucTex=h;ucMesh=mesh(UCV,UCU,UCS)}if(g&&CHV.length){chTex=g;chMesh=mesh(CHV,CHU,CHS)}if(f&&GV.length){giftTex=f;giftMesh=mesh(GV,GU,GS)}if(e){manTex=e;manParts=buildMan()}atlasTex=a;spriteTex=b;decTex=c;if(d&&LBQ){lbTex=d;const P=[];for(const i of [0,1,2,0,2,3])P.push(...LBQ[i]);lbMesh=mesh(P,[0,1,1,1,1,0,0,1,1,0,0,0],[1.12,1.12,1.12,1.12,1.12,1.12])}gl.enable(gl.DEPTH_TEST);gl.disable(gl.CULL_FACE);$('loading').hidden=true;setArea('entrance');last=performance.now();requestAnimationFrame(render)}).catch(()=>{$('loading').innerHTML='<div class="loadbox">Unable to load 3D textures. Extract the whole ZIP first.</div>'})}
 launch();
 })();
