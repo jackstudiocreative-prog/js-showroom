@@ -4,12 +4,13 @@ const gl=canvas.getContext('webgl2',{antialias:true,alpha:false,powerPreference:
 if(!gl){$('loading').innerHTML='<div class="loadbox">Your browser does not support WebGL.<br>Please use Chrome or Edge.</div>';return;}
 const clamp=(v,a,b)=>Math.max(a,Math.min(b,v)),lerp=(a,b,t)=>a+(b-a)*t;
 const rects=window.JS_ATLAS_RECTS||{};
-const vs=`attribute vec3 aPos;attribute vec2 aUV;attribute float aShade;uniform mat4 uVP;uniform vec3 uCamera;varying vec2 vUV;varying float vShade;varying float vDist;void main(){gl_Position=uVP*vec4(aPos,1.);vUV=aUV;vShade=aShade;vDist=distance(aPos,uCamera);}`;
-const fs=`precision highp float;varying vec2 vUV;varying float vShade;varying float vDist;uniform sampler2D uTexture;uniform float uCut;void main(){vec4 tex=texture2D(uTexture,vUV);float cov=1.;if(uCut>0.){cov=clamp((tex.a-uCut)*3.+.5,0.,1.);if(cov<.02)discard;}vec3 color=tex.rgb*vShade;color=mix(color,vec3(.81,.78,.74),clamp((vDist-10.)/24.,0.,.28));gl_FragColor=vec4(color,cov);}`;
+const vs=`attribute vec3 aPos;attribute vec2 aUV;attribute float aShade;uniform mat4 uVP;uniform vec3 uCamera;varying vec2 vUV;varying float vShade;varying float vDist;varying vec3 vWorld;void main(){vWorld=aPos;gl_Position=uVP*vec4(aPos,1.);vUV=aUV;vShade=aShade;vDist=distance(aPos,uCamera);}`;
+const fs=`precision highp float;varying vec2 vUV;varying float vShade;varying float vDist;uniform sampler2D uTexture;uniform float uCut;uniform float uHeritage;uniform vec4 uContacts[28];varying vec3 vWorld;void main(){vec4 tex=texture2D(uTexture,vUV);float cov=1.;if(uCut>0.){cov=clamp((tex.a-uCut)*3.+.5,0.,1.);if(cov<.02)discard;}vec3 color=tex.rgb*vShade;if(uHeritage>.5&&abs(vWorld.y-.8625)<.002){float shadow=1.;for(int i=0;i<28;i++){vec4 c=uContacts[i];vec2 p=(vWorld.xz-c.xy)/c.zw;shadow*=1.-.26*exp(-dot(p,p)*2.2);}color*=max(.48,shadow);}color=mix(color,vec3(.81,.78,.74),clamp((vDist-10.)/24.,0.,.28));gl_FragColor=vec4(color,cov);}`;
 function shader(type,source){const s=gl.createShader(type);gl.shaderSource(s,source);gl.compileShader(s);if(!gl.getShaderParameter(s,gl.COMPILE_STATUS))throw Error(gl.getShaderInfoLog(s));return s}
 const program=gl.createProgram();gl.attachShader(program,shader(gl.VERTEX_SHADER,vs));gl.attachShader(program,shader(gl.FRAGMENT_SHADER,fs));gl.linkProgram(program);if(!gl.getProgramParameter(program,gl.LINK_STATUS))throw Error(gl.getProgramInfoLog(program));gl.useProgram(program);
 gl.enable(gl.SAMPLE_ALPHA_TO_COVERAGE);   // antialiased edges on photo cut-outs (MSAA)
-const loc={pos:gl.getAttribLocation(program,'aPos'),uv:gl.getAttribLocation(program,'aUV'),shade:gl.getAttribLocation(program,'aShade'),mvp:gl.getUniformLocation(program,'uVP'),camera:gl.getUniformLocation(program,'uCamera'),sampler:gl.getUniformLocation(program,'uTexture'),cut:gl.getUniformLocation(program,'uCut')};
+const loc={pos:gl.getAttribLocation(program,'aPos'),uv:gl.getAttribLocation(program,'aUV'),shade:gl.getAttribLocation(program,'aShade'),mvp:gl.getUniformLocation(program,'uVP'),camera:gl.getUniformLocation(program,'uCamera'),sampler:gl.getUniformLocation(program,'uTexture'),cut:gl.getUniformLocation(program,'uCut'),heritage:gl.getUniformLocation(program,'uHeritage'),contacts:gl.getUniformLocation(program,'uContacts[0]')};
+gl.uniform4fv(loc.contacts,new Float32Array([-0.25,-1.15,0.13,0.2,-0.45,-1.31,0.08,0.14,-0.2,-1.5699999999999998,0.08,0.16,-0.015,-1.93,0.07,0.14,-0.245,-2.295,0.18,0.18,-0.34,-2.68,0.09,0.2,-0.08,-2.64,0.07,0.15,-0.43,-3.0300000000000002,0.08,0.14,-0.05,-3.04,0.075,0.16,-0.075,-3.45,0.07,0.14,0.24,-2.235,0.13,0.08,0.13,-2.45,0.13,0.08,0.13,-2.61,0.13,0.08,0.13,-2.77,0.13,0.08,0.34,-2.41,0.07,0.08,0.35,-2.59,0.07,0.08,0.29,-2.89,0.07,0.08,0.385,-3.11,0.07,0.08,0.5,-2.37,0.09,0.06,0.49,-2.56,0.09,0.06,0.49,-2.75,0.12,0.06,0.13,-3,0.13,0.13,0.405,-3.3899999999999997,0.12,0.12,0.26,-1.77,0.12,0.12,0.16,-3.25,0.12,0.1,-0.025,-1.18,0.19,0.28,-0.245,-1.92,0.07,0.18,-0.4,-3.29,0.15,0.18]));
 const verts=[],UVS=[],shades=[];
 // Photo cut-out products (RGBA sprite sheet, alpha-tested), drawn as a second pass.
 const SP=window.JS_SPRITES||{},SPS=window.JS_SPRITE_SIZE||[1,1],sV=[],sU=[],sS=[];
@@ -342,15 +343,15 @@ var CHV=[],CHU=[],CHS=[],chMesh=null,chTex=null;
 // cards, badges) carries a print, and the log slices their wood. +x = display side, +z = entrance end.
 function heritageItems(cx,cz,yT,L,DP){const R=window.JS_CH,{q,tri,F,box,cyl,disc:tdisc,I}=mkTM(R,CHV,CHU,CHS,cx,cz,yT);
  const A=Math.PI/2,LE=()=>LEA,ME=()=>MET;
- // ---- textured parts: oak top, logs, prints ----
- box(I,[0,-.05,0],DP,.05,L,{t:'c_oakc',s:'c_oakc',d:'c_oakc'});
- {const n=4,y=.0005;for(let i=0;i<n;i++){const z0=-L/2+i*L/n,z1=z0+L/n;q(I([DP/2,y,z1]),I([DP/2,y,z0]),I([-DP/2,y,z0]),I([-DP/2,y,z1]),'oak',1)}}
- const log=(x,z,r,h)=>{cyl(I,[x,0,z],[x,h,z],r,'bark',24);tdisc([cx+x,yT+h+.0005,cz+z],r,[1,0,0],[0,0,-1],'slice',1)};
- log(.33,.92,.1,.05);log(.06,-.2,.09,.05);log(.34,-.55,.1,.045);log(-.14,-.78,.07,.06);
- [[.2,1.13,.075,'badge1',.004],[.17,1.27,.055,'badge2',.008],[.2,1.38,.055,'badge3',.012]].forEach(([x,z,r,k,y])=>{cyl(I,[x,y,z],[x,y+.004,z],r,'c_white',24);tdisc([cx+x,yT+y+.0045,cz+z],r,[1,0,0],[0,0,-1],k)});
- box(I,[.25,0,.88],.18,.015,.05,{s:'c_walnut'});box(F(.25,.88,0,.12,.015),[0,0,0],.17,.075,.003,{f:'daily',s:'c_acrylic'});
- box(I,[.12,0,.48],.25,.04,.06,{s:'c_walnut'});box(F(.12,.48,A/2,.08,.04),[0,0,0],.23,.33,.004,{f:'sign',s:'c_acrylic'});
- box(I,[-.33,.11,-.93],.15,.02,.04,{s:'c_walnut'});box(F(-.33,-.93,A,.1,.13),[0,0,0],.14,.095,.003,{f:'newarr',s:'c_acrylic'});
+ // Live-edge timber slab: a continuous top grain and gently irregular solid edge.
+ const edge=z=>DP/2+.009*Math.sin(z*6)+.005*Math.sin(z*15);
+ const wood=R.timber;
+ for(let j=0;j<64;j++){const z0=-L/2+j*L/64,z1=z0+L/64;
+  for(let k=0;k<8;k++){const f0=-1+k/4,f1=f0+.25,points=[[edge(z0)*f0,0,z0],[edge(z1)*f0,0,z1],[edge(z1)*f1,0,z1], [edge(z0)*f1,0,z0]],u0=(j%16)/16,u1=u0+1/16,v0=(k%4)/4,v1=v0+1/4;
+   const uv=[[u0,v0],[u1,v0],[u1,v1],[u0,v1]].map(([u,v])=>[wood[0]+(wood[2]-wood[0])*u,wood[1]+(wood[3]-wood[1])*v*.69]);tri(points.map(I),uv,1);
+  }
+  for(const sg of [-1,1])q(I([sg*edge(z0),-.057,z0]),I([sg*edge(z1),-.057,z1]),I([sg*edge(z1),0,z1]),I([sg*edge(z0),0,z0]),'c_oakc',.84);
+ }for(const sg of [-1,1])q(I([-DP/2,-.057,sg*L/2]),I([DP/2,-.057,sg*L/2]),I([DP/2,0,sg*L/2]),I([-DP/2,0,sg*L/2]),'timber',.8);
  // ---- lit geometry helpers: local u across, v up, w towards the front; yaw turns the front (w) to world ----
  const T=(x,z,yaw=0,y0=0,tilt=0)=>{const c=Math.cos(yaw),s=Math.sin(yaw),ct=Math.cos(tilt),st=Math.sin(tilt),
    r=p=>{const v=p[1]*ct-p[2]*st,w=p[1]*st+p[2]*ct;return [p[0]*c+w*s,v,-p[0]*s+w*c]};
@@ -385,7 +386,9 @@ function heritageItems(cx,cz,yT,L,DP){const R=window.JS_CH,{q,tri,F,box,cyl,disc
 
  // ---- real product bodies: the product's silhouette (rounded profile) extruded to its depth with
  //      rounded edges; front/back carry the studio product photos, the edge band its own leather ----
- const PV=(k,u,v)=>{const r=R[k];return [r[0]+(r[2]-r[0])*u,r[1]+(r[3]-r[1])*(1-v)]};
+ const PV=(k,u,v,crop)=>{const r=R[k];if(!r)throw Error('Missing Craft Heritage texture: '+k);
+  const c=crop||(k.startsWith('P_owl')?[.055,.12,.945,.98]:/P_(m_|s_|t_|w_wb)/.test(k)?[.045,.035,.955,.965]:[0,0,1,1]);
+  return [r[0]+(r[2]-r[0])*(c[0]+(c[2]-c[0])*u),r[1]+(r[3]-r[1])*(c[1]+(c[3]-c[1])*(1-v))]};
  const rrect=(w,h,rt,rb,n=5)=>{const P=[],arc=(cu,cv,r,a0)=>{for(let i=0;i<=n;i++){const a=a0+i/n*Math.PI/2;P.push([cu+r*Math.cos(a),cv+r*Math.sin(a)])}};
   arc(w/2-rb,rb,rb,-Math.PI/2);arc(w/2-rt,h-rt,rt,0);arc(-w/2+rt,h-rt,rt,Math.PI/2);arc(-w/2+rb,rb,rb,Math.PI);return P};
  const dome=(w,h,sh)=>{const P=[];P.push([w/2,0]);for(let i=0;i<=12;i++){const a=i/12*Math.PI;P.push([w/2*Math.cos(a)*(1-.04*Math.sin(a)),h-sh+sh*Math.sin(a)])}P.push([-w/2,0]);return P};
@@ -395,7 +398,7 @@ function heritageItems(cx,cz,yT,L,DP){const R=window.JS_CH,{q,tri,F,box,cyl,disc
   const pt=(i,off,z)=>[prof[i][0]-N[i][0]*off,prof[i][1]-N[i][1]*off,z];
   const shd=(nu,nv,nw)=>.66+.22*nv+.14*nw+.06*nu;
   const put=(P,U,S)=>{for(const j of [0,1,2,0,2,3]){CHV.push(...T(P[j]));CHU.push(...U[j]);CHS.push(S[j])}};
-  for(const sg of [1,-1]){const k=sg>0?fk:bk,uvp=(p)=>PV(k,sg>0?(p[0]+w/2)/w:1-(p[0]+w/2)/w,p[1]/h);
+  for(const sg of [1,-1]){const k=sg>0?fk:bk,uvp=(p)=>PV(k,sg>0?(p[0]+w/2)/w:1-(p[0]+w/2)/w,p[1]/h,o.crop);
    const ring=t=>{const th=t*Math.PI/2;return {off:r*(1-Math.cos(th)),z:sg*(d/2-r+r*Math.sin(th)),nw:Math.sin(th),nr:Math.cos(th)}};
    for(let k2=0;k2<K;k2++){const A=ring(k2/K),B=ring((k2+1)/K);
     for(let i=0;i<n;i++){const j=(i+1)%n,P=[pt(i,A.off,A.z),pt(j,A.off,A.z),pt(j,B.off,B.z),pt(i,B.off,B.z)];
@@ -415,116 +418,159 @@ function heritageItems(cx,cz,yT,L,DP){const R=window.JS_CH,{q,tri,F,box,cyl,disc
  const webbing=(T,pts,wd,col)=>{for(let i=0;i+1<pts.length;i++){const a=T(pts[i]),b=T(pts[i+1]);bar((p,n)=>[p,n],a,b,[0,1,0],.003,wd,col,LEA)}};
  // textured strap along a path (table-local points); vert: image runs top->bottom along the path
  const strip=(pts,wd,k,acr,vert=false,rep=1,sh=1)=>{const r=R[k],L=[0];for(let i=1;i<pts.length;i++)L.push(L[i-1]+Math.hypot(...pts[i].map((v,j)=>v-pts[i-1][j])));
-  const tot=L[L.length-1]||1,W=p=>[cx+p[0],yT+p[1],cz+p[2]],uv=(t,s0)=>vert?[r[0]+(r[2]-r[0])*s0,r[1]+(r[3]-r[1])*t]:[r[0]+(r[2]-r[0])*((t*rep)%1.0001),r[1]+(r[3]-r[1])*s0];
+  const normals=pts.map((p,i)=>{const a=pts[Math.max(0,i-1)],b=pts[Math.min(pts.length-1,i+1)],d=b.map((v,j)=>v-a[j]),w=typeof acr==='function'?acr(i):acr,n=[d[1]*w[2]-d[2]*w[1],d[2]*w[0]-d[0]*w[2],d[0]*w[1]-d[1]*w[0]],len=Math.hypot(...n)||1;return n.map(v=>v/len*.001)});const tot=L[L.length-1]||1,W=p=>[cx+p[0],yT+p[1],cz+p[2]],uv=(t,s0)=>vert?[r[0]+(r[2]-r[0])*s0,r[1]+(r[3]-r[1])*t]:[r[0]+(r[2]-r[0])*((t*rep)%1.0001),r[1]+(r[3]-r[1])*s0];
   for(let i=0;i+1<pts.length;i++){const A0=typeof acr==='function'?acr(i):acr,A1=typeof acr==='function'?acr(i+1):acr,a=pts[i],b=pts[i+1],t0=L[i]/tot,t1=L[i+1]/tot;
    let u0=t0*rep,u1=t1*rep;if(!vert&&Math.floor(u0)!==Math.floor(u1-1e-6)){u0=u0%1;u1=u0+(t1-t0)*rep}
    const T0=vert?t0:u0/rep,T1=vert?t1:u1/rep;
    const P=[a.map((v,j)=>v-A0[j]*wd/2),b.map((v,j)=>v-A1[j]*wd/2),b.map((v,j)=>v+A1[j]*wd/2),a.map((v,j)=>v+A0[j]*wd/2)].map(W);
    const U=vert?[uv(t0,0),uv(t1,0),uv(t1,1),uv(t0,1)]:[[r[0]+(r[2]-r[0])*Math.min(1,u0),r[1]+(r[3]-r[1])],[r[0]+(r[2]-r[0])*Math.min(1,u1),r[1]+(r[3]-r[1])],[r[0]+(r[2]-r[0])*Math.min(1,u1),r[1]],[r[0]+(r[2]-r[0])*Math.min(1,u0),r[1]]];
-   tri(P,U,sh)}};
+   const n0=normals[i],n1=normals[i+1],ns=[n0,n1,n1,n0],front=P.map((p,j)=>p.map((v,k)=>v+ns[j][k])),back=P.map((p,j)=>p.map((v,k)=>v-ns[j][k]));tri(front,U,sh);tri(back.slice().reverse(),U.slice().reverse(),sh*.72);for(const [a,b] of [[0,1],[2,3],...(i===0?[[3,0]]:[]),...(i===pts.length-2?[[1,2]]:[])])q(front[a],back[a],back[b],front[b],'c_walnut',.65)}};
  // belt wound into a coil lying on its side (band upright): spiral from r0 inwards
  const coilT=(x,z,y0,r0,wd,turns,k,a0=0)=>{const P=[];for(let i=0;i<=turns*36;i++){const a=a0+i/36*6.2832,r=r0-i/36*.0075;P.push([x+Math.cos(a)*r,y0+wd/2,z+Math.sin(a)*r])}strip(P,wd,k,[0,1,0],false,turns*2.2,.92)};
  // belt rolled and standing on edge (roll axis along x)
  const rollT=(x,z,y0,r0,wd,turns,k)=>{const P=[];for(let i=0;i<=turns*36;i++){const a=i/36*6.2832,r=r0-i/36*.006;P.push([x,y0+r0+Math.sin(a)*r,z+Math.cos(a)*r])}strip(P,wd,k,[1,0,0],false,turns*2,.9)};
  const buckle=(t,u,v,w,bw,bh,col,th=.0032)=>{[[[-bw/2,0],[bw/2,0]],[[bw/2,0],[bw/2,bh]],[[bw/2,bh],[-bw/2,bh]],[[-bw/2,bh],[-bw/2,0]]].forEach(([p0,p1])=>tube(t([u+p0[0],v+p0[1],w],[0,0,1])[0],t([u+p1[0],v+p1[1],w],[0,0,1])[0],th,th,col,MET,6));
   tube(t([u,v,w],[0,0,1])[0],t([u,v+bh*.9,w+.004],[0,0,1])[0],th*.8,th*.8,col,MET,6)};
- const BRASS=[.68,.56,.3];
- const GL=[.21,.11,.075],GL2=[.27,.15,.1],CH=[.44,.29,.17],CH2=[.36,.23,.14],TAN=[.64,.39,.18],DK=[.28,.23,.19],BLK=[.07,.065,.065];
- // ---- C end (photo 13): orange-wood board with the black hide, three round badges, the brown leather belt
- //      tray (six belts rolled in its slots, tails with buckles over the front lip), the brown pebbled belt
- //      standing, the red/black belt coiled on a log, the black H-buckle belt lying flat ----
- box(I,[-.12,0,1.33],.46,.042,.25,{t:'P_hboard',s:'c_orangewood'});
- {const t=T(-.12,1.0,0),TR=[.27,.15,.1],TW=[.9,.86,.78];rbox(t,[0,.012,0],[.25,.012,.17],.004,TR,LE,[2,2,2]);
-  for(const sg of [-1,1])rbox(t,[sg*.245,.04,0],[.007,.03,.17],.004,TR,LE,[2,2,2]);rbox(t,[0,.03,.165],[.25,.018,.007],.004,TR,LE,[2,2,2]);rbox(t,[0,.06,-.165],[.25,.05,.007],.004,TR,LE,[2,2,2]);
-  stitchRect(t,-.24,.24,.016,.044,.1725,TW);rbox(t,[0,.024,0],[.238,.002,.16],.002,[.86,.82,.74],null,[1,1,1]);
-  for(let j=0;j<7;j++)rbox(t,[-.24+j*.08,.03,-.02],[.004,.01,.14],.002,[.86,.82,.74],null,[1,1,1]);
-  for(let j=0;j<6;j++){const x=-.12-.2+j*.08;
-   for(let k=0;k<3;k++)rollT(x,.88+.0,.026,.04-k*.009,.06,1,'P_belt'+(j+1));
-   strip([[x,.1,.9],[x,.098,.97],[x,.08,1.08],[x,.064,1.16],[x,.05,1.176],[x,.0,1.18]],.06,'P_belt'+(j+1),[1,0,0],true);
-   buckle((p,n)=>[[cx+p[0],yT+p[1],cz+p[2]],n],x,.0,1.186,.068,.05,j==4||j==1?BRASS:[.62,.62,.6]);
-   if(j%2==0)rbox(W0,[x+.02,.03,1.19],[.012,.02,.0015],.001,[.5,.5,.8],null,[1,1,1])}}
- [[.2,1.13,.075,'badge1',.004],[.17,1.27,.055,'badge2',.008],[.2,1.38,.055,'badge3',.012]].forEach(()=>{});
- // brown pebbled belt standing in a loop, tail up with its brass roller buckle
- rollT(.18,1.08,0,.05,.045,2.5,'P_brnband');strip([[.18,.0,1.03],[.18,.08,1.02],[.18,.16,1.03]],.045,'P_bbelt',[1,0,0],true);
- buckle((p,n)=>[[cx+p[0],yT+p[1],cz+p[2]],n],.18,.02,1.0,.055,.05,BRASS);
- // red belt (black edge, white stitch) coiled on the log, square brass buckle
- coilT(.33,.92,.051,.088,.04,2.3,'P_redband');
- {const bt=T(.33,1.012,0,.056);buckle(bt,0,0,0,.06,.035,BRASS,.0042)}
- // black belt with the silver H buckle lying along the front edge
- strip([[.44,.004,1.45],[.44,.004,1.0],[.43,.004,.8]],.035,'P_blkband',[1,0,0],false,4);
- {const t=T(.44,1.1,A,.008);rbox(t,[0,.0,0],[.03,.004,.02],.002,SILVER,ME);for(const sg of [-1,1])rbox(t,[sg*.026,.0,0],[.005,.006,.024],.002,SILVER,ME);rbox(t,[0,.0,0],[.03,.006,.004],.002,SILVER,ME)}
- // ---- dark glossy bags ----
- prod(stand(-.32,.6,0),rrect(.2,.32,.05,.02),.2,.32,.1,'P_g_sling','P_g_sling',{r:.03});
- prod(stand(-.28,.8,0),rrect(.32,.23,.03,.02),.32,.23,.1,'P_m_mb_f','P_m_mb_b',{r:.03});strapArc(T(-.28,.8,0),.32,.23,.1,[.16,.1,.07],.02);
- {prod(stand(0,.8,0),rrect(.28,.16,.035,.025),.28,.16,.085,'P_w_wb_f','P_w_wb_f',{r:.03});webbing(F(0,.8,0),[[-.14,.1,-.02],[-.2,.05,-.03],[-.22,.0,0],[.22,0,0],[.2,.05,-.03],[.14,.1,-.02]],.035,[.3,.2,.15]);box(F(-.02,.86,0,.3,.17),[0,0,0],.09,.03,.004,{f:'c_white',s:'c_white'})}
- prod(stand(.24,.68,A/2),rrect(.23,.16,.03,.02),.23,.16,.085,'P_s_sb_f','P_s_sb_b',{r:.03});
- // ---- industrial pipe lamp ----
- {const lx=-.13,lz=.5,IR=[.2,.19,.18];tube([cx+lx-.12,yT+.015,cz+lz],[cx+lx+.12,yT+.015,cz+lz],.014,.014,IR,MET,10);tube([cx+lx,yT+.015,cz+lz-.1],[cx+lx,yT+.015,cz+lz+.1],.014,.014,IR,MET,10);
-  for(const [dx,dz] of [[-.12,0],[.12,0],[0,-.1],[0,.1],[0,0]])rbox(W0,[lx+dx,.018,lz+dz],[.02,.018,.02],.006,IR,ME);
-  const P=[[lx,.03,lz],[lx,.55,lz],[lx+.08,.62,lz+.04]].map(p=>[cx+p[0],yT+p[1],cz+p[2]]);tube(P[0],P[1],.011,.011,IR,MET,8);tube(P[1],P[2],.011,.011,IR,MET,8);rbox(W0,[lx,.55,lz],[.016,.016,.016],.005,IR,ME);
-  const s0=[cx+lx+.08,yT+.62,cz+lz+.04],s1=[cx+lx+.17,yT+.52,cz+lz+.1];tube(s0,s1,.035,.11,[.62,.62,.6],[0,0],20);tube(s1,s0.map((v,i)=>v+(s1[i]-v)*.96),.107,.034,[.86,.85,.82],[0,0],20)}
- // ---- chrome clip rail ----
- {const px=-.48,C=[cx+px,0,0];tube([cx+px,yT,cz+.95],[cx+px,yT+.55,cz+.95],.012,.012,SILVER,MET,10);for(const y of [.42,.38])tube([cx+px,yT+y,cz+.95],[cx+px,yT+y,cz+.28],.009,.009,SILVER,MET,10);
-  for(const z of [.85,.75,.45,.35]){rbox(W0,[px,.36,z],[.012,.03,.018],.004,SILVER,ME);rbox(W0,[px,.32,z],[.004,.025,.014],.002,sh(SILVER,.8),ME)}}
- // ---- owl backpack on its chrome stand ----
- {const x=-.3,z=.24,OW=[.36,.27,.17],OW2=[.48,.34,.2];rbox(W0,[x,.004,z],[.09,.004,.11],.003,SILVER,ME);tube([cx+x,yT+.008,cz+z],[cx+x,yT+.8,cz+z],.008,.008,SILVER,MET,8);
-  for(let i=0;i<8;i++){const a0=i/8*Math.PI,a1=(i+1)/8*Math.PI;tube([cx+x-.02,yT+.8+.04*Math.sin(a0),cz+z-.13*Math.cos(a0)],[cx+x-.02,yT+.8+.04*Math.sin(a1),cz+z-.13*Math.cos(a1)],.008,.008,SILVER,MET,6)}
-  const t=T(x+.03,z,A,.36);prod(stand(x+.03,z,A,.36),dome(.3,.38,.12),.3,.38,.13,'P_owl_f','P_owl_b',{r:.04});const P=[];for(let i=0;i<=8;i++){const a=i/8*Math.PI;P.push([-.04*Math.cos(a),.33+.04*Math.sin(a),-.03])}tb(t,P,.008,[.24,.16,.12])}
- // ---- hot-stamping machine on its walnut box ----
- {const x=.05,z=.2,WN=[.36,.2,.12],AL=[.78,.79,.8];const b=T(x,z,-A);rbox(b,[0,.07,0],[.14,.07,.12],.006,WN,null,[2,2,2]);
-  for(const s of [-1,1])for(let k=0;k<3;k++)ln(b,[s*.07-.03,.04+k*.012,.121],[s*.07+.03,.04+k*.012,.121],.004,.001,sh(WN,.4));
-  disc(b,[-.03,.11,.12],.008,.006,[.1,.1,.1],MET);rbox(b,[.03,.11,.122],[.003,.008,.004],.002,SILVER,ME);rbox(b,[.09,.11,.122],[.007,.007,.006],.003,SILVER,ME);
-  const d=T(x,z,A);rbox(d,[0,.07,.121],[.11,.045,.002],.002,sh(WN,1.08),null,[1,1,1]);disc(d,[0,.07,.123],.006,.008,[.75,.7,.6],MET);
-  const t=T(x,z,A,.14);rbox(t,[0,.006,-.02],[.1,.006,.08],.003,AL,ME);
-  for(const s of [-1,1]){const P=[];for(let i=0;i<=12;i++){const a=-.3+i/12*2.4;P.push([s*.06,.17+.15*Math.sin(a),-.05-.1*Math.cos(a)])}for(let i=0;i+1<P.length;i++)bar(t,P[i],P[i+1],[1,0,0],.012,.022,AL,MET)}
-  rbox(t,[0,.07,-.02],[.02,.06,.02],.004,AL,ME);rbox(t,[0,.13,0],[.1,.005,.08],.002,[.93,.93,.92],null,[1,1,1]);
-  for(let k=-4;k<=4;k++){ln(t,[k*.022,.1355,-.075],[k*.022,.1355,.075],.0012,.0004,[.4,.4,.42],LEA,[0,1,0]);ln(t,[-.095,.1355,k*.018],[.095,.1355,k*.018],.0012,.0004,[.4,.4,.42],LEA,[0,1,0])}
-  for(const s of [-1,1])rbox(t,[s*.075,.14,0],[.006,.004,.07],.002,SILVER,ME);
-  rbox(t,[0,.26,-.06],[.04,.05,.04],.005,AL,ME);rbox(t,[0,.33,-.06],[.028,.03,.028],.004,sh(AL,.85),ME);rbox(t,[0,.205,-.06],[.03,.012,.03],.003,[.5,.45,.4],ME);
-  tube(t([.03,.3,-.06],[0,1,0])[0],t([.2,.43,-.04],[0,1,0])[0],.007,.007,SILVER,MET,8);tube(t([.2,.43,-.04],[0,1,0])[0],t([.24,.46,-.04],[0,1,0])[0],.015,.015,[.08,.08,.08],LEA,10);
-  tb(t,[[-.08,.0,-.1],[-.1,.08,-.09],[-.09,.18,-.07],[-.05,.24,-.06]],.007,sh(SILVER,.85),MET)}
- // ---- crazy-horse bags (back half) ----
- prod(stand(-.3,.02,A),rrect(.32,.24,.03,.02),.32,.24,.1,'P_m_mc_f','P_m_mc_b',{r:.03});strapArc(T(-.3,.02,A),.32,.24,.13,[.42,.27,.16],.03);
- prod(stand(-.13,-.02,A),rrect(.23,.16,.03,.02),.23,.16,.08,'P_s_sc_f','P_s_sc_b',{r:.03});
- prod(stand(-.3,-.38,A),rrect(.2,.32,.05,.02),.2,.32,.1,'P_c_sling','P_c_sling',{r:.03});
- prod(stand(-.12,-.42,A),rrect(.27,.15,.035,.025),.27,.15,.09,'P_t_cd_f','P_t_cd_b',{r:.03});
- // ---- wallet field (photos 6/7/8): long wallets in a row, bifolds in front of them, card holders on a log,
- //      bifolds upright on a black wire stand, money clips on a log, tan hide with the gold logo, pampas ----
- lie(.02,.36,A,.095,.19,.018,'wl1');lie(.02,.23,A,.095,.19,.018,'ltan');lie(.02,.1,A,.095,.19,.018,'lbrown');lie(.02,-.03,A,.095,.19,.018,'ldark');
- lie(.22,.44,A,.11,.095,.02,'wb2');lie(.22,.3,A,.11,.095,.02,'borange');lie(.22,.16,A,.11,.095,.02,'bplum');
- lie(.22,.02,A,.115,.1,.022,'wb6');lie(.225,.025,A+.12,.11,.095,.02,'bplum',{y:.022});lie(.23,-.13,A+.25,.11,.095,.022,'w11');lie(.22,-.3,A,.11,.095,.025,'bblack');
- lie(.4,.28,A,.08,.11,.015,'bbrown');lie(.4,.15,A,.08,.11,.02,'bblack');lie(.4,.0,A,.095,.19,.018,'lplum');
- ['ch2','ch1','ch3'].forEach((k,i)=>{const f=F(.06,-.2+(i-1)*.05,A,-.35,.05);prod(p=>f([p[0],p[1],p[2]]),rrect(.1,.075,.006,.006),.1,.075,.005,'P_'+k,'P_'+k,{r:.0025})});
- {const x=.08,z=-.45;for(const sg of [-1,1]){tube([cx+x-.06,yT+.004,cz+z+sg*.06],[cx+x+.06,yT+.004,cz+z+sg*.06],.003,.003,[.08,.08,.08],MET,5);tube([cx+x-.06,yT+.004,cz+z+sg*.06],[cx+x-.07,yT+.12,cz+z+sg*.06],.003,.003,[.08,.08,.08],MET,5)}
-  ['wb2','wb1','wb4'].forEach((k,i)=>{const f=F(x-.02+i*.035,z,A,.32,.004);prod(p=>f(p),rrect(.115,.095,.006,.006),.115,.095,.02,'P_'+k,'P_'+k,{r:.006})})}
- [[[.08,.08,.08],.31,-.6],[[.28,.23,.2],.37,-.54],[[.55,.36,.2],.34,-.5]].forEach(([c,x,z])=>{const t=T(x,z,.6,.046);const P=[];for(let i=0;i<=8;i++){const a=Math.PI+i/8*Math.PI;P.push([.018*Math.cos(a),0,.012-.018*Math.sin(a)])}
-   prism(t,[[-.018,0,-.03],[.018,0,-.03],...P.slice().reverse()],[0,.004,0],c,LEA);logo(T(x,z,.6,.0505),0,0,.0,.005)});
- {const ar=window.JS_CH_AR.hide_tan,f=F(.37,.52,A,0,.001),h=.13;q(f([-h,0,h*ar]),f([h,0,h*ar]),f([h,0,-h*ar]),f([-h,0,-h*ar]),'hide_tan',1.02)}
- {let sd=3;const rnd=()=>(sd=(sd*16807)%2147483647)/2147483647;
-  for(let i=0;i<70;i++){const t=i/70,bx=.33+t*.12,bz=.44-t*.24,ang=rnd()*6.28,rr=.012+.02*Math.sin(t*Math.PI);
-   const b=[bx+Math.cos(ang)*rr*.5,.006,bz+Math.sin(ang)*rr*.5],e=[b[0]+.015+rnd()*.01,.012+rnd()*.012,b[2]-.02+(rnd()-.5)*.02];
-   tube([cx+b[0],yT+b[1],cz+b[2]],[cx+e[0],yT+e[1],cz+e[2]],.0035,.0015,rnd()>.5?[.8,.55,.28]:[.7,.46,.22],LEA,4)}
-  tube([cx+.33,yT+.004,cz+.44],[cx+.5,yT+.004,cz+.2],.002,.002,[.5,.66,.3],LEA,4)}
- // ---- D end: owl coin pouch, NEW ARRIVAL board, chrome hook stand with two toiletry bags, keychains, rolled belts ----
- {const t=T(-.14,-.78,A,.06);rbox(t,[0,.045,0],[.04,.045,.035],.03,[.3,.22,.16],LE,[4,4,4]);for(const s of [-1,1])disc(t,[s*.017,.06,.036],.014,.002,[.5,.36,.2],LEA,16);
-  const P=[];for(let i=0;i<=8;i++){const a=i/8*Math.PI;P.push([-.03*Math.cos(a),.09+.05*Math.sin(a),0])}tb(t,P,.004,[.4,.27,.17])}
- rbox(W0,[-.33,.025,-.95],[.12,.025,.17],.004,[.74,.44,.22],null,[2,2,2]);
- {cyl(I,[-.33,.05,-.93],[-.33,.11,-.93],.07,'bark',18);tdisc([cx-.33,yT+.1105,cz-.93],.07,[1,0,0],[0,0,-1],'slice',1)}
- {const x=0,z=-1.15;disc((p,n)=>[[cx+p[0],yT+p[2],cz+p[1]],[n[0],n[2],n[1]]],[x,z,0],.13,.005,SILVER,MET,32);
-  tube([cx+x,yT,cz+z],[cx+x,yT+.72,cz+z],.007,.007,SILVER,MET,8);
-  let prev=null;for(let i=0;i<=16;i++){const tt=i/16,p=[cx+x,yT+.72+.06*Math.sin(tt*Math.PI*2)*(1-Math.abs(tt-.5)),cz+z-.17+tt*.34];if(prev)tube(prev,p,.006,.006,SILVER,MET,6);prev=p}
-  [[-.09,TAN],[.09,DK]].forEach(([dz,c])=>{const zz=z+dz;tube([cx+x,yT+.74,cz+zz],[cx+x+.03,yT+.64,cz+zz],.006,.006,c,LEA,6);
-   const t=T(x+.03,zz,A,.38),k=c===TAN?'t_cc':'t_cd',f=F(x+.03,zz,A,0,.38);prod(p=>f([p[1]-.135,p[0]+.135,p[2]]),rrect(.27,.15,.035,.03),.27,.15,.09,'P_'+k+'_f','P_'+k+'_b',{r:.03});rbox(t,[.0,.285,0],[.01,.02,.012],.004,c,LE)})}
- {const t=T(.38,-1.12,A,0,.15),PN=[.86,.76,.6];rbox(t,[0,.125,0],[.085,.125,.01],.003,PN,null,[2,2,2]);rbox(W0,[.38,.01,-1.08],[.03,.01,.085],.003,PN,null,[2,2,2]);
-  [[.25,.24,.2],[.5,.33,.2],[.12,.1,.1]].forEach((c,j)=>{const dx=-.05+j*.05;tube(t([dx,.2,.01],[0,1,0])[0],t([dx+.003,.205,.035],[0,1,0])[0],.003,.003,PN,LEA,6);
-   for(let i=0;i<10;i++){const a0=i/10*6.283,a1=(i+1)/10*6.283;tube(t([dx+.011*Math.cos(a0),.19+.011*Math.sin(a0),.03],[0,1,0])[0],t([dx+.011*Math.cos(a1),.19+.011*Math.sin(a1),.03],[0,1,0])[0],.0018,.0018,SILVER,MET,5)}
-   const kt=F(.38,-1.12,A+.2*(j-1),-.15,0);prod(p=>kt([p[0]+dx,p[1]+.06,p[2]+.03]),rrect(.036,.12,.006,.006),.036,.12,.006,'P_k'+(j+1)+'s','P_k'+(j+1)+'s',{r:.002})})}
- box(I,[.42,0,-1.38],.1,.006,.16,{s:'c_acrylic'});
- for(const [dz,r] of [[-.04,.05],[.045,.046]]){const z=-1.38+dz;rollT(.42,z,.006,r,.036,4,'P_blkband');
-  const t=T(.42+.0,z,A,.006);rbox(t,[0,.03,.0],[.022,.03,.004],.003,SILVER,ME);rbox(t,[0,.03,.005],[.016,.024,.002],.002,sh(SILVER,.7),ME)}
+ const BRASS=[.68,.56,.3],GL=[.18,.09,.055],CH=[.40,.25,.145],TAN=[.62,.36,.16],DK=[.25,.20,.16];
+ const print=(x,z,w,h,k,y=0,yaw=A)=>{box(F(x,z,yaw),[0,y,0],w+.025,.022,.045,{s:'c_walnut'});box(F(x,z,yaw,.08,y+.022),[0,0,0],w,h,.003,{f:k,b:k,s:'c_acrylic'})};
+ const price=(x,z,k)=>print(x,z,.12,.043,k,.002);
+ const plaque=(x,z,w=.14)=>{const f=F(x,z,A,-.25,.006);box(f,[0,0,0],w,.023,.006,{f:'brand',s:'c_chrome'})};
+ const log=(x,z,r,h,y=0)=>{cyl(I,[x,y,z],[x,y+h,z],r,'bark_real',32);tdisc([cx+x,yT+y+h+.0007,cz+z],r,[1,0,0],[0,0,-1],'endgrain',1,48)};
+ const standBag=(x,z,k,w,h,d,col,yaw=A,opt={})=>{
+   const y=opt.y||.008,ft=F(x,z,yaw,0,y),t=T(x,z,yaw,y);
+   prod(ft,rrect(w,h,Math.min(w*.15,.043),.025),w,h,d,'P_'+k+'_f','P_'+k+'_b',{r:.018,side:'S_'+k+'_f'});
+   // The zips follow the curved top and are separate geometry on both compartments.
+   for(const zz of (opt.double?[-d*.23,d*.23]:[0])){
+     const path=[];for(let i=0;i<=24;i++){const u=-w*.46+i/24*w*.92;path.push([u,h-.025*Math.pow(Math.abs(u)/(w*.46),8),zz])}
+     tb(t,path,.0028,[.10,.08,.065]);tb(t,path.map(p=>[p[0],p[1]+.002,p[2]]),.0011,[.63,.59,.47],MET,5);
+     ln(t,[-w*.40,h-.01,zz],[-w*.43,h-.045,zz+.015],.009,.003,col,LEA,[1,0,0]);
+   }
+   // Side rings and the folded shoulder / wrist strap, including the return run.
+   for(const sg of [-1,1]){const pp=[];for(let i=0;i<=16;i++){const a=i/16*Math.PI*2;pp.push([sg*(w/2+.003),h*.72+.012*Math.cos(a),.012*Math.sin(a)])}tb(t,pp,.002,SILVER,MET,5)}
+   if(opt.shoulder){const pts=[];for(let i=0;i<=36;i++){const a=i/36*Math.PI*2;pts.push([w*.46*Math.cos(a),h+.008+.035*Math.pow(Math.sin(a),2),.018*Math.sin(a)-.012])}webbing(ft,pts,.028,col);tb(t,pts.map(p=>[p[0],p[1]+.002,p[2]-.011]),.0008,[.65,.45,.25]);
+     webbing(ft,[[w*.50,h,.0],[w*.61,h*.72,-.015],[w*.57,h*.12,-.04],[w*.46,.01,-.03]],.03,col);
+   }else if(opt.wrist){const pts=[];for(let i=0;i<=24;i++){const a=i/24*Math.PI*2;pts.push([-w/2-.04+.047*Math.cos(a),.030+.025*Math.sin(a),.055*Math.sin(a)])}webbing(ft,pts,.013,col)}
+   if(opt.plaque)plaque(x+d/2+.015,z);
+ };
+ const sling=(x,z,col,key)=>{const w=.235,h=.38,d=.115,t=T(x,z,A,.006),f=F(x,z,A,0,.006);
+   prod(f,rrect(w,h,.045,.024),w,h,d,'P_'+key,'S_'+key,{r:.022});
+   // Raised upper zip pocket and projecting flap/closure give the sling real depth.
+   const pf=F(x+d/2+.008,z,A,0,.225);prod(pf,rrect(.207,.15,.028,.026),.207,.15,.022,'P_'+key,'P_'+key,{r:.01,crop:[.06,.0,.94,.43]});
+   zip(T(x,z,A+Math.PI,.006),-.075,.075,.24,d/2+.002,col);topZip(t,w,h,d,col);buckle(t,0,.095,d/2+.025,.033,.028,BRASS,.0022);
+   webbing(f,[[0,.33,-d/2],[.06,.22,-.08],[.12,.02,-.05],[.05,.004,.04],[-.08,.004,.06]],.032,col);
+ };
+ // LEFT: six belts, hide sample board, two freestanding belts and the dark bag family.
+ box(F(.34,1.12,A),[0,0,0],.48,.035,.28,{t:'P_hboard',s:'c_orangewood'});
+ {const x=-.025,z=1.07,t=T(x,z,A),f=F(x,z,A),TR=[.27,.135,.09];
+  rbox(t,[0,.012,0],[.255,.012,.17],.004,TR,LE);rbox(t,[0,.026,0],[.24,.003,.153],.002,[.87,.82,.70],null);
+  for(const sg of [-1,1])rbox(t,[sg*.25,.045,0],[.007,.036,.17],.003,TR,LE);
+  for(const sg of [-1,1])rbox(t,[0,.03,sg*.165],[.25,.018,.007],.003,TR,LE);
+  const order=[1,2,3,4,5,6];for(let j=0;j<6;j++){const u=-.208+j*.083;
+   for(let i=0;i<3;i++){const pts=[];for(let n=0;n<=30;n++){const a=n/30*Math.PI*2;pts.push([u,.065+(.037-i*.008)*Math.sin(a),-.07+(.037-i*.008)*Math.cos(a)])}webbing(f,pts,.061,j===3||j===5?[.07,.06,.05]:j===1?[.30,.08,.06]:[.55,.23,.09])}
+   q(f([u-.033,.042,.155]),f([u+.033,.042,.155]),f([u+.033,.102,-.085]),f([u-.033,.102,-.085]),'P_belt'+order[j],1);
+   buckle(t,u,.018,.17,.062,.044,j===1||j===4?BRASS:SILVER,.0026);
+   if(j%2===0)box(F(x+.19,z-u,A,.1,.005),[0,0,0],.026,.042,.001,{s:'c_white'});
+  }
+ }
+ [[.24,.87,.065,'badge1'],[.37,.87,.045,'badge2'],[.49,.87,.047,'badge3']].forEach(([x,z,r,k])=>tdisc([cx+x,yT+.037,cz+z],r,[1,0,0],[0,0,-1],k,1,32));
+ rollT(.25,.72,.003,.057,.047,3,'P_brnband');strip([[.25,.09,.70],[.27,.06,.67],[.29,.008,.66]],.043,'P_bbelt',[1,0,0],true);buckle(T(.29,.67,A),0,.006,0,.055,.05,BRASS);
+ log(.26,.48,.104,.052);coilT(.26,.48,.054,.091,.045,2.5,'P_redband');buckle(T(.36,.49,A,.057),0,0,0,.058,.043,BRASS,.0035);strip([[.351,.078,.48],[.357,.078,.43],[.344,.078,.39],[.321,.078,.365],[.298,.078,.355]],.041,'P_redband',[0,1,0],false,1,.95);
+ strip([[.52,.006,1.00],[.51,.009,.78],[.52,.008,.56],[.51,.006,.32]],.041,'P_blkband',[1,0,0],false,3);
+ {const t=T(.52,.67,A,.013);for(const u of [-.028,.028])rbox(t,[u,0,0],[.006,.005,.025],.002,SILVER,ME);rbox(t,[0,0,0],[.027,.005,.006],.002,SILVER,ME)}
+ sling(-.45,.94,GL,'g_sling');
+ standBag(-.25,1.10,'m_mb',.355,.26,.13,GL,A,{shoulder:true});
+ standBag(-.20,.68,'w_wb',.29,.185,.10,GL,A,{double:true,plaque:true});print(-.17,.68,.12,.043,'price359',.195);
+ standBag(-.015,.32,'s_sb',.25,.185,.095,GL,A,{wrist:true,plaque:true});
+ print(.105,.65,.19,.105,'daily');
+ {const x=-.55,t=T(x,.72,A);box(I,[x,.001,.72],.045,.018,.36,{s:'c_chrome'});cyl(I,[x,0,.72],[x,.47,.72],.008,'c_chrome',12);for(const yy of [.37,.405])cyl(I,[x,yy,.43],[x,yy,1.04],.007,'c_chrome',12);for(const z of [.49,.59,.85,.96]){const tt=T(x,z,A);rbox(tt,[0,.353,0],[.012,.026,.007],.004,SILVER,ME);disc(tt,[0,.369,.009],.004,.003,SILVER,MET);}}
+ // Centre: iron-pipe lamp, tall owl backpack, main sign and hot foil press.
+ {const x=-.41,z=.66,IRON=[.14,.13,.115];const t=T(x,z,A);
+  for(const sg of [-1,1]){tb(t,[[sg*.105,.014,.09],[sg*.105,.033,.025],[0,.033,.025]],.013,IRON,MET);rbox(t,[sg*.105,.018,.09],[.02,.016,.023],.007,IRON,ME)}
+  tb(t,[[0,.03,.025],[0,.58,.025],[.025,.68,.025]],.011,IRON,MET,10);
+  tube(t([.025,.68,.025],[0,1,0])[0],t([.04,.62,.16],[0,1,0])[0],.035,.15,[.48,.48,.43],MET,40);
+  tube(t([.04,.619,.161],[0,1,0])[0],t([.025,.675,.03],[0,1,0])[0],.145,.031,[.78,.77,.69],LEA,40);
+  tube(t([.03,.66,.08],[0,1,0])[0],t([.04,.625,.13],[0,1,0])[0],.017,.017,[.08,.075,.065],LEA,12);
+  const cable=[];for(let i=0;i<=45;i++){const a=i/45*Math.PI*5;cable.push([.07*Math.cos(a),.007,.06*Math.sin(a)])}tb(t,cable,.002,[.035,.03,.025]);
+ }
+ {const x=-.46,z=.35;box(I,[x,0,z],.16,.009,.20,{s:'c_chrome'});cyl(I,[x,0,z],[x,.86,z],.007,'c_chrome',12);
+  prod(stand(x+.025,z,A,.40),dome(.325,.40,.105),.325,.40,.14,'P_owl_f','P_owl_b',{r:.024});
+  const t=T(x+.025,z,A,.4);strapArc(t,.13,.40,.045,[.24,.15,.08],.014);
+  for(const sg of [-1,1])webbing(F(x+.025,z,A,0,.4),[[sg*.09,.35,-.077],[sg*.11,.17,-.13],[sg*.09,-.08,-.11],[sg*.12,.03,-.075]],.026,[.29,.19,.11]);
+ }
+ print(-.245,.33,.30,.43,'sign');
+ {const x=-.245,z=-.045,WN=[.40,.23,.13],AL=[.67,.69,.68],t=T(x,z,A),f=F(x,z,A);
+  box(f,[0,0,0],.31,.16,.29,{s:'c_walnut',t:'timber'});
+  rbox(t,[0,.08,.148],[.135,.061,.003],.003,WN,null);disc(t,[0,.085,.153],.009,.004,BRASS,MET);
+  for(const sg of [-1,1])for(let j=0;j<3;j++)ln(t,[sg*.075-.029,.052+j*.014,-.146],[sg*.075+.029,.052+j*.014,-.146],.003,.001,[.12,.08,.05]);
+  rbox(t,[0,.17,-.025],[.125,.008,.10],.003,AL,()=>[0,0]);
+  for(const sg of [-1,1]){const P=[];for(let i=0;i<=18;i++){const a=-.62+i/18*2.63;P.push([sg*.087,.34+.20*Math.sin(a),-.055-.13*Math.cos(a)])}for(let i=0;i<P.length-1;i++)bar(t,P[i],P[i+1],[1,0,0],.016,.043,AL,[0,0]);
+   for(const y of [.27,.40,.48])disc(t,[sg*.087,y,.0],.006,.005,SILVER,MET);
+  }
+  rbox(t,[0,.24,-.01],[.023,.07,.025],.003,AL,()=>[0,0]);rbox(t,[0,.30,.025],[.145,.008,.115],.003,AL,()=>[0,0]);
+  for(let j=-6;j<=6;j++){ln(t,[j*.022,.309,-.08],[j*.022,.309,.135],.0008,.0005,[.25,.28,.27],LEA,[0,1,0]);ln(t,[-.14,.309,.025+j*.017],[.14,.309,.025+j*.017],.0008,.0005,[.25,.28,.27],LEA,[0,1,0])}
+  rbox(t,[0,.44,-.025],[.058,.06,.052],.004,AL,()=>[0,0]);q(f([-.054,.382,.028]),f([.054,.382,.028]),f([.054,.498,.028]),f([-.054,.498,.028]),'pressplate',1.10);rbox(t,[0,.535,-.025],[.034,.035,.035],.003,[.58,.59,.57],()=>[0,0]);
+  rbox(t,[0,.368,-.025],[.068,.012,.058],.002,[.40,.34,.25],ME);
+  tb(t,[[.055,.48,-.025],[.24,.66,-.025]],.008,SILVER,MET);tb(t,[[.24,.66,-.025],[.28,.70,-.025]],.014,[.06,.06,.06]);
+  const cord=[];for(let i=0;i<=64;i++){const a=i/64*Math.PI;cord.push([-.12-.045*Math.sin(a),.17+i/64*.27,-.025-.035*Math.sin(a)])}tb(t,cord,.007,[.48,.48,.44],MET,8);
+  for(const sg of [-1,1])ln(t,[sg*.11,.311,-.07],[sg*.11,.311,.13],.01,.004,AL,[0,0],[1,0,0]);
+ }
+ // Right half: aged leather bag family with folded straps and individual stands.
+ standBag(-.34,-.43,'m_mc',.35,.26,.13,CH,A,{shoulder:true});
+ standBag(-.08,-.39,'s_sc',.25,.18,.095,CH,A,{wrist:true,plaque:true});
+ sling(-.43,-.78,CH,'c_sling');
+ standBag(-.05,-.79,'t_cd',.29,.17,.11,CH,A-.10,{double:true,wrist:true,plaque:true});
+ standBag(-.075,-1.20,'s_sc',.25,.20,.09,CH,A-.18,{wrist:true});
+ // Wallet positions from 145509/145513/145521: three long wallets behind two bifolds,
+ // the separate orange long wallet offset left/front, stacked plum/orange at the right.
+ lie(.24,.015,A-.10,.112,.225,.020,'wl1');
+ [['ltan',-.20],['lbrown',-.36],['ldark',-.52]].forEach(([k,z])=>lie(.13,z,A,.11,.225,.020,k));
+ lie(.34,-.16,A-.05,.125,.11,.024,'borange');
+ lie(.35,-.34,A+.035,.125,.11,.024,'bplum');
+ lie(.29,-.64,A-.04,.125,.11,.024,'borange');
+ lie(.292,-.643,A+.015,.125,.11,.022,'wb6',{y:.024});
+ lie(.297,-.648,A-.025,.125,.11,.021,'bplum',{y:.046});
+ // The front three pieces are staggered/angled, not a continuation of the rear row.
+ lie(.50,-.12,A-.08,.085,.15,.018,'bbrown');
+ lie(.49,-.31,A+.30,.085,.16,.018,'bblack');
+ lie(.465,-.50,A+.12,.095,.225,.020,'lplum');
+ print(-.01,-.33,.12,.043,'price199');
+ {const f=F(.40,.22,A-.12,0,.003),h=.12;q(f([-h,0,h*.65]),f([h,0,h*.65]),f([h,0,-h*.65]),f([-h,0,-h*.65]),'hide_tan',1)}
+ // Dried sprig lies across the open foreground, between the hide and the front wallets.
+ {let seed=5;const rnd=()=>(seed=seed*16807%2147483647)/2147483647;for(let j=0;j<90;j++){const z=.10-rnd()*.37,x=.405+(rnd()-.5)*.07;tb(T(0,0),[[x,.01,z],[x+.014,.02+rnd()*.012,z-.03]],.002,[.72+rnd()*.13,.47+rnd()*.10,.18],LEA,4)}tb(T(0,0),[[.405,.007,.11],[.48,.006,-.67]],.002,[.36,.43,.16])}
+ // Card sleeves are on the log immediately to the right of the long-wallet row.
+ log(.13,-.75,.105,.047);
+ ['bbrown','ldark','ltan'].forEach((k,i)=>lie(.13,-.75+(1-i)*.065,A+.08,.068,.10,.005,k,{y:.048+i*.001}));
+ // Four upright wallets run front-to-back in the wire rack; open orange sample in front/left.
+ {const x=.16,z=-1.00,t=T(x,z,A);for(const sg of [-1,1])tb(t,[[sg*.065,0,-.08],[sg*.065,.08,-.075],[sg*.065,.08,.05],[sg*.065,0,.075]],.0025,[.06,.06,.055],MET,6);
+  ['wb2','wb1','wb4','bblack'].forEach((k,i)=>{const f=F(x+i*.045-.06,z,A,.20,.008);prod(f,rrect(.13,.115,.008,.008),.13,.115,.017,'P_'+k,'P_'+k,{r:.004})});
+  const hinge=[.385,-.86],leaf=(yaw,side)=>F(hinge[0]+side*.054*Math.cos(yaw),hinge[1]-side*.054*Math.sin(yaw),yaw,0,.003);const left=leaf(A-.65,-1),right=leaf(A+.65,1);prod(left,rrect(.105,.12,.006,.006),.105,.12,.009,'P_w11','P_borange',{r:.003});prod(right,rrect(.105,.12,.006,.006),.105,.12,.009,'P_w11','P_borange',{r:.003});
+ }
+ log(.405,-1.14,.105,.05);
+ [[.045,'c_mclip1',.02],[-.015,'c_mclip2',-.025],[-.065,'c_mclip3',.015]].forEach(([z,k,dx])=>{const f=F(.405+dx,-1.14+z,A,0,.051);prod(p=>f([p[0],p[2],-p[1]+.038]),rrect(.045,.075,.018,.012),.045,.075,.005,k,k,{r:.002,side:k})});
+ print(.045,-1.17,.16,.10,'daily');price(.17,-1.17,'price259');
+ // End display: a two-hook chrome stand, the two suspended clutches, small owl and keychains.
+ box(F(-.40,-1.04,A+.10),[0,0,0],.32,.045,.25,{s:'c_orangewood',t:'timber'});log(-.40,-1.04,.09,.065,.045);print(-.40,-1.04,.17,.13,'newarr',.11);
+ {const x=-.43,z=-1.25,t=T(x,z,A);tdisc([cx+x,yT+.008,cz+z],.12,[1,0,0],[0,0,-1],'c_chrome',.95);cyl(I,[x,.008,z],[x,.82,z],.007,'c_chrome',16);
+  const pts=[];for(let i=0;i<=32;i++){const u=-.20+i/32*.40;pts.push([u,.77+.08*Math.cos(u/.2*Math.PI),0])}tb(t,pts,.005,SILVER,MET,8);
+  for(const [u,k,col] of [[-.13,'t_cc',TAN],[.13,'t_cd',DK]]){const f=F(x,z,A,0,0);prod(p=>f([p[1]-.155+u,p[0]+.46,p[2]]),rrect(.31,.17,.032,.025),.31,.17,.095,'P_'+k+'_f','P_'+k+'_b',{r:.018});
+   webbing(f,[[u,.76,0],[u-.025,.66,.02],[u-.02,.59,.045]],.024,col);disc(t,[u-.02,.60,.052],.004,.002,SILVER,MET);
+  }
+ }
+ {const x=-.22,z=-1.04,t=T(x,z,A,.015);rbox(t,[0,.062,0],[.043,.062,.035],.027,CH,LE);for(const sg of [-1,1]){disc(t,[sg*.019,.084,.037],.019,.002,[.52,.34,.17],LEA,24);disc(t,[sg*.019,.084,.040],.006,.002,[.07,.06,.045],MET,16)}ln(t,[0,.08,.041],[0,.047,.041],.012,.004,[.58,.38,.18]);strapArc(t,.075,.12,.04,CH,.01)}
+ {const x=.18,z=-1.32,t=T(x,z,A-.12,.003,.22),f=F(x,z,A-.12,-.22,.003);box(f,[0,0,0],.21,.31,.018,{s:'pine',f:'pine',b:'pine'});
+  tb(T(x,z,A),[[-.065,.20,-.045],[-.065,.006,-.13],[.065,.006,-.13],[.065,.20,-.045]],.004,[.69,.55,.36]);
+  ['k1s','k2s','k3s'].forEach((k,j)=>{const u=-.065+j*.065;tb(t,[[u,.25,.005],[u,.25,.04]],.003,[.72,.59,.40]);const ring=[];for(let n=0;n<=16;n++){const a=n/16*Math.PI*2;ring.push([u+.012*Math.cos(a),.232+.012*Math.sin(a),.04])}tb(t,ring,.002,SILVER,MET,6);prod(p=>f([p[0]+u,p[1]+.07,p[2]+.025]),rrect(.037,.14,.005,.007),.037,.14,.007,'P_'+k,'P_'+k,{r:.002})});
+ }
+ for(const z of [-1.28,-1.385]){box(F(.435,z,A),[0,.002,0],.041,.045,.028,{s:'c_acrylic'});const cv=CHV.length,mv=MV.length;rollT(.49,z,.004,.055,.037,4,'P_blkband');
+  // The two end belts lean on their acrylic support, instead of standing like upright rings.
+  const ct=Math.cos(.65),st=Math.sin(.65);for(const [buf,start,stride] of [[CHV,cv,3],[MV,mv,13]])for(let j=start;j<buf.length;j+=stride){const ox=buf[j]-cx-.49,x=buf[j+2]-cz-z,y=buf[j+1]-yT;buf[j]=cx+.445+x*ct-y*st;buf[j+1]=yT+.045+x*st+y*ct;buf[j+2]=cz+z-ox;if(stride===13){const oxn=buf[j+3],nx=buf[j+5],ny=buf[j+4];buf[j+3]=nx*ct-ny*st;buf[j+4]=nx*st+ny*ct;buf[j+5]=-oxn}}
+  strip([[.445,.12,z],[.50,.065,z],[.56,.008,z]],.037,'P_blkband',[0,0,1],false,1);
+  const t=T(.555,z,A-.10,.005,.55);rbox(t,[0,.022,0],[.023,.026,.004],.002,SILVER,ME);rbox(t,[0,.022,.005],[.016,.020,.002],.002,[.17,.17,.16],ME);
+ }
 }
+
 function craftHeritage(cx,cz){
- const S=1.15,L=2.66*S,DP=.9*S,TH=.75*S,T=.05*S,front=cx+DP/2,back=cx-DP/2,y=TH;
+ const S=1.15,L=2.90,DP=1.18,TH=.75*S,T=.05*S,front=cx+DP/2,back=cx-DP/2,y=TH;
  if(window.JS_CH){heritageItems(cx,cz,y,L,DP);for(const sz of [-1,1]){const lz=cz+sz*(L/2-.35*S);
   for(const x of [front-.07*S,back+.07*S])box(x,(y-T)/2,lz,.06*S,y-T,.06*S,'metal',1);
   box(cx,.03*S,lz,DP-.08*S,.06*S,.06*S,'metal',1);box(cx,y-T-.03*S,lz,DP-.08*S,.06*S,.06*S,'metal',.9)}return}
@@ -1234,6 +1280,7 @@ const stops=[
  {id:'entrance',name:'Entrance',x:0,z:3.75,yaw:0,detail:'island',desc:'Welcome to the Jack Studio concept showroom.'},
  {id:'innovative',name:'Craft Innovative',x:-.9,z:1.7,yaw:.62,detail:'island',desc:'Walk around the central leather-goods display.'},
  {id:'urban',name:'Urban Carry',x:2.0,z:1.35,yaw:1.57,detail:'urban',desc:'Explore the everyday bag and backpack collection.'},
+ {id:'craft',name:'Craft Heritage',x:1.55,z:-2.25,yaw:-1.57,detail:'heritage',desc:'Crazy Horse leather · made to age with character.'},
  {id:'professional',name:'Professional',x:2.2,z:-2.65,yaw:1.57,detail:'professional',desc:'Office-ready leather goods and work bags.'},
  {id:'travel',name:'Travel Movement',x:1.5,z:-7.0,yaw:1.57,detail:'travel',desc:'Travel bags, cabin luggage and accessories.'},
  {id:'counter',name:'Brand Wall',x:0,z:-8.7,yaw:0,detail:'counter',desc:'The JACK STUDiO brand wall.'},
@@ -1241,16 +1288,18 @@ const stops=[
  {id:'heritage',name:'Our Story',x:-2.3,z:-2.2,yaw:-1.57,detail:'heritage',desc:'How Jack Studio began, and the customers who are part of it.'},
  {id:'essential',name:'Brand Promise',x:-2.6,z:2.9,yaw:-1.57,detail:'essential',desc:'Our brand promise: more trust, more relevant, more personal.'},
 ];
-const tourOrder=['entrance','innovative','urban','professional','travel','counter','fashion','heritage','essential','entrance'];
+const tourOrder=['entrance','innovative','urban','craft','professional','travel','counter','fashion','heritage','essential','entrance'];
 function findStop(id){return stops.find(s=>s.id===id)||stops[0]}
 function nearestStop(){let best=stops[0],d=Infinity;for(const s of stops){const d2=(cam.x-s.x)**2+(cam.z-s.z)**2;if(d2<d){d=d2;best=s}}return best}
 function wrap(a){return Math.atan2(Math.sin(a),Math.cos(a))}
-function updateArea(){const s=nearestStop();if(s.id!==activeID){activeID=s.id;$('areaTitle').textContent=s.name;$('areaDescription').textContent=s.desc}}
+function updateArea(){if($('craftViews')&&!$('craftViews').hidden){$('areaTitle').textContent='Craft Heritage';return;}const s=nearestStop();if(s.id!==activeID){activeID=s.id;$('areaTitle').textContent=s.name;$('areaDescription').textContent=s.desc}}
 function blocked(x,z,r=.32){if(Math.abs(x)>5.04-r||z< -9.52+r||z>FRONT-.25-r)return true;
 // central island & service counter; white glass door not obstructed
-for(const obj of [{x:.3,z:.35,w:.75,h:.62},{x:.3-.78,z:.31,w:.5,h:.42},{x:0,z:-2.25,w:1.08,h:3.1},{x:0,z:-5.8,w:1.6,h:.75},{x:0,z:-7.45,w:1.6,h:.75}])
+for(const obj of [{x:.3,z:.35,w:.75,h:.62},{x:.3-.78,z:.31,w:.5,h:.42},{x:0,z:-2.25,w:1.22,h:2.92},{x:0,z:-5.8,w:1.6,h:.75},{x:0,z:-7.45,w:1.6,h:.75}])
 if(Math.abs(x-obj.x)<obj.w/2+r&&Math.abs(z-obj.z)<obj.h/2+r)return true;
 return false}
+function moveSafely(dx,dz){const n=Math.max(1,Math.ceil(Math.hypot(dx,dz)/.045));for(let i=0;i<n;i++){if(!blocked(cam.x+dx/n,cam.z))cam.x+=dx/n;if(!blocked(cam.x,cam.z+dz/n))cam.z+=dz/n}}
+function leaveCraftView(){if(!$('craftViews').hidden){$('craftViews').hidden=true;cam.pitch=-.12;}cam.y=1.65;}
 function gridPath(tx,tz){tx=clamp(tx,-4.6,4.6);tz=clamp(tz,-9.04,FRONT-.6);const step=.4,nx=25,nz=46,x0=-4.8,z0=-9.1;
 const ix=x=>Math.round(clamp((x-x0)/step,0,nx-1)),iz=z=>Math.round(clamp((z-z0)/step,0,nz-1));const cx=i=>x0+(i%nx)*step,cz=i=>z0+Math.floor(i/nx)*step;const nearestClear=(x,z)=>{let best=null,d=1e10;for(let j=0;j<nz;j++)for(let i=0;i<nx;i++){const px=x0+i*step,pz=z0+j*step;if(blocked(px,pz))continue;const v=(px-x)**2+(pz-z)**2;if(v<d){best=j*nx+i;d=v}}return best};
 const start=nearestClear(cam.x,cam.z),goal=nearestClear(tx,tz);if(start===null||goal===null)return[];
@@ -1266,7 +1315,7 @@ if(di&&dj&&(blocked(x0+(col+di)*step,z0+row*step)||blocked(x0+col*step,z0+(row+d
 const newC=cost[c]+Math.hypot(di,dj);if(newC<cost[id]){cost[id]=newC;came[id]=c;if(!open.includes(id))open.push(id)}}}
 return []}
 function clearLine(a,b){const n=Math.ceil(Math.hypot(a.x-b.x,a.z-b.z)/.11);for(let i=1;i<=n;i++){const t=i/n;if(blocked(lerp(a.x,b.x,t),lerp(a.z,b.z,t),.32))return false}return true}
-function goTo(pos,opt={}){auto={path:gridPath(pos.x,pos.z),targetYaw:opt.yaw,forTour:!!opt.forTour};if(!auto.path.length){if(Number.isFinite(opt.yaw))cam.yaw=opt.yaw;auto=null;onArrive();}else if(!opt.forTour){tour=false;showTourButtons();$('status').innerHTML='<i></i> WALKING'} }
+function goTo(pos,opt={}){leaveCraftView();auto={path:gridPath(pos.x,pos.z),targetYaw:opt.yaw,forTour:!!opt.forTour};if(!auto.path.length){if(Number.isFinite(opt.yaw))cam.yaw=opt.yaw;auto=null;onArrive();}else if(!opt.forTour){tour=false;showTourButtons();$('status').innerHTML='<i></i> WALKING'} }
 function stopAuto(){auto=null;tour=false;showTourButtons();$('status').innerHTML='<i></i> FREE WALK'}
 function showTourButtons(){$('autoTour').hidden=tour;$('stopTour').hidden=!tour}
 function beginTour(){tour=true;tourIndex=0;tourPause=0;showTourButtons();nextTour()}
@@ -1282,9 +1331,9 @@ function updateOverlay(){if(!mvp)return;const width=canvas.clientWidth,height=ca
 const map=$('mapDot');map.setAttribute('transform',`translate(${102+cam.x*13.9} ${130+cam.z*11.7}) rotate(${-cam.yaw*180/Math.PI})`);
 }
 function toast(msg){$('toast').textContent=msg;$('toast').classList.add('show');clearTimeout(toastTimer);toastTimer=setTimeout(()=>$('toast').classList.remove('show'),2100)}
-function openPhoto(){const stop=nearestStop();$('photoTitle').textContent=stop.name;$('realPhoto').src='assets/'+stop.detail+'.jpg';$('photoModal').hidden=false;keys.clear();stopAuto();}
+function openPhoto(){const focused=!$('craftViews').hidden,stop=focused?findStop('craft'):nearestStop();$('photoTitle').textContent=stop.name;$('realPhoto').src=stop.id==='craft'?'assets/craft-'+(focused?activeCraftView:'front')+'.jpg':'assets/'+stop.detail+'.jpg';$('photoModal').hidden=false;keys.clear();stopAuto();}
 $('viewPhoto').onclick=openPhoto;$('closePhoto').onclick=$('returnRoom').onclick=()=>$('photoModal').hidden=true;
-$('help').onclick=()=>$('helpModal').hidden=false;
+$('help').onclick=()=>{keys.clear();stopAuto();$('helpModal').hidden=false;};document.addEventListener('visibilitychange',()=>{if(document.hidden)keys.clear()});
 $('closeHelp').onclick=$('startFromHelp').onclick=()=>$('helpModal').hidden=true;
 $('autoTour').onclick=beginTour;$('stopTour').onclick=stopAuto;$('restart').onclick=()=>{stopAuto();goTo(stops[0],{yaw:0});cam.pitch=-.08;setArea('entrance')};
 let mapVisible=true;$('mapToggle').onclick=()=>{mapVisible=!mapVisible;$('floorMap').hidden=!mapVisible;$('mapContainer').querySelector('.mapFooter').hidden=!mapVisible;$('mapToggle').textContent=mapVisible?'⌄':'⌃'};
@@ -1295,14 +1344,14 @@ stopAuto();goTo({x,z});}
 canvas.addEventListener('pointerdown',e=>{canvas.setPointerCapture(e.pointerId);mouseDown={x:e.clientX,y:e.clientY,lastX:e.clientX,lastY:e.clientY};dragged=false;canvas.classList.add('dragging')});
 canvas.addEventListener('pointermove',e=>{if(!mouseDown)return;const dx=e.clientX-mouseDown.lastX,dy=e.clientY-mouseDown.lastY;if(Math.hypot(e.clientX-mouseDown.x,e.clientY-mouseDown.y)>6)dragged=true;if(dragged){cam.yaw+=dx*.0042;cam.pitch=clamp(cam.pitch-dy*.0034,-1.05,1.05);if(tour)stopAuto()}mouseDown.lastX=e.clientX;mouseDown.lastY=e.clientY});
 canvas.addEventListener('pointerup',e=>{canvas.classList.remove('dragging');if(mouseDown&&!dragged)floorClick(e);mouseDown=null});canvas.addEventListener('pointercancel',()=>{mouseDown=null;canvas.classList.remove('dragging')});
-function moveKey(e,pressed){const key=e.key.toLowerCase();const mapped=key==='arrowup'?'w':key==='arrowdown'?'s':key==='arrowleft'?'q':key==='arrowright'?'e':key;if(['w','a','s','d','q','e','shift'].includes(mapped)){e.preventDefault();if(pressed){keys.add(mapped);if(tour||auto)stopAuto()}else keys.delete(mapped)}}
+function moveKey(e,pressed){const key=e.key.toLowerCase();const mapped=key==='arrowup'?'w':key==='arrowdown'?'s':key==='arrowleft'?'q':key==='arrowright'?'e':key;if(['w','a','s','d','q','e','shift'].includes(mapped)){e.preventDefault();if(pressed){leaveCraftView();keys.add(mapped);if(tour||auto)stopAuto()}else keys.delete(mapped)}}
 document.addEventListener('keydown',e=>{if($('photoModal').hidden&&$('helpModal').hidden)moveKey(e,true);if(e.key==='Escape'){$('photoModal').hidden=true;$('helpModal').hidden=true;stopAuto()}});document.addEventListener('keyup',e=>moveKey(e,false));
-for(const btn of document.querySelectorAll('[data-key]')){const k=btn.dataset.key;btn.addEventListener('pointerdown',e=>{e.preventDefault();btn.setPointerCapture(e.pointerId);keys.add(k);stopAuto()});for(const evt of ['pointerup','pointercancel','lostpointercapture'])btn.addEventListener(evt,()=>keys.delete(k))}
+for(const btn of document.querySelectorAll('[data-key]')){const k=btn.dataset.key;btn.addEventListener('pointerdown',e=>{e.preventDefault();btn.setPointerCapture(e.pointerId);leaveCraftView();keys.add(k);stopAuto()});for(const evt of ['pointerup','pointercancel','lostpointercapture'])btn.addEventListener(evt,()=>keys.delete(k))}
 function animate(dt){if(!$('photoModal').hidden||!$('helpModal').hidden)return;
 let manual=false;
 if(keys.has('q')){cam.yaw-=1.45*dt;manual=true}if(keys.has('e')){cam.yaw+=1.45*dt;manual=true}
 let f=(keys.has('w')?1:0)-(keys.has('s')?1:0),r=(keys.has('d')?1:0)-(keys.has('a')?1:0);const mag=Math.hypot(f,r);if(mag){f/=mag;r/=mag;const spd=keys.has('shift')?4.1:2.45;const dx=(Math.sin(cam.yaw)*f+Math.cos(cam.yaw)*r)*spd*dt,dz=(-Math.cos(cam.yaw)*f+Math.sin(cam.yaw)*r)*spd*dt;
-if(!blocked(cam.x+dx,cam.z))cam.x+=dx;if(!blocked(cam.x,cam.z+dz))cam.z+=dz;manual=true}
+moveSafely(dx,dz);manual=true}
 if(auto&&!manual){const next=auto.path[0];if(next){const dx=next.x-cam.x,dz=next.z-cam.z,dist=Math.hypot(dx,dz);if(dist<.08){auto.path.shift()}else{const speed=Math.min(dist,2.15*dt);const desired=Math.atan2(dx,-dz);cam.yaw+=wrap(desired-cam.yaw)*Math.min(1,dt*4.5);const px=cam.x+dx/dist*speed,pz=cam.z+dz/dist*speed;if(!blocked(px,pz,.21)){cam.x=px;cam.z=pz}else auto.path.shift()}}
 if(auto.path.length===0){if(Number.isFinite(auto.targetYaw)){const diff=wrap(auto.targetYaw-cam.yaw);cam.yaw+=diff*Math.min(1,dt*4.2);if(Math.abs(diff)<.055){auto=null;onArrive()}}else{auto=null;onArrive()}}}
 if(tour&&tourPause>0){tourPause-=dt;if(tourPause<=0)nextTour()}
@@ -1311,7 +1360,7 @@ let lastOverlay=0;
 function render(now){const dt=Math.min(.055,(now-last)/1000||.016);last=now;animate(dt);const dpr=Math.min(window.devicePixelRatio||1,1.6);const w=Math.round(canvas.clientWidth*dpr),h=Math.round(canvas.clientHeight*dpr);if(canvas.width!==w||canvas.height!==h){canvas.width=w;canvas.height=h;gl.viewport(0,0,w,h)}
 gl.clearColor(.81,.79,.73,1);gl.clear(gl.COLOR_BUFFER_BIT|gl.DEPTH_BUFFER_BIT);
 const fw=[Math.sin(cam.yaw)*Math.cos(cam.pitch),Math.sin(cam.pitch),-Math.cos(cam.yaw)*Math.cos(cam.pitch)];const proj=perspective(Math.PI/3.1,w/h,.09,75),view=lookAt([cam.x,cam.y,cam.z],[cam.x+fw[0],cam.y+fw[1],cam.z+fw[2]]);mvp=mul(proj,view);
-gl.uniformMatrix4fv(loc.mvp,false,mvp);gl.uniform3f(loc.camera,cam.x,cam.y,cam.z);bindMesh(worldMesh);gl.bindTexture(gl.TEXTURE_2D,atlasTex);gl.uniform1f(loc.cut,-1.);gl.drawArrays(gl.TRIANGLES,0,worldMesh.n);if(lbMesh){bindMesh(lbMesh);gl.bindTexture(gl.TEXTURE_2D,lbTex);gl.drawArrays(gl.TRIANGLES,0,6)}if(proMesh){bindMesh(proMesh);gl.bindTexture(gl.TEXTURE_2D,proTex);gl.uniform1f(loc.cut,.5);gl.drawArrays(gl.TRIANGLES,0,proMesh.n);gl.uniform1f(loc.cut,-1.)}if(ucMesh){bindMesh(ucMesh);gl.bindTexture(gl.TEXTURE_2D,ucTex);gl.uniform1f(loc.cut,.5);gl.drawArrays(gl.TRIANGLES,0,ucMesh.n);gl.uniform1f(loc.cut,-1.)}if(chMesh){bindMesh(chMesh);gl.bindTexture(gl.TEXTURE_2D,chTex);gl.uniform1f(loc.cut,.5);gl.drawArrays(gl.TRIANGLES,0,chMesh.n);gl.uniform1f(loc.cut,-1.)}if(giftMesh){bindMesh(giftMesh);gl.bindTexture(gl.TEXTURE_2D,giftTex);gl.uniform1f(loc.cut,.5);gl.drawArrays(gl.TRIANGLES,0,giftMesh.n);gl.uniform1f(loc.cut,-1.)}if(manParts){gl.bindTexture(gl.TEXTURE_2D,manTex);gl.uniform1f(loc.cut,.5);for(const m of manParts){bindMesh(m);gl.bindBuffer(gl.ELEMENT_ARRAY_BUFFER,m.i);gl.drawElements(gl.TRIANGLES,m.n,gl.UNSIGNED_SHORT,0)}gl.uniform1f(loc.cut,-1.)}if(decTex)drawLit();if(spriteTex&&spriteMesh.n){updateSprites();bindMesh(spriteMesh);gl.bindTexture(gl.TEXTURE_2D,spriteTex);gl.uniform1f(loc.cut,.5);gl.drawArrays(gl.TRIANGLES,0,spriteMesh.n)}if(now-lastOverlay>45){updateOverlay();lastOverlay=now}requestAnimationFrame(render)}
+gl.uniformMatrix4fv(loc.mvp,false,mvp);gl.uniform3f(loc.camera,cam.x,cam.y,cam.z);bindMesh(worldMesh);gl.bindTexture(gl.TEXTURE_2D,atlasTex);gl.uniform1f(loc.cut,-1.);gl.drawArrays(gl.TRIANGLES,0,worldMesh.n);if(lbMesh){bindMesh(lbMesh);gl.bindTexture(gl.TEXTURE_2D,lbTex);gl.drawArrays(gl.TRIANGLES,0,6)}if(proMesh){bindMesh(proMesh);gl.bindTexture(gl.TEXTURE_2D,proTex);gl.uniform1f(loc.cut,.5);gl.drawArrays(gl.TRIANGLES,0,proMesh.n);gl.uniform1f(loc.cut,-1.)}if(ucMesh){bindMesh(ucMesh);gl.bindTexture(gl.TEXTURE_2D,ucTex);gl.uniform1f(loc.cut,.5);gl.drawArrays(gl.TRIANGLES,0,ucMesh.n);gl.uniform1f(loc.cut,-1.)}if(chMesh){gl.uniform1f(loc.heritage,1.);bindMesh(chMesh);gl.bindTexture(gl.TEXTURE_2D,chTex);gl.uniform1f(loc.cut,.5);gl.drawArrays(gl.TRIANGLES,0,chMesh.n);gl.uniform1f(loc.heritage,0.);gl.uniform1f(loc.cut,-1.)}if(giftMesh){bindMesh(giftMesh);gl.bindTexture(gl.TEXTURE_2D,giftTex);gl.uniform1f(loc.cut,.5);gl.drawArrays(gl.TRIANGLES,0,giftMesh.n);gl.uniform1f(loc.cut,-1.)}if(manParts){gl.bindTexture(gl.TEXTURE_2D,manTex);gl.uniform1f(loc.cut,.5);for(const m of manParts){bindMesh(m);gl.bindBuffer(gl.ELEMENT_ARRAY_BUFFER,m.i);gl.drawElements(gl.TRIANGLES,m.n,gl.UNSIGNED_SHORT,0)}gl.uniform1f(loc.cut,-1.)}if(decTex)drawLit();if(spriteTex&&spriteMesh.n){updateSprites();bindMesh(spriteMesh);gl.bindTexture(gl.TEXTURE_2D,spriteTex);gl.uniform1f(loc.cut,.5);gl.drawArrays(gl.TRIANGLES,0,spriteMesh.n)}if(now-lastOverlay>45){updateOverlay();lastOverlay=now}requestAnimationFrame(render)}
 function buildMan(){const J=window.JS_MAN,Q=MANQ;if(!J||!Q)return null;const dec=(b,T)=>{const r=atob(b),u=new Uint8Array(r.length);for(let i=0;i<r.length;i++)u[i]=r.charCodeAt(i);return new T(u.buffer)};
  const sc=Q.h/(J.meta.ytop-J.meta.ybot),c=Math.cos(Q.yaw),sn=Math.sin(Q.yaw);
  return J.parts.map(P=>{const ip=dec(P.p,Int16Array),iu=dec(P.u,Uint16Array),is=dec(P.s,Uint8Array),n=P.n,V=new Float32Array(n*3),U=new Float32Array(n*2),S=new Float32Array(n);
@@ -1324,4 +1373,9 @@ function loadTex(url,fmt){return new Promise((ok,bad)=>{const im=new Image();im.
 function launch(){gl.activeTexture(gl.TEXTURE0);gl.uniform1i(loc.sampler,0);
 Promise.all([loadTex(window.JS_ATLAS_URL,gl.RGB),window.JS_SPRITE_URL?loadTex(window.JS_SPRITE_URL,gl.RGBA).catch(()=>null):Promise.resolve(null),window.JS_DECAL_URL?loadTex(window.JS_DECAL_URL,gl.RGBA).catch(()=>null):Promise.resolve(null),window.JS_LIGHTBOX_URL?loadTex(window.JS_LIGHTBOX_URL,gl.RGB).catch(()=>null):Promise.resolve(null),window.JS_MAN_URL?loadTex(window.JS_MAN_URL,gl.RGBA).catch(()=>null):Promise.resolve(null),window.JS_GIFT_URL?loadTex(window.JS_GIFT_URL,gl.RGBA).catch(()=>null):Promise.resolve(null),window.JS_CH_URL?loadTex(window.JS_CH_URL,gl.RGBA).catch(()=>null):Promise.resolve(null),window.JS_UC_URL?loadTex(window.JS_UC_URL,gl.RGBA).catch(()=>null):Promise.resolve(null),window.JS_PRO_URL?loadTex(window.JS_PRO_URL,gl.RGBA).catch(()=>null):Promise.resolve(null)]).then(([a,b,c,d,e,f,g,h,i9])=>{if(i9&&PRV.length){proTex=i9;proMesh=mesh(PRV,PRU,PRS)}if(h&&UCV.length){ucTex=h;ucMesh=mesh(UCV,UCU,UCS)}if(g&&CHV.length){chTex=g;chMesh=mesh(CHV,CHU,CHS)}if(f&&GV.length){giftTex=f;giftMesh=mesh(GV,GU,GS)}if(e){manTex=e;manParts=buildMan()}atlasTex=a;spriteTex=b;decTex=c;if(d&&LBQ){lbTex=d;const P=[];for(const i of [0,1,2,0,2,3])P.push(...LBQ[i]);lbMesh=mesh(P,[0,1,1,1,1,0,0,1,1,0,0,0],[1.12,1.12,1.12,1.12,1.12,1.12])}gl.enable(gl.DEPTH_TEST);gl.disable(gl.CULL_FACE);$('loading').hidden=true;setArea('entrance');last=performance.now();requestAnimationFrame(render)}).catch(()=>{$('loading').innerHTML='<div class="loadbox">Unable to load 3D textures. Extract the whole ZIP first.</div>'})}
 launch();
+let activeCraftView='front';
+const craftViews={front:{x:1.85,y:2.05,z:-2.25,yaw:-Math.PI/2,pitch:-.50},back:{x:-1.7,y:2.05,z:-2.25,yaw:Math.PI/2,pitch:-.50},left:{x:1.50,y:1.95,z:-.75,yaw:-.7854,pitch:-.40},right:{x:1.5,y:1.95,z:-3.8,yaw:-2.372,pitch:-.40}};
+function craftView(view){activeCraftView=view;stopAuto();keys.clear();Object.assign(cam,craftViews[view]||craftViews.front);const fit=Math.min(2.3,Math.max(1,1.6/(canvas.clientWidth/canvas.clientHeight)));cam.x*=fit;cam.z=-2.25+(cam.z+2.25)*fit;cam.y=1.05+(cam.y-1.05)*fit;setArea('craft');$('craftViews').hidden=false;for(const el of document.querySelectorAll('[data-craft-view]'))el.setAttribute('aria-pressed',String(el.dataset.craftView===view));}
+$('focusCraft').onclick=()=>craftView('front');for(const el of document.querySelectorAll('[data-craft-view]'))el.onclick=()=>craftView(el.dataset.craftView);
+if(location.hash.startsWith('#craft'))craftView(location.hash.split('-')[1]||'front');
 })();
