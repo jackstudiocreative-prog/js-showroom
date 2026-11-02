@@ -144,41 +144,45 @@ function proItems(){const J=window.JS_PRO;if(!J)return false;const R=J.R,Gm=J.G,
  // chrome T-stands under the bags that hang on them
  for(const [z,y0,y1,dx] of Gm.stands){const x=Gm.cx+(dx||0);disc((p,n)=>[[x+p[0],y0+.004+p[2],z+p[1]],[n[0],n[2],n[1]]],[0,0,0],.07,.006,SILVER,MET,24);
   tube([x,y0,z],[x,y1,z],.007,.007,SILVER,MET,8);tube([x,y1,z-.1],[x,y1,z+.1],.006,.006,SILVER,MET,8);for(const sz of [-1,1])tube([x,y1,z+sz*.1],[x-.03,y1+.04,z+sz*.12],.005,.005,SILVER,MET,6)}
- // ---- bottom level (store photo): BAB50506 hangs by its handles on a chrome stand at the back, BAB50507 stands
- //      on a log slice in front of it, the sling hangs on the T-stand, two JWC50354 long wallets on label plates.
- //      Solid boxes with the product photos as faces, so nothing shows through and there are no cut-out edges.
- if(Gm.bot){const B=Gm.bot,X=B.cx,Y=B.y,Z=u=>B.z0+u,SV=SILVER,BLK=[.075,.075,.08];
+ // ---- ladder shelf, all levels laid out from the frontal store photo (positions/sizes measured in build.py).
+ //      Bags that read as boxes are solid boxes with their straightened photo faces; straps, handles, chrome
+ //      stands and log slices are real geometry, so nothing is see-through and no cut-out edge is visible.
+ if(Gm.q){const Q=Gm.q,X=Q.cx,LV=Q.LV,SV=SILVER,BLK=[.075,.075,.08];
   const bx=(k,b,x,z,y,w,h,d,yaw=0,tilt=0,sd='c_lea')=>box(F(x,z,-A+yaw,tilt,y),[0,0,0],w,h,d,{f:k,b:b||sd,s:sd,t:sd,d:'c_lea2'});
-  const cr=(P,n)=>{const Q=[P[0],...P,P[P.length-1]],O=[];for(let i=1;i<Q.length-2;i++)for(let k=0;k<n;k++){const t=k/n,t2=t*t,t3=t2*t;
-    O.push([0,1,2].map(c=>.5*(2*Q[i][c]+(-Q[i-1][c]+Q[i+1][c])*t+(2*Q[i-1][c]-5*Q[i][c]+4*Q[i+1][c]-Q[i+2][c])*t2+(-Q[i-1][c]+3*Q[i][c]-3*Q[i+1][c]+Q[i+2][c])*t3)))}O.push(P[P.length-1]);return O};
+  const cr=(P,n)=>{const R=[P[0],...P,P[P.length-1]],O=[];for(let i=1;i<R.length-2;i++)for(let k=0;k<n;k++){const t=k/n,t2=t*t,t3=t2*t;
+    O.push([0,1,2].map(c=>.5*(2*R[i][c]+(-R[i-1][c]+R[i+1][c])*t+(2*R[i-1][c]-5*R[i][c]+4*R[i+1][c]-R[i+2][c])*t2+(-R[i-1][c]+3*R[i][c]-3*R[i+1][c]+R[i+2][c])*t3)))}O.push(P[P.length-1]);return O};
   const strap=(P,wid,thk,col)=>{const n=P.length,W=[],T=[];   // continuous ribbon: neighbouring segments share their cross-sections
    for(let i=0;i<n;i++){const a=P[Math.max(0,i-1)],b=P[Math.min(n-1,i+1)],tg=[b[0]-a[0],b[1]-a[1],b[2]-a[2]],w=n3([0,tg[2],-tg[1]]);W.push(w.map(v=>v*wid/2));T.push(n3(crs(tg,w)).map(v=>v*thk))}
    const o=(p,w,t,s)=>p.map((v,c)=>v+s*w[c]-t[c]/2);
    for(let i=0;i<n-1;i++){const t=T[i].map((v,c)=>(v+T[i+1][c])/2);prism((p,nn)=>[p,nn],[o(P[i],W[i],t,-1),o(P[i],W[i],t,1),o(P[i+1],W[i+1],t,1),o(P[i+1],W[i+1],t,-1)],t,col,LEA)}};
-  const base=(x,z,r)=>disc((p,n)=>[[x+p[0],Y+.002+p[2],z+p[1]],[n[0],n[2],n[1]]],[0,0,0],r,.007,SV,MET,28);
-  // BAB50506 (L 40x30x9): hangs from a hook; both webbing handles rise from the buckle tabs to the hook
-  {const w=.40,h=.30,d=.09,cx=X+.12,zc=Z(.23),y0=Y+.20,top=y0+h,ap=top+.13,px=cx+d/2+.03;
-   bx('B_6f','B_6b',cx,zc,y0,w,h,d);
+  const dsk=(x,y,z,r,h,col,mat,N=28)=>disc((p,n)=>[[x+p[0],y+p[2],z+p[1]],[n[0],n[2],n[1]]],[0,0,0],r,h,col,mat,N);
+  // wire display stand: round base, pole, M-shaped top with two ball-tipped hooks
+  const stand=(px,pz,Y,y1)=>{dsk(px,Y+.002,pz,.065,.007,SV,MET);tube([px,Y,pz],[px,y1,pz],.0055,.0055,SV,MET,10);
+   tube([px,y1,pz-.11],[px,y1+.016,pz],.004,.004,SV,MET,6);tube([px,y1+.016,pz],[px,y1,pz+.11],.004,.004,SV,MET,6);
+   for(const sz of [-1,1]){tube([px,y1,pz+sz*.11],[px-.004,y1+.03,pz+sz*.12],.0035,.0035,SV,MET,6);dsk(px-.004,y1+.03,pz+sz*.12,.007,.008,SV,MET,10)}};
+  const log=(x,z,Y,r,h)=>{dsk(x,Y,z,r,h,[.36,.25,.17],LEA);dsk(x,Y+h,z,r*.9,.0015,[.74,.58,.40],LEA)};
+  // briefcase hanging by both handles on a stand: handle loops rise from the buckle tabs to the hook; pole hidden inside the bag
+  const hang=(fk,bk,cx,[zc,w,y0,h],d,apex,tabs,col,Y)=>{const top=y0+h;bx(fk,bk,cx,zc,y0,w,h,d);stand(cx,zc,Y,apex+.012);
    for(const sg of [-1,1]){const P=[];for(let i=0;i<=28;i++){const t=i/28*Math.PI,sn=Math.sin(t);
-     P.push([cx+sg*(d/2+.0035)*(1-.92*Math.pow(sn,1.4)),top-.04+(ap-top+.04)*sn,zc-.081*Math.cos(t)])}strap(P,.026,.0035,BLK)}
-   base(px,zc-.06,.06);tube([px,Y,zc-.06],[px,ap+.02,zc-.06],.0065,.0065,SV,MET,10);
-   tube([px,ap+.02,zc-.06],[cx,ap+.02,zc],.005,.005,SV,MET,8);tube([cx,ap+.02,zc],[cx-.012,ap+.045,zc],.004,.004,SV,MET,6)}
-  // BAB50507 (M 36x26.5x8) on a log slice
-  {const w=.36,h=.265,d=.08,cx=X-.03,zc=Z(.34),lz=Z(.37),lh=.045;
-   disc((p,n)=>[[cx+p[0],Y+p[2],lz+p[1]],[n[0],n[2],n[1]]],[0,0,0],.075,lh,[.36,.25,.17],LEA,28);
-   disc((p,n)=>[[cx+p[0],Y+lh+p[2],lz+p[1]],[n[0],n[2],n[1]]],[0,0,0],.068,.0015,[.74,.58,.40],LEA,28);
-   bx('B_7f','B_7b',cx,zc,Y+lh+.0015,w,h,d)}
-  // sling on the chrome T-stand: strap rises from both side rings over the top of the stand
-  {const w=.22,h=.155,d=.055,px=X+.06,zc=Z(.63),y1=Y+.56,cx=px-d/2-.012,y0=Y+.30,top=y0+h;
-   base(px,zc,.065);tube([px,Y,zc],[px,y1,zc],.0055,.0055,SV,MET,10);
-   tube([px,y1,zc-.11],[px,y1+.016,zc],.004,.004,SV,MET,6);tube([px,y1+.016,zc],[px,y1,zc+.11],.004,.004,SV,MET,6);
-   for(const sz of [-1,1]){tube([px,y1,zc+sz*.11],[px-.004,y1+.03,zc+sz*.12],.0035,.0035,SV,MET,6);
-    disc((p,n)=>[[px-.004+p[0],y1+.03+p[2],zc+sz*.12+p[1]],[n[0],n[2],n[1]]],[0,0,0],.007,.008,SV,MET,10)}
-   bx('B_sl',0,cx,zc,y0,w,h,d);
-   strap(cr([[cx,top-.012,zc-w/2-.004],[cx+.008,top+.05,zc-.108],[px-.006,y1-.005,zc-.1],[px-.006,y1+.026,zc-.05],[px-.006,y1+.032,zc],[px-.006,y1+.026,zc+.05],[px-.006,y1-.005,zc+.1],[cx+.008,top+.05,zc+.108],[cx,top-.012,zc+w/2+.004]],8),.032,.004,BLK)}
-  // JWC50354 long wallets (19 x 9.2 cm), standing, leaning back a little, each on a metal label plate
-  for(const [k,u,dx,yw,sd] of [['B_wlK',1.0,-.11,-.12,'c_wblk'],['B_wlB',1.22,-.04,.1,'c_wbrn']]){const w=.19,h=.092,d=.022,cx=X+dx,zc=Z(u);
-   bx(k,k,cx,zc,Y,w,h,d,yw,.1,sd);box(F(cx,zc,-A+yw,0,Y),[0,0,d/2+.016],.062,.022,.004,{s:'c_metal'})}}
+     P.push([cx+sg*(d/2+.0035)*(1-.92*Math.pow(sn,1.4)),top-.04+(apex-top+.04)*sn,zc+(tabs[0]+tabs[1])/2-(tabs[1]-tabs[0])/2*Math.cos(t)])}strap(P,.026,.0035,col)}};
+  // shoulder bag on a stand: strap from both side rings over the top of the stand
+  const sling=(fk,bk,[zc,w,y0,h],d,y1,px,pz,col,Y,wid=.032)=>{const cx=px-d/2-.012,top=y0+h;stand(px,pz,Y,y1);bx(fk,bk,cx,zc,y0,w,h,d);
+   strap(cr([[cx,top-.012,zc-w/2-.004],[cx+.008,top+.05,zc-w/2+.004],[px-.006,y1-.005,pz-.1],[px-.006,y1+.026,pz-.05],[px-.006,y1+.032,pz],[px-.006,y1+.026,pz+.05],[px-.006,y1-.005,pz+.1],[cx+.008,top+.05,zc+w/2-.004],[cx,top-.012,zc+w/2+.004]],8),wid,.004,col)};
+  // level 2: brown BAB50506 hanging (back), brown BAB50507 on a log (front), brown sling with its tan strap, sign card
+  hang('F_brL',0,X+.1,Q.brL,.1,Q.brL_apex,Q.brL_tabs,[.42,.26,.15],LV[2]);
+  {const [lz,lh]=Q.brM_log;log(X-.06,lz,LV[2],.07,lh);const b=Q.brM.slice();b[2]=LV[2]+lh+.0015;bx('F_brM',0,X-.06,b[0],b[2],b[1],b[3],.09)}
+  sling('F_sl',0,Q.sl2,.065,Q.sl2_top,X+.09,Q.sl2_pole,[.40,.25,.14],LV[2],.045);
+  {const [zc,w,y0,h]=Q.card;box(F(X-.14,zc,-A,.18,LV[2]),[0,0,0],w,h,.006,{f:'F_card',s:'c_white',b:'c_white'});box(F(X-.12,zc,-A,0,LV[2]),[0,0,.01],w*.9,.02,.04,{s:'c_wood'})}
+  // level 1: black messenger on its stand, navy backpack on a log, ID-holder stand
+  sling('F_msg',0,Q.msg,.09,Q.msg_top,X+.06,Q.msg_pole,BLK,LV[1],.036);
+  log(X-.03,Q.bp_log[0],LV[1],.075,Q.bp_log[1]);
+  stand(X+.12,Q.id_pole[0],LV[1],Q.id_pole[1]);
+  // level 0: black BAB50506 hanging, black BAB50507 on a log, black sling, JWC50354 long wallets on metal label plates
+  hang('B_6f','B_6b',X+.1,Q.bL,.1,Q.bL_apex,[-.079,.079],BLK,LV[0]);
+  {const [lz,lh]=Q.bM_log;log(X-.06,lz,LV[0],.075,lh);const b=Q.bM.slice();bx('B_7f','B_7b',X-.06,b[0],LV[0]+lh+.0015,b[1],b[3],.09)}
+  sling('B_sl',0,Q.sl0,.06,Q.sl0_top,X+.08,Q.sl0_pole,BLK,LV[0]);
+  Q.wl.forEach(([zc,w],i)=>{const k=i?'B_wlB':'B_wlK',sd=i?'c_wbrn':'c_wblk',W=.2,H=.1,D=.024,cx=X-.1+i*.03,yw=i?.12:-.14;
+   bx(k,k,cx,zc,LV[0],W,H,D,yw,.12,sd);box(F(cx,zc,-A+yw,0,LV[0]),[0,0,D/2+.018],.07,.024,.004,{s:'c_metal'})})}
  for(const P of J.P)infl(P);
  return true}
 function profZone(){
